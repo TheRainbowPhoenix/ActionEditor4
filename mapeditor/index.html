@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tilemap Editor</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            overflow: hidden;
+        }
+        #gameContainer {
+            display: flex;
+            height: 100vh;
+        }
+        #gameCanvas {
+            flex-grow: 1;
+        }
+        .picker {
+            padding: 10px;
+            background-color: #ddd;
+        }
+        #uiCanvas {
+            min-width: 256px;
+        }
+        .tile-button {
+            margin: 10px;
+            width: 32px;
+            height: 32px;
+            cursor: pointer;
+        }
+        #saveButton {
+            display: block;
+            margin-top: 20px;
+            background-color: #007bff;
+            color: white;
+            text-align: center;
+            padding: 10px;
+            cursor: pointer;
+        }
+        .loadForm {
+            display: flex;
+            flex-direction: column;
+            padding-top: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div id="gameContainer">
+        <div class="picker">
+            <h3>Tile Palette</h3>
+            <div id="uiCanvas"></div>
+            <div id="saveButton">Save Level</div>
+            <div class="loadForm">
+                <span>Load Level</span>
+                <input type="file" id="loadFileInput" accept=".json" />
+            </div>
+        </div>
+        <div id="gameCanvas"></div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/phaser/3.86.0/phaser.js"></script>
+    <script src="./js/editor.js"></script>
+</body>
+</html>

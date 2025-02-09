@@ -1,0 +1,14 @@
+{
+    "name": "phaser-tilemap-post-2-01-drawing-tiles",
+    "version": "1.0.0",
+    "description": "Painting tiles",
+    "main": "index.html",
+    "scripts": {
+      "start": "parcel index.html --open",
+      "build": "parcel build index.html"
+    },
+    "dependencies": {
+      "phaser": "^3.55.2"
+    },
+    "keywords": []
+  }
