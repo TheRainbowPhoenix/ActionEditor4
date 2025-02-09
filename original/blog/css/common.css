@@ -1,0 +1,38 @@
+/*------------------------------------------------------------
+ブラウザ固有のCSSをリセット
+-------------------------------------------------------------*/
+
+body,div,dl,dt,dd,ul,ol,li,
+h1,h2,h3,h4,h5,h6,
+pre,form,fieldset,input,p,blockquote,table,th,td{
+	margin: 0;
+	padding: 0;
+}
+
+table{
+	border-collapse: collapse;
+	border-spacing: 0;
+}
+
+address,caption,cite,code,dfn,h1,h2,h3,h4,th,var{
+	font-style: normal;
+	font-weight: normal;
+}
+
+fieldset,img,abbr{ border: 0; }
+caption,th{ text-align: left; }
+/*th{ text-align: center; }*/
+q:before,q:after{ content: ''; }
+a{ text-decoration: none; }
+img{
+	border: none;
+	vertical-align: bottom;
+}
+
+/*WordPress対策*/
+span textarea,span input{ vertical-align: bottom!important; }
+
+
+/*Firefox対策*/
+html{ overflow-y: scroll; }
+body,x:-moz-broken { margin-left:-1px; }

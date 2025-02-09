@@ -1,0 +1,25 @@
+@media print{
+/*--------------------------------------------------------
+デザイン用CSSの設定を上書きします。
+トップヘッダー帯、サイドバーは非表示にしています。
+-------------------------------------------------------*/
+body{
+	width: 100%!important;
+	padding: 0!important;
+	background: none!important;
+	overflow: visible!important;
+}
+
+div#header{ display: none!important; }
+div#main{ overflow: visible!important; }
+div#sidebar{ display: none!important; }
+div#main-contents{
+	margin: 0 auto!important;
+	width: 96%!important;
+	overflow: visible!important;
+}
+
+/*------------------------------------------------------------
+　written＆copyright by Shigeoki Matsuo
+-------------------------------------------------------------*/
+}

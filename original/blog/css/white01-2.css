@@ -1,0 +1,966 @@
+@media all{
+/*--------------------------------------------------------
+1、total設定
+-------------------------------------------------------*/
+
+/*背景画像設定*/
+body{
+	margin: 0;
+	/*background: url(../images/bg/bg02-white.jpg) #fff center top repeat-x fixed;*/
+	background: #EAEAEA;
+	text-align: center;
+}
+body#w{
+	text-align: left;
+	margin-left: 5px;
+	background: #EAEAEA;
+}
+
+/*
+初期設定の背景：background: url(../images/bg/bg02-white.jpg) #fff center top repeat-x fixed;
+任意の画像の背景：background: url(../images/bg/bg-photo.jpg) left top repeat fixed;
+単色の背景：background: #000;
+*/
+
+
+/*文字設定*/
+body,pre{
+	font-family: 'ヒラギノ角ゴ Pro W3','Hiragino Kaku Gothic Pro','メイリオ',Meiryo,'ＭＳ Ｐゴシック',sans-serif;
+	font-size: 90%;
+	line-height: 1.4em;
+	color: #333;
+}
+
+pre{
+	font-size: 100%;
+	white-space: pre-wrap;
+	word-wrap: break-word;
+	white-space: -pre-wrap;
+	white-space: -o-pre-wrap;
+	white-space: -moz-pre-wrap;
+}
+
+
+/*リンク色*/
+a{ text-decoration: underline; }
+a:link{ color: #0000dd; }
+a:visited{ color: #0000dd; }
+a:hover{ color: #cc6600; }
+
+
+/*--------------------------------------------------------
+2、hタグ
+--------------------------------------------------------*/
+
+h1{
+	z-index: 1;
+	position: absolute;
+	margin: 7px 0 0 16px;
+	font-size: 8.5pt;
+	line-height: 18px;
+	color: #333;
+}
+div#container_w h1{
+	line-height: 0;
+	position: relative;
+	margin: 4px 5px 0 0px;
+	line-height: 18px;
+	/*background: url(../images/bg-h2/bg01-h2-white.jpg) left center repeat-x;*/
+	background: #CCCCCC;
+}
+
+/*サイドバーのタイトル帯の文字色
+div#sidebar .title p{
+	margin: 0 10px;
+	padding: 5px 0;
+	font-weight: bold;
+	color: #333;
+}*/
+
+
+h2,h2.p1{
+	clear: both;
+	margin: 0 0 1.0em 0;
+	padding: 0.2em 14px;
+	border: 3px solid #999;
+	background: url(../images/bg-h2/bg01-h2-white.jpg) left center repeat-x;
+	font-size: 1.2em;
+	font-weight: bold;
+	line-height: 1.4em;
+	color: #333;
+}
+
+
+h2 a,h2.p1 a{ text-decoration: underline; }
+h2 a:link,h2.p1 a:link{ color: #333; }
+h2 a:visited,h2.p1 a:visited{ color: #333; }
+h2 a:hover,h2.p1 a:hover{ color: #cc6600; }
+
+
+/*h2のパターン2*/
+h2.p2{
+	padding: 0.6em 40px;
+	background: url(../images/bg-h2/bg02-h2-white.jpg) left center repeat-x;
+	font-size: 1.4em;
+	color: #333;
+}
+
+/*h2のパターン3*/
+h2.p3{
+	background: url(../images/bg-h2/bg03-h2-white.jpg) left center repeat-x;
+}
+
+/*h2のパターン4*/
+h2.p4{
+	border: 0;
+	background: url(../images/bg-h2/bg04-h2-white.jpg) left bottom repeat-x;
+	color: #333;
+}
+
+
+h3{
+	clear: both;
+	margin: 0 10px 1.0em 0px;
+	padding: 0.3em 10px 0.3em 10px;
+	border: 1px solid #7070ba;
+	background: url(../images/bg-h3/bg-h3-white.jpg) left bottom repeat-x;
+	font-size: 1.0em;
+	font-weight: bold;
+	line-height: 1.4em;
+	text-align: left;
+	color: #333;
+}
+
+
+h4{
+	clear: both;
+	margin: 1.0em 0;
+	padding: 0.3em 10px;
+	border: 1px dotted #7070ba;
+	font-size: 1.0em;
+	font-weight: bold;
+	line-height: 1.4em;
+	text-align: left;
+	color: #333;
+}
+
+
+/*--------------------------------------------------------
+3、サイト全体の配置＆横幅
+--------------------------------------------------------*/
+
+/*サイト全体をセンタリング*/
+div#container{
+	margin: 0 auto;
+	text-align: left;
+}
+
+/*左右の枠線*/
+div#header,
+div#header-logo,
+div#navi,
+div#main{
+	border-left: 1px solid #333;
+	border-right: 1px solid #333;
+}
+
+
+/*■サイト全体の横幅*/
+div#container,
+div#header,
+div#header-logo,
+div#navi,
+div#main{
+	width: 920px;
+	_width: 922px;/*IE6用（「全体」+「2px」）*/
+}
+div#container_w,
+div#main_w{
+	/*width: 920px;*/
+	/*_width: 922px;*//*IE6用（「全体」+「2px」）*/
+}
+
+/*■トップメニュー帯の横幅（「全体」-「16px」）*/
+div#header #top-menu{ width: 904px; }
+
+
+/*■サイドバーの横幅*/
+div#sidebar{ width: 240px; }
+
+div#sidebar .menu,
+div#sidebar .menu-mtwp,
+div#sidebar .contents{
+	width: 218px;/*「サイドバー」-「22px」*/
+	_width: 220px;/*IE6用（「サイドバー」-「20px」）*/
+}
+
+/*■本文の横幅*/
+div#main-contents{
+	width: 660px;/*「全体」-「サイドバー」-「20px」*/
+	_width: 680px;/*IE6用（「全体」-「サイドバー」）*/
+}
+div#main-contents_w{
+
+}
+
+
+/*--------------------------------------------------------
+4-1、エリアの設定「最上部ヘッダー帯」
+--------------------------------------------------------*/
+
+div#header{
+	height: 30px;
+	background: center url(../images/bg-sub/bg-sub-white.jpg);
+}
+
+div#header #top-menu{
+	position: absolute;
+	top: 5px;
+	text-align: right;
+}
+
+div#header #top-menu li{
+	display: inline;
+	font-size: 8.5pt;
+	line-height: 14pt;
+}
+
+
+/*リンク色*/
+div#header #top-menu li{ color: #333; }
+div#header #top-menu li a:link{ color: #333; }
+div#header #top-menu li a:visited{ color: #333; }
+div#header #top-menu li a:hover{ color: #cc6600; }
+
+
+/*--------------------------------------------------------
+4-2、エリアの設定「ヘッダーロゴ」
+--------------------------------------------------------*/
+
+div#header-logo{
+	z-index: 1;
+	position: absolute;
+	top: 30px;
+	height: 150px;/*■ロゴの高さ*/
+	border-top: 1px solid #333;
+	border-bottom: 1px solid #333;
+	background: url(../images/bg-logo/logo01-white.jpg);
+	text-align: left;
+}
+
+
+/*ロゴテキスト*/
+p#logo-text{
+	position: absolute;
+	top: 40px;/*■縦位置*/
+	left: 18px;
+	font-size: 24pt;
+	font-weight: bold;
+	line-height: 1.1em;
+	letter-spacing: -0.5pt;
+}
+
+/*サブテキスト*/
+p#sub-text{
+	position: absolute;
+	top: 80px;/*■縦位置*/
+	left: 18px;
+	font-size: 10pt;
+	font-weight: bold;
+	line-height: 12pt;
+	letter-spacing: -0.5pt;
+}
+
+/*ロゴテキスト＆サブテキストの文字色＆リンク文字色*/
+p#logo-text,
+p#sub-text{ color: #333; }
+p#logo-text a{ text-decoration: none; }
+p#logo-text a:link{ color: #333; }
+p#logo-text a:visited{ color: #333; }
+p#logo-text a:hover{ color: #990000; }
+
+
+/*ヘッダー右側文章*/
+div#header-text{
+	position: absolute;
+	top: 112px;/*■縦位置*/
+	right: 20px;
+	width: 400px;
+	font-size: 9pt;
+	line-height: 14pt;
+	text-align: right;
+	color: #333;
+}
+
+
+/*--------------------------------------------------------
+4-3、エリアの設定「パン屑ナビ」
+--------------------------------------------------------*/
+
+div#navi{
+	position: absolute;
+	top: 180px;/*■縦位置*/
+	height: 34px;
+	/*background: #fff;*/
+}
+
+div#navi p{
+	margin: 9px 0 0 16px;
+	font-size: 8.5pt;
+	line-height: 14pt;
+}
+
+div#navi_w{
+	/*background: #fff;*/
+}
+
+div#navi_w p{
+	margin: 10px 3px 10px 16px;
+	/*font-size: 10.5pt;*/
+	line-height: 24pt;
+}
+
+
+
+/*--------------------------------------------------------
+4-4、エリアの設定「コンテンツ全体」
+--------------------------------------------------------*/
+
+div#main{
+	position: absolute;
+	top: 214px;/*■縦位置*/
+	overflow: hidden;
+	/*background: #fff;*/
+	text-align: left;
+}
+
+
+/*--------------------------------------------------------
+4-5、エリアの設定「サイドバー」
+--------------------------------------------------------*/
+
+div#sidebar{
+	display: inline;
+	float: left;
+	overflow: hidden;
+}
+
+
+/*サイドバー内のPタグ*/
+div#sidebar p{
+	margin: 15px;
+	font-size: 90%;
+}
+
+
+/*サイドバーの枠線＆マージン*/
+div#sidebar .menu,
+div#sidebar .menu-mtwp,
+div#sidebar .contents{
+	margin: 0 0 10px 10px;
+	border: 1px solid #333;
+}
+
+
+/*サイドバーのタイトル帯の背景色*/
+div#sidebar .title{
+	background: url(../images/bg-sub/bg-sub-white.jpg) left center;
+}
+
+/*サイドバーのタイトル帯の文字色*/
+div#sidebar .title p{
+	margin: 0 10px;
+	padding: 5px 0;
+	font-weight: bold;
+	color: #333;
+}
+
+div#sidebar .title p a{ text-decoration: none; }
+div#sidebar .title p a:link{ color: #333; }
+div#sidebar .title p a:visited{ color: #333; }
+div#sidebar .title p a:hover{ color: #990000; }
+
+div#sidebar .title p img{
+	vertical-align: middle!important;
+}
+
+
+/*親メニューリスト*/
+div#sidebar ul{ margin: 5px 15px; }
+div#sidebar li{
+	list-style-type: none;
+	list-style-position: outside;
+	margin: 15px 0;
+	padding-left: 16px;
+	background: url(../images/icon/icon-menu01-r-black.gif) 0 3px no-repeat;
+	font-size: 105%;
+	font-weight: bold;
+}
+
+/*子メニューリスト*/
+div#sidebar ul.sub{ margin: 10px 0 20px 0; }
+div#sidebar ul.sub li{
+	margin: 10px 0;
+	background: url(../images/icon/icon-menu10-black.gif) 0 3px no-repeat;
+	font-size: 90%;
+	font-weight: normal;
+}
+
+/*ランキングリスト*/
+div#sidebar ul.ranking li{
+	margin-bottom: 20px;
+	padding: 0;
+	border-bottom: 1px dotted #333;
+	background: none;
+	font-weight: normal;
+}
+
+div#sidebar ul.ranking li.end{ border: none; }
+div#sidebar ul.ranking p{ margin: 10px 0; }
+
+
+.no1,.no2,.no3,.no4,.no5,.no6,.no7,.no8,.no9,.no10{
+	height: 24px!important;
+	padding: 5px 0 0 30px!important;
+}
+
+
+/*ベスト3は赤文字*/
+.no1,.no2,.no3{
+	font-size: 1.2em!important;
+	font-weight: bold!important;
+	color: #ff0000!important;
+}
+
+
+/*王冠画像*/
+.no1{ background: url(../images/icon/icon-rank01-01.gif) left top no-repeat; }
+.no2{ background: url(../images/icon/icon-rank01-02.gif) left top no-repeat; }
+.no3{ background: url(../images/icon/icon-rank01-03.gif) left top no-repeat; }
+.no4{ background: url(../images/icon/icon-rank01-04.gif) left top no-repeat; }
+.no5{ background: url(../images/icon/icon-rank01-05.gif) left top no-repeat; }
+.no6{ background: url(../images/icon/icon-rank01-06.gif) left top no-repeat; }
+.no7{ background: url(../images/icon/icon-rank01-07.gif) left top no-repeat; }
+.no8{ background: url(../images/icon/icon-rank01-08.gif) left top no-repeat; }
+.no9{ background: url(../images/icon/icon-rank01-09.gif) left top no-repeat; }
+.no10{ background: url(../images/icon/icon-rank01-10.gif) left top no-repeat; }
+
+
+/*MT＆WordPressで使用*/
+div#sidebar .menu-mtwp li{
+	font-size: 90%;
+	font-weight: normal;
+	background: url(../images/icon/icon-menu01-r-black.gif) 0 4px no-repeat;
+}
+
+div#sidebar .menu-mtwp li ul{ margin: 10px 0 20px 0; }
+div#sidebar .menu-mtwp li ul li{
+	margin: 10px 0;
+	background: url(../images/icon/icon-menu10-black.gif) 0 3px no-repeat;
+	font-size: 90%;
+	font-weight: normal;
+}
+
+
+/*--------------------------------------------------------
+4-6、エリア設定「本文」
+--------------------------------------------------------*/
+
+div#main-contents{
+	display: inline;
+	float: right;
+	overflow: hidden;
+	padding: 0 10px;
+}
+div#main-contents_w{
+	padding: 0 10px;
+}
+
+
+/*本文内のPタグ*/
+div#main-contents p,div#main-contents_w p{
+	margin-bottom: 1.2em;
+	padding: 0;
+}
+
+
+/*本文内の線*/
+div#main-contents hr{
+	clear: both;
+	margin: 0.5em 0 1.7em;
+	_margin: 0 0 1.2em;
+	padding: 0px;
+	font-size: 1.0em;
+	line-height: 1.0em;
+	color: #ccc;
+}
+
+*:first-child+html div#main-contents hr{ margin: 0 0 1.2em; }
+
+
+/*コンテンツエリア*/
+div#main-contents .contents{
+	clear: both;
+	overflow: auto;
+	margin: 0;
+	padding: 0px 20px 1.4em 20px;
+}
+div#main-contents .contents_w{
+
+}
+
+
+/*コンテンツエリア2（インデント10px）*/
+div#main-contents .contents2{
+	clear: both;
+	overflow: auto;
+	margin: 0;
+	padding: 0px 30px 1.4em 30px;
+}
+
+
+/*本文内のリストタグ--------------------------*/
+div#main-contents ul,div#main-contents_w ul,
+div#main-contents ol,div#main-contents_w ol{	
+	list-style-position: outside;
+	margin: 0 10px 1.4em 10px;
+}
+
+div#main-contents ul,div#main-contents_w ul{ list-style-type: disc; }
+div#main-contents li,div#main-contents_w li{ line-height: 1.8em; }
+
+/*--- ulのアレンジ(追加)*/
+/*最近の更新*/
+div#main-contents ul#recent {
+	list-style-type: none;
+	margin: 0 0 1.4em 0;
+}
+div#main-contents ul#recent li {
+	margin-bottom: 1em;
+	list-style-type: none;
+	line-height: 1.4em;
+	/*padding-bottom: 1em;*/
+	border-bottom: 1px dotted #999;
+}
+/*更新履歴*/
+div#main-contents ul#log {
+	list-style-type: none;
+	margin: 0 0 1.4em 0;
+}
+div#main-contents ul#log li {
+	margin-bottom: 1em;
+	list-style-type: none;
+	line-height: 1.4em;
+}
+
+
+/*最新情報のリストタグ--------------------------*/
+div#main-contents ul.topics{
+	list-style-type: none;
+	list-style-position: outside;
+	padding: 15px 15px 0 15px;
+	border: 1px solid #999;
+}
+
+div#main-contents ul.topics li{
+	margin-bottom: 1.2em;
+	padding-bottom: 1.2em;
+	border-bottom: 1px dotted #999;
+	line-height: 1.4em!important;
+}
+
+
+/*チェックリスト用のリストタグ--------------------*/
+div#main-contents ul.checklist{
+	list-style-type: none;
+	list-style-position: outside;
+	padding: 15px;
+	border: 1px solid #999;
+}
+
+div#main-contents ul.checklist li{
+	padding-left: 24px;
+	background: url(../images/icon/icon-check02-blue.gif) no-repeat 0 8px;
+	line-height: 2.5em;
+}
+
+
+
+
+/*定義タグ-----------------------------------*/
+div#main-contents dl{
+	margin-bottom: 1.2em;
+	padding: 0;
+	border: 1px solid #777;
+	border-top: none;
+	background: #ddd;
+}
+
+div#main-contents dt{
+	margin: 0;
+	padding: 0.5em;
+	border-top: 1px solid #777;
+	border-bottom: 1px solid #777;
+	font-weight: bold;
+	color: #444;
+}
+
+div#main-contents dd{
+	margin: 0;
+	padding: 0.8em 1.0em;
+	background: #EAEAEA;
+}
+
+
+/*引用エリア-----------------------------------*/
+div#main-contents q,
+div#main-contents blockquote{
+	overflow: auto;
+	margin: 0 10px 1.4em 10px;
+	padding: 10px;
+	border-top: 3px solid #ddd;
+	border-bottom: 3px solid #ddd;
+	background: #eee;
+	color: #444;
+}
+
+
+/*戻る＆進むリンク--------------------------*/
+.link-back,
+.link-next{
+	margin-top: 1.2em;
+	font-size: 120%;
+	font-weight: bold;
+}
+
+.link-back{ text-align: left; }
+.link-next{ text-align: right; }
+
+.link-next a,
+.link-back a{
+	padding-left: 15px;
+}
+
+/*矢印画像*/
+.link-next a{ background: url(../images/icon/icon-menu01-r-black.gif) 0 3px no-repeat; }
+.link-back a{ background: url(../images/icon/icon-menu01-l-black.gif) 0 3px no-repeat; }
+
+
+
+/*サイドバーのメニュー設定をメインでも使用--------------*/
+div#main-contents .menu{
+	margin: 0;
+	border: 1px solid #333;
+}
+
+div#main-contents .menu .title{ background: url(../images/bg-sub/bg-sub-white.jpg) left center; }
+div#main-contents .menu .title p{
+	margin: 0 10px;
+	padding: 5px 0;
+	font-weight: bold;
+	color: #333;
+}
+
+div#main-contents .menu ul,
+div#main-contents .menu ol{
+	margin: 5px 10px;
+}
+
+div#main-contents .menu ol{ padding-left: 15px!important; }
+
+div#main-contents .menu li{
+	list-style-position: outside;
+	margin: 15px!important;
+	line-height: 1.2em;
+}
+
+/*ランキングリスト*/
+div#main-contents ul.ranking li{
+	list-style-type: none;
+	margin-bottom: 10px!important;
+	padding-bottom: 10px;
+	border-bottom: 1px dotted #333;
+	background: none;
+	font-weight: normal;
+}
+
+div#main-contents ul.ranking li.end{ border: none; }
+div#main-contents ul.ranking p{	margin: 10px 0; }
+
+
+/*表のデザイン----------------------------------------------*/
+table{
+	margin: 10px 0;
+	font-size: 85%;
+}
+table.smallfont{
+	font-size: 75%;
+}
+div#container_w table{
+	font-size: 75%;
+}
+
+th,td{
+	padding: 0.8em;
+	border: 1px solid #333;
+	vertical-align: center;
+	white-space: nowrap;
+}
+div#container_w td{
+	padding: 0.2em;
+}
+
+th{
+	background: #DFDFDF;
+	font-weight: bold;
+}
+.txtcenter{
+	text-align: center;
+	/*align: center;*/
+}
+
+.wrap{	/*テキストの自動的な折り返しをする*/
+	white-space: normal;
+}
+
+/*データ表で使うクラス*/
+.col1{
+	background-color: #CCFFFF;
+}
+.col2{
+	background-color: #CCFFCC;
+}
+.col3{
+	background-color: #CCCCFF;
+}
+.col4{
+	background-color: #FFCCFF;
+}
+.col5{
+	background-color: #FFCCCC;
+}
+.col6{
+	background-color: #FFFFCC;
+}
+.col7{
+	background-color: #FFCC99;
+}
+.col8{
+	background-color: #CCCCCC;
+}
+
+/*タグ----------------------------------------------*/
+ul.tag li{
+	display: inline;
+	margin-right: 15px;
+}
+
+
+
+/*--------------------------------------------------------
+4-7、エリア設定「フッター」
+--------------------------------------------------------*/
+
+div#footer{
+	clear: both;
+	width: 100%;
+	/*background: #fff;*/
+	text-align: center;
+}
+
+div#footer hr{
+	clear: both;
+	margin: 0;
+	padding: 0;
+	color: #333;
+}
+
+div#footer .menu{ margin: 0.5em 0; }
+
+div#footer .menu li{
+	display: inline;
+	margin: 0 1.0em;
+	font-size: 90%;
+	line-height: 14pt;
+}
+
+div#footer #copyright{
+	clear: both;
+	width: 100%;
+	margin-top: 1.0em;
+	padding: 1.0em 0 1 1;
+	background: url(../images/bg-sub/bg-sub-white.jpg) left center;
+	font-size: 10pt;
+	line-height: 14pt;
+	color: #333;
+	text-align: left;
+}
+
+div#footer #copyright a{ text-decoration: underline; }
+div#footer #copyright a:link{ color: #333; }
+div#footer #copyright a:visited{ color: #333; }
+div#footer #copyright a:hover{ color: #cc6600; }
+
+
+div#footer address{ margin: 15px 0; }
+
+
+
+/*--------------------------------------------------------
+5、追加設定
+--------------------------------------------------------*/
+
+/*WordPressで使用*/
+ol#commentlist ul{
+	list-style-type: none!important;
+	list-style-position: outside!important;
+}
+
+ol#commentlist{
+	list-style-type: none!important;
+	list-style-position: outside!important;
+	margin-left: 0!important;
+}
+
+li.comment{
+	padding: 10px 10px 0 10px;
+	border-left: dotted 1px #ccc;
+	margin: 20px 0;
+	font-size: 10pt;
+}
+
+div.reply{
+	padding-bottom: 10px!important;
+}
+
+div.reply.contents{
+	width: 100%;
+}
+
+cite,span.says{
+	vertical-align: bottom!important;
+}
+
+/*WordPressカレンダー*/
+table#wp-calendar {
+	width: 100%;
+	_width: 90%;
+	margin:0 auto;
+}
+
+#wp-calendar caption{
+	text-align: center;
+}
+
+#wp-calendar th,#wp-calendar td{
+	width: 14%;
+	padding: 0!important;
+	border: 0;
+	margin: 0!important;
+	font-size: 12px;
+	text-align: center;
+}
+
+/*以下、完全自作*/
+.b-blue{
+	font-weight : 600;
+	color : #3333ff;
+}
+.b-violet{
+	font-weight : 600;
+	color : #9900ff;
+}
+.b-red{
+	font-weight : 600;
+	color : #ff3333;
+}
+.b-orrange,.b-orange{
+	font-weight : 600;
+	color : #ff7700;	
+}
+.b-green{
+	font-weight : 600;
+	color : #00aa00;
+}
+.b-cyan{
+	font-weight : 600;
+	color : #219ddd;
+}
+
+/*カウンタ*/
+div#counter{
+	margin-top: 1.2em;
+	text-align: right;
+	font-size: 10pt;
+}
+div#counter img{
+	vertical-align: middle;
+}
+
+/*リスト*/
+div#main-contents ul.none,div#main-contents_w ul.none {
+	list-style-type: none;
+}
+div#main-contents ul.square,div#main-contents_w ul.square {
+	list-style-type: square;
+	margin-left: 1em;
+}
+,div#main-contents_w ul.circle,div#main-contents_w ul.circle {
+	list-style-type: circle;
+	margin-left: 1em;
+}
+
+
+/*------------------------------------------------------------
+ソーシャルボタン
+-------------------------------------------------------------*/
+div#navi p {
+	float: left;
+	display: inline;
+}
+div#navi ul.sb{
+	display: inline;
+	float: right;
+	/*width:100%;*/
+	margin: 0;
+	/*margin-bottom: 10px;*/
+	margin-top: 8px;
+	padding: 0;
+}
+div#navi ul.sb li{
+	display: inline-block;
+	margin-right: 5px;
+	vertical-align: top;
+	list-style: none;
+}
+* html div#navi ul.sb li{
+	float: left;
+	width: 130px;
+	list-style: none;
+} /* IE6 */
+*+html div#navi ul.sb li{
+	display: inline;
+	list-style: none;
+} /* IE7 */
+
+div#navi li.sb-tweet {
+	width:80px;
+	/*margin-top: 6px;*/
+}
+div#navi li.sb-fb-like {
+	width:80px;
+}
+div#navi li.sb-gplus {
+	width:40px;
+	/*margin-top: 6px;*/
+}
+div#navi li.sb-hatebu {
+	width:30px;
+}
+
+
+
+/*------------------------------------------------------------
+　written＆copyright by Shigeoki Matsuo
+-------------------------------------------------------------*/
+}

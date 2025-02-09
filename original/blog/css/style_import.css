@@ -1,0 +1,13 @@
+@charset "UTF-8";
+
+/*初期化用*/
+@import "./common.css";
+
+/*デザイン用*/
+@import "./white01-2.css";
+
+/*印刷用*/
+@import "./print.css";
+
+/*拡張用*/
+@import "./advanced.css";

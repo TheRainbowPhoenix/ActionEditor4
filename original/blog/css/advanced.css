@@ -1,0 +1,514 @@
+/*------------------------------------------------------------
+t：上（top）、r：右（right）、b：下（bottom）、l：左（left）
+c：左右の中央（center）、m：上下の中間（middle）
+-------------------------------------------------------------*/
+
+/*------------------------------------------------------------
+1、align・・・文字の横位置
+-------------------------------------------------------------*/
+
+.al-c{ text-align: center; }/*中央寄せ*/
+.al-r{ text-align: right; }/*右寄せ*/
+.al-l{ text-align: left; }/*左寄せ*/
+
+
+/*------------------------------------------------------------
+2、valign・・・文字の縦位置
+-------------------------------------------------------------*/
+
+.vl-t{ vertical-align: top; }/*上寄せ*/
+.vl-m{ vertical-align: middle; }/*中央寄せ*/
+.vl-b{ vertical-align: bottom; }/*下寄せ*/
+
+
+/*------------------------------------------------------------
+3、float・・・ブロックの左右の回り込み＆clearfix
+-------------------------------------------------------------*/
+
+.fl-r{ float:right; margin-left: 20px; }/*右寄せ*/
+.fl-l{ float:left; margin-right: 20px; }/*左寄せ*/
+.fl-c{
+	clear: both;
+	margin-top: 20px;/*上に20pxのマージンをとる*/
+}
+
+
+/*「clearfix」でfloatを使った際のエリアが重なるバグを解除*/
+.clearfix:after{
+	visibility: hidden;
+	display: block;
+	content: ".";
+	height: 0;
+	clear: both;
+}
+.clearfix{ display: inline-block; }
+
+* html .clearfix{ height: 1%; };
+.clearfix{
+	display: block;
+}
+
+
+/*------------------------------------------------------------
+4、margin・・・周りのブロックからの距離
+-------------------------------------------------------------*/
+
+.m0{ margin: 0!important; }/*周りからのmarginを0にする*/
+.m0-t{ margin-top: 0!important; }/*上からのmarginが0px*/
+.m0-r{ margin-right: 0!important; }/*右からのmarginが0px*/
+.m0-b{ margin-bottom: 0!important; }/*下からのmarginが0px*/
+.m0-l{ margin-left: 0!important; }/*左からのmarginが0px*/
+
+.m5{ margin: 5px!important; }/*周りからのmarginを5に*/
+.m5-t{ margin-top: 5px!important; }/*上からのmarginを5pxに*/
+.m5-r{ margin-right: 5px!important; }/*右からのmarginを5pxに*/
+.m5-b{ margin-bottom: 5px!important; }/*下からのmarginを5pxに*/
+.m5-l{ margin-left: 5px!important; }/*左からのmarginを5pxに*/
+
+.m10{ margin: 10px!important; }
+.m10-t{ margin-top: 10px!important; }
+.m10-r{ margin-right: 10px!important; }
+.m10-b{ margin-bottom: 10px!important; }
+.m10-l{ margin-left: 10px!important; }
+
+.m15{ margin: 15px!important; }
+.m15-t{ margin-top: 15px!important; }
+.m15-r{ margin-right: 15px!important; }
+.m15-b{ margin-bottom: 15px!important; }
+.m15-l{ margin-left: 15px!important; }
+
+.m20{ margin: 20px!important; }
+.m20-t{ margin-top: 20px!important; }
+.m20-r{ margin-right: 20px!important; }
+.m20-b{ margin-bottom: 20px!important; }
+.m20-l{ margin-left: 20px!important; }
+
+.m30{ margin: 30px!important; }
+.m30-t{ margin-top: 30px!important; }
+.m30-r{ margin-right: 30px!important; }
+.m30-b{ margin-bottom: 30px!important; }
+.m30-l{ margin-left: 30px!important; }
+
+.m40{ margin: 40px!important; }
+.m40-t{ margin-top: 40px!important; }
+.m40-r{ margin-right: 40px!important; }
+.m40-b{ margin-bottom: 40px!important; }
+.m40-l{ margin-left: 40px!important; }
+
+.m50{ margin: 50px!important; }
+.m50-t{ margin-top: 50px!important; }
+.m50-r{ margin-right: 50px!important; }
+.m50-b{ margin-bottom: 50px!important; }
+.m50-l{ margin-left: 50px!important; }
+
+.m60{ margin: 60px!important; }
+.m60-t{ margin-top: 60px!important; }
+.m60-r{ margin-right: 60px!important; }
+.m60-b{ margin-bottom: 60px!important; }
+.m60-l{ margin-left: 60px!important; }
+
+
+/*------------------------------------------------------------
+5、padding・・・周りのブロックからの距離（padding）
+-------------------------------------------------------------*/
+
+.p0{ padding: 0!important; }
+.p0-t{ padding-top: 0!important; }
+.p0-r{ padding-right: 0!important; }
+.p0-b{ padding-bottom: 0!important; }
+.p0-l{ padding-left: 0!important; }
+
+.p5{ padding: 5px!important; }
+.p5-t{ padding-top: 5px!important; }
+.p5-r{ padding-right: 5px!important; }
+.p5-b{ padding-bottom: 5px!important; }
+.p5-l{ padding-left: 5px!important; }
+
+.p10{ padding: 10px!important; }
+.p10-t{ padding-top: 10px!important; }
+.p10-r{ padding-right: 10px!important; }
+.p10-b{ padding-bottom: 10px!important; }
+.p10-l{ padding-left: 10px!important; }
+
+.p15{ padding: 15px!important; }
+.p15-t{ padding-top: 15px!important; }
+.p15-r{ padding-right: 15px!important; }
+.p15-b{ padding-bottom: 15px!important; }
+.p15-l{ padding-left: 15px!important; }
+
+.p20{ padding: 20px!important; }
+.p20-t{ padding-top: 20px!important; }
+.p20-r{ padding-right: 20px!important; }
+.p20-b{ padding-bottom: 20px!important; }
+.p20-l{ padding-left: 20px!important; }
+
+.p30{ padding: 30px!important; }
+.p30-t{ padding-top: 30px!important; }
+.p30-r{ padding-right: 30px!important; }
+.p30-b{ padding-bottom: 30px!important; }
+.p30-l{ padding-left: 30px!important; }
+
+.p40{ padding: 40px!important; }
+.p40-t{ padding-top: 40px!important; }
+.p40-r{ padding-right: 40px!important; }
+.p40-b{ padding-bottom: 40px!important; }
+.p40-l{ padding-left: 40px!important; }
+
+.p50{ padding: 50px!important; }
+.p50-t{ padding-top: 50px!important; }
+.p50-r{ padding-right: 50px!important; }
+.p50-b{ padding-bottom: 50px!important; }
+.p50-l{ padding-left: 50px!important; }
+
+.p60{ padding: 60px!important; }
+.p60-t{ padding-top: 60px!important; }
+.p60-r{ padding-right: 60px!important; }
+.p60-b{ padding-bottom: 60px!important; }
+.p60-l{ padding-left: 60px!important; }
+
+
+/*------------------------------------------------------------
+6、font-size・・・フォントサイズの設定
+※「em」は文字サイズ可変に対応。「pt」は文字サイズ固定
+-------------------------------------------------------------*/
+
+.b{ font-weight: bold!important; }
+.normal{ font-weight: normal!important; }
+
+.big{ font-size: 120%!important; }
+.big2{ font-size: 150%!important; }
+.big3{ font-size: 180%!important; }
+.small{ font-size: 80%!important; }
+
+.f08em{ font-size: 0.8em; }
+.f09em{ font-size: 0.9em; }
+.f10em{ font-size: 1.0em; }
+.f11em{ font-size: 1.1em; }
+.f12em{ font-size: 1.2em; }
+.f13em{ font-size: 1.3em; }
+.f14em{ font-size: 1.4em; }
+.f15em{ font-size: 1.5em; }
+.f16em{ font-size: 1.6em; }
+.f17em{ font-size: 1.7em; }
+.f18em{ font-size: 1.8em; }
+.f19em{ font-size: 1.9em; }
+.f20em{ font-size: 2.0em; }
+.f21em{ font-size: 2.1em; }
+.f22em{ font-size: 2.2em; }
+.f23em{ font-size: 2.3em; }
+.f24em{ font-size: 2.4em; }
+
+.f8pt{ font-size: 8.5pt!important; }
+.f9pt{ font-size: 9.0pt!important; }
+.f10pt{ font-size: 10pt!important; }
+.f11pt{ font-size: 11pt!important; }
+.f12pt{ font-size: 12pt!important; }
+.f13pt{ font-size: 13pt!important; }
+.f14pt{ font-size: 14pt!important; }
+.f15pt{ font-size: 15pt!important; }
+.f16pt{ font-size: 16pt!important; }
+.f17pt{ font-size: 17pt!important; }
+.f18pt{ font-size: 18pt!important; }
+.f19pt{ font-size: 19pt!important; }
+.f20pt{ font-size: 20pt!important; }
+.f21pt{ font-size: 21pt!important; }
+.f22pt{ font-size: 22pt!important; }
+.f23pt{ font-size: 23pt!important; }
+.f24pt{ font-size: 24pt!important; }
+
+
+/*------------------------------------------------------------
+7、color・・・フォントカラーの設定
+-------------------------------------------------------------*/
+
+.red{ color: #ff0000!important; }/*赤*/
+.blue{ color: #0000dd!important; }/*青*/
+.green{ color: #008000!important; }/*緑*/
+.yellow{ color: #ffff00!important; }/*黄*/
+.navy{ color: #1F26A9!important; }/*紺*/
+.orange{ color: #ff6600!important; }/*橙*/
+.pink{ color: #cc6699!important; }/*ピンク*/
+.purple{ color: #660099!important; }/*紫*/
+.olive{ color: #808000!important; }/*黄土色*/
+.lime{ color: #00ff00!important; }/*黄緑*/
+.aqua{ color: #167FA6!important; }/*水色*/
+.black{ color: #000!important; }/*黒*/
+.gray{ color: #ccc!important; }/*灰*/
+.white{ color: #fff!important; }/*白*/
+
+
+/*------------------------------------------------------------
+8、line-height・・・行間の設定
+-------------------------------------------------------------*/
+
+.lh10{ line-height: 1.0em!important; }
+.lh11{ line-height: 1.1em!important; }
+.lh12{ line-height: 1.2em!important; }
+.lh13{ line-height: 1.3em!important; }
+.lh14{ line-height: 1.4em!important; }
+.lh15{ line-height: 1.5em!important; }
+.lh16{ line-height: 1.6em!important; }
+.lh17{ line-height: 1.7em!important; }
+.lh18{ line-height: 1.8em!important; }
+.lh19{ line-height: 1.9em!important; }
+.lh20{ line-height: 2.0em!important; }
+
+
+/*------------------------------------------------------------
+9、下線や取消線の設定
+-------------------------------------------------------------*/
+
+.underline{ text-decoration: underline!important; }
+.del{ text-decoration:line-through;}
+.noborder{ border: 0!important; }/*枠線を無くす*/
+
+
+/*------------------------------------------------------------
+10、box・・・蛍光ペンのようなボックスの設定
+-------------------------------------------------------------*/
+
+.box-yellow{ padding:2px;background-color: #ffff00!important; }/*黄色*/
+.box-aqua{ padding:2px;background-color: #00ffff!important; }/*水色*/
+.box-gray{ padding:2px;background-color: #eee!important; }/*灰色*/
+.box-red{ padding:2px;background-color: #fc9b8b!important; }/*赤色*/
+
+
+/*------------------------------------------------------------
+11、input:focus・・・入力フォームをハイライトする（Firefox）
+-------------------------------------------------------------*/
+
+input:focus,textarea:focus{ background-color: #dee!important; }
+
+
+/*------------------------------------------------------------
+12、hr・・・線の基本設定
+-------------------------------------------------------------*/
+
+hr{
+	clear: both;
+	margin: 0;
+	padding: 0;
+	border-width: 1px 0 0 0;
+	border-style: solid none none none;
+	height: 1px;
+	color: #ccc;
+}
+
+/*------------------------------------------------------------
+13、left、right・・・画像を簡単に回り込ませる設定
+-------------------------------------------------------------*/
+
+/*左に画像、右に文章*/
+.left{
+	float: left;
+	margin: 0 30px 20px 0!important;
+}
+
+/*右に画像、左に画像*/
+.right{
+	float: right;
+	margin: 0 0 20px 30px!important;
+}
+
+
+/*------------------------------------------------------------
+14、top、middle、bottom・・・画像の縦位置設定
+-------------------------------------------------------------*/
+
+img.top{ vertical-align: top!important; }
+img.middle{ vertical-align: middle!important; }
+img.bottom{ vertical-align: bottom!important; }
+
+
+/*------------------------------------------------------------
+15、zindex・・・重なりの優先度
+-------------------------------------------------------------*/
+
+.z1{ z-index: 1!important; }
+.z2{ z-index: 2!important; }
+.z3{ z-index: 3!important; }
+.z4{ z-index: 4!important; }
+.z5{ z-index: 5!important; }
+
+
+/*------------------------------------------------------------
+16、文字列の前にアイコン
+-------------------------------------------------------------*/
+
+.caution1{
+	padding: 20px 0 0 60px!important;
+	background: url(../images/icon/icon-check01.gif) left top no-repeat!important;
+}
+
+.caution2{
+	padding: 20px 0 0 60px!important;
+	background: url(../images/icon/icon-check02.gif) left top no-repeat!important;
+}
+
+.caution3{
+	padding: 20px 0 0 60px!important;
+	background: url(../images/icon/icon-point01.gif) left top no-repeat!important;
+}
+
+.caution4{
+	padding: 20px 0 0 60px!important;
+	background: url(../images/icon/icon-point02.gif) left top no-repeat!important;
+}
+
+.caution5{
+	padding: 14px 0 0 36px!important;
+	background: url(../images/icon/icon-check03.gif) left top no-repeat!important;
+}
+
+.caution6{
+	padding: 14px 0 0 36px!important;
+	background: url(../images/icon/icon-point03.gif) left top no-repeat!important;
+}
+
+.caution7{
+	padding: 20px 0 0 60px!important;
+	background: url(../images/icon/icon-check07.gif) left top no-repeat!important;
+}
+
+.caution8{
+	padding: 20px 0 0 60px!important;
+	background: url(../images/icon/icon-check08.gif) left top no-repeat!important;
+}
+
+
+/*初心者マーク*/
+.wakaba{
+	padding: 14px 0 0 36px!important;
+	background: url(../images/icon/icon-wakaba.gif) left top no-repeat!important;
+}
+
+/*メールアイコン*/
+.mail{
+	padding: 10px 0 0 36px!important;
+	background: url(../images/icon/icon-mail.gif) left top no-repeat!important;
+}
+
+/*PDFアイコン*/
+.pdf{
+	padding: 14px 0 0 36px!important;
+	background: url(../images/icon/icon-pdf.gif) left top no-repeat!important;
+}
+
+/*ZIPアイコン*/
+.zip{
+	padding: 14px 0 0 36px!important;
+	background: url(../images/icon/icon-zip.gif) left top no-repeat!important;
+}
+
+/*RSSアイコン*/
+.rss{
+	padding: 10px 0 10px 28px!important;
+	background: url(../images/icon/icon-rss02.gif) left top no-repeat!important;
+}
+
+/*小さいRSSアイコン*/
+.rss-mini{
+	padding-left: 16px!important;
+	background: url(../images/icon/icon-rss-orange.jpg) left center no-repeat!important;
+}
+
+/*後ろにメールアイコン*/
+.mail-back{
+	padding: 14px 34px 0 0!important;
+	background: url(../images/icon/icon-mail.gif) right top no-repeat!important;
+}
+
+/*後ろにPDFアイコン*/
+.pdf-back{
+	padding: 20px 34px 0 0!important;
+	background: url(../images/icon/icon-pdf.gif) right top no-repeat!important;
+}
+
+/*後ろにZIPアイコン*/
+.zip-back{
+	padding: 20px 34px 0 0!important;
+	background: url(../images/icon/icon-zip.gif) right top no-repeat!important;
+}
+
+/*後ろにRSSアイコン*/
+.rss-back{
+	padding: 9px 26px 0 0!important;
+	background: url(../images/icon/icon-rss02.gif) right top no-repeat!important;
+}
+
+
+/*------------------------------------------------------------
+17、枠線を角丸に
+-------------------------------------------------------------*/
+
+/*Firefoxのみ対応*/
+div#main-contents ul.topics,
+div#main-contents ul.checklist{
+	-moz-border-radius: 16px;/*角丸の半径*/
+}
+
+/*角丸エリアを作る*/
+div#main-contents .c1{
+	padding-top: 15px;
+	background: url(../images/corner/corner-left-top.gif) no-repeat left top;
+}
+div#main-contents .c2{
+	width: 100%;
+	background: url(../images/corner/corner-right-top.gif) no-repeat right top;
+}
+div#main-contents .c3{
+	padding: 0 0 15px 15px;
+	background: url(../images/corner/corner-left-bottom.gif) no-repeat left bottom;
+}
+div#main-contents .c4{
+	padding-right: 15px;
+	background: url(../images/corner/corner-right-bottom.gif) no-repeat	right bottom;
+}
+
+
+/*------------------------------------------------------------
+18、ノートのような線を引く
+-------------------------------------------------------------*/
+
+.noteline{
+	display: inline!important;
+	padding-bottom: 0.3em!important;
+	border-bottom: 1px dashed #7070ba!important;
+	line-height: 2.1em!important;
+}
+
+
+/*------------------------------------------------------------
+19、広告の絶対配置エリアを出現させる
+※<div class="ad"><p><p></div>を使う
+-------------------------------------------------------------*/
+
+div.ad{
+	z-index: 10;
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	margin: 0;
+	padding: 0;
+	text-align :right;
+}
+
+div.ad p{
+	position: fixed;
+	_position: absolute;/*IE6用*/
+	top: 0;
+	right: 0;
+	width: 240px;
+	height: 120px;
+	padding: 5px;
+	border: 1px solid #000;
+	background: #eee;
+	text-align :center;
+}
+
+
+/*------------------------------------------------------------
+　written＆copyright by Shigeoki Matsuo
+-------------------------------------------------------------*/
