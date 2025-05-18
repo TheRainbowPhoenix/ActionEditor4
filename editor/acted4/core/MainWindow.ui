@@ -1,0 +1,408 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1013</width>
+    <height>606</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Action Editor</string>
+  </property>
+  <property name="dockNestingEnabled">
+   <bool>true</bool>
+  </property>
+  <widget class="QWidget" name="centralwidget"/>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>1013</width>
+     <height>22</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="menuFile">
+    <property name="title">
+     <string>File(&amp;F)</string>
+    </property>
+    <widget class="QMenu" name="menuRecentStages">
+     <property name="title">
+      <string>Open Recent</string>
+     </property>
+    </widget>
+    <addaction name="actionNew_Stage"/>
+    <addaction name="actionOpen_Stage"/>
+    <addaction name="menuRecentStages"/>
+    <addaction name="actionClose_Stage"/>
+    <addaction name="separator"/>
+    <addaction name="actionSave_Stage"/>
+    <addaction name="actionSave_Stage_As"/>
+    <addaction name="actionSave_Common_Palette"/>
+    <addaction name="separator"/>
+    <addaction name="actionOpen_Project"/>
+    <addaction name="actionSave_Project_As"/>
+    <addaction name="actionClose_Project"/>
+   </widget>
+   <widget class="QMenu" name="menuEdit">
+    <property name="title">
+     <string>Edit(&amp;E)</string>
+    </property>
+    <widget class="QMenu" name="menuChange_Palette">
+     <property name="title">
+      <string>Change Palette(&amp;P)</string>
+     </property>
+     <addaction name="actionPalette_Block"/>
+     <addaction name="actionPalette_Character"/>
+     <addaction name="actionPalette_Item"/>
+    </widget>
+    <widget class="QMenu" name="menuClear_Placement">
+     <property name="title">
+      <string>Clear Placement Data(&amp;C)</string>
+     </property>
+     <addaction name="actionClear_All"/>
+     <addaction name="actionClear_Blocks"/>
+     <addaction name="actionClear_Characters"/>
+     <addaction name="actionClear_Items"/>
+    </widget>
+    <addaction name="actionUndo"/>
+    <addaction name="actionRedo"/>
+    <addaction name="separator"/>
+    <addaction name="menuChange_Palette"/>
+    <addaction name="menuClear_Placement"/>
+   </widget>
+   <widget class="QMenu" name="menuView">
+    <property name="title">
+     <string>View(&amp;V)</string>
+    </property>
+    <addaction name="actionCommon_Palette"/>
+    <addaction name="actionStage_Palette"/>
+    <addaction name="actionGroup_Info"/>
+    <addaction name="separator"/>
+    <addaction name="actionLock_Docks"/>
+   </widget>
+   <widget class="QMenu" name="menuStage">
+    <property name="title">
+     <string>Stage(&amp;S)</string>
+    </property>
+    <addaction name="actionStage_Settings"/>
+    <addaction name="separator"/>
+    <addaction name="actionLoad_Stage_Palette"/>
+    <addaction name="actionSave_Stage_Palette"/>
+    <addaction name="separator"/>
+    <addaction name="actionStage_Options"/>
+   </widget>
+   <widget class="QMenu" name="menuProject">
+    <property name="title">
+     <string>Project(&amp;P)</string>
+    </property>
+    <addaction name="actionDatabase"/>
+    <addaction name="actionWorld_Map"/>
+    <addaction name="actionSystem"/>
+    <addaction name="separator"/>
+    <addaction name="actionProject_Options"/>
+   </widget>
+   <widget class="QMenu" name="menuTest">
+    <property name="title">
+     <string>Test Play(&amp;T)</string>
+    </property>
+    <addaction name="actionTest_Play"/>
+    <addaction name="actionTest_Play_Game"/>
+   </widget>
+   <widget class="QMenu" name="menuOther">
+    <property name="title">
+     <string>Other(&amp;O)</string>
+    </property>
+    <addaction name="actionBitmap_Tool"/>
+   </widget>
+   <addaction name="menuFile"/>
+   <addaction name="menuEdit"/>
+   <addaction name="menuView"/>
+   <addaction name="menuStage"/>
+   <addaction name="menuProject"/>
+   <addaction name="menuTest"/>
+   <addaction name="menuOther"/>
+  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
+  <widget class="QToolBar" name="toolBar">
+   <property name="acceptDrops">
+    <bool>false</bool>
+   </property>
+   <property name="windowTitle">
+    <string>toolBar</string>
+   </property>
+   <property name="iconSize">
+    <size>
+     <width>24</width>
+     <height>24</height>
+    </size>
+   </property>
+   <property name="toolButtonStyle">
+    <enum>Qt::ToolButtonStyle::ToolButtonIconOnly</enum>
+   </property>
+   <property name="floatable">
+    <bool>false</bool>
+   </property>
+   <attribute name="toolBarArea">
+    <enum>TopToolBarArea</enum>
+   </attribute>
+   <attribute name="toolBarBreak">
+    <bool>false</bool>
+   </attribute>
+   <addaction name="actionNew_Stage"/>
+   <addaction name="actionOpen_Stage"/>
+   <addaction name="actionSave_Stage"/>
+   <addaction name="separator"/>
+   <addaction name="actionUndo"/>
+   <addaction name="actionRedo"/>
+   <addaction name="separator"/>
+   <addaction name="actionPalette_Block"/>
+   <addaction name="actionPalette_Character"/>
+   <addaction name="actionPalette_Item"/>
+   <addaction name="separator"/>
+   <addaction name="actionTest_Play"/>
+   <addaction name="actionTest_Play_Game"/>
+  </widget>
+  <action name="actionNew_Stage">
+   <property name="icon">
+    <iconset theme="QIcon::ThemeIcon::DocumentPageSetup"/>
+   </property>
+   <property name="text">
+    <string>Create New Stage(&amp;N)</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+N</string>
+   </property>
+  </action>
+  <action name="actionOpen_Stage">
+   <property name="icon">
+    <iconset theme="QIcon::ThemeIcon::DocumentOpen"/>
+   </property>
+   <property name="text">
+    <string>Open Stage(&amp;O)</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+O</string>
+   </property>
+  </action>
+  <action name="actionClose_Stage">
+   <property name="text">
+    <string>Close Stage(&amp;C)</string>
+   </property>
+  </action>
+  <action name="actionSave_Stage">
+   <property name="icon">
+    <iconset theme="QIcon::ThemeIcon::DocumentSave"/>
+   </property>
+   <property name="text">
+    <string>Save Common Palette &amp;&amp; Stage (Overwrite)(&amp;S)</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+S</string>
+   </property>
+  </action>
+  <action name="actionSave_Stage_As">
+   <property name="text">
+    <string>Save Common Palette &amp;&amp; Stage (New Save)(&amp;A)</string>
+   </property>
+  </action>
+  <action name="actionSave_Common_Palette">
+   <property name="text">
+    <string>Save Common Palette (Overwrite)(&amp;B)</string>
+   </property>
+  </action>
+  <action name="actionUndo">
+   <property name="icon">
+    <iconset theme="QIcon::ThemeIcon::EditUndo"/>
+   </property>
+   <property name="text">
+    <string>Undo(&amp;U)</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Z</string>
+   </property>
+  </action>
+  <action name="actionRedo">
+   <property name="icon">
+    <iconset theme="QIcon::ThemeIcon::EditRedo"/>
+   </property>
+   <property name="text">
+    <string>Redo(&amp;R)</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Y</string>
+   </property>
+  </action>
+  <action name="actionPalette_Block">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="../resources/resources.qrc">
+     <normaloff>:/img/icons/block.svg</normaloff>:/img/icons/block.svg</iconset>
+   </property>
+   <property name="text">
+    <string>Block(&amp;B)</string>
+   </property>
+  </action>
+  <action name="actionPalette_Character">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="../resources/resources.qrc">
+     <normaloff>:/img/icons/character.svg</normaloff>:/img/icons/character.svg</iconset>
+   </property>
+   <property name="text">
+    <string>Character(&amp;C)</string>
+   </property>
+  </action>
+  <action name="actionPalette_Item">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="../resources/resources.qrc">
+     <normaloff>:/img/icons/item.svg</normaloff>:/img/icons/item.svg</iconset>
+   </property>
+   <property name="text">
+    <string>Item(&amp;I)</string>
+   </property>
+  </action>
+  <action name="actionClear_All">
+   <property name="text">
+    <string>Clear All Placement Data(&amp;A)</string>
+   </property>
+  </action>
+  <action name="actionClear_Blocks">
+   <property name="text">
+    <string>Clear All Blocks(&amp;B)</string>
+   </property>
+  </action>
+  <action name="actionClear_Characters">
+   <property name="text">
+    <string>Clear All Characters(&amp;C)</string>
+   </property>
+  </action>
+  <action name="actionClear_Items">
+   <property name="text">
+    <string>Clear All Items(&amp;I)</string>
+   </property>
+  </action>
+  <action name="actionCommon_Palette">
+   <property name="text">
+    <string>Common Palette(&amp;C)</string>
+   </property>
+  </action>
+  <action name="actionStage_Palette">
+   <property name="text">
+    <string>Stage Palette(&amp;S)</string>
+   </property>
+  </action>
+  <action name="actionGroup_Info">
+   <property name="text">
+    <string>Group Info(&amp;G)</string>
+   </property>
+  </action>
+  <action name="actionLock_Docks">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Lock Docks</string>
+   </property>
+  </action>
+  <action name="actionStage_Settings">
+   <property name="text">
+    <string>Stage Settings(&amp;E)</string>
+   </property>
+  </action>
+  <action name="actionLoad_Stage_Palette">
+   <property name="text">
+    <string>Load Stage Palette(&amp;L)</string>
+   </property>
+  </action>
+  <action name="actionSave_Stage_Palette">
+   <property name="text">
+    <string>Save Stage Palette(&amp;A)</string>
+   </property>
+  </action>
+  <action name="actionStage_Options">
+   <property name="text">
+    <string>Stage Options(&amp;O)</string>
+   </property>
+  </action>
+  <action name="actionDatabase">
+   <property name="text">
+    <string>Database(&amp;D)</string>
+   </property>
+  </action>
+  <action name="actionWorld_Map">
+   <property name="text">
+    <string>World Map(&amp;W)</string>
+   </property>
+  </action>
+  <action name="actionSystem">
+   <property name="text">
+    <string>System(&amp;S)</string>
+   </property>
+  </action>
+  <action name="actionProject_Options">
+   <property name="text">
+    <string>Project Options(&amp;O)</string>
+   </property>
+  </action>
+  <action name="actionTest_Play">
+   <property name="icon">
+    <iconset resource="../resources/resources.qrc">
+     <normaloff>:/img/icons/test.svg</normaloff>:/img/icons/test.svg</iconset>
+   </property>
+   <property name="text">
+    <string>Test Play(&amp;T)</string>
+   </property>
+   <property name="shortcut">
+    <string>F5</string>
+   </property>
+  </action>
+  <action name="actionTest_Play_Game">
+   <property name="icon">
+    <iconset resource="../resources/resources.qrc">
+     <normaloff>:/img/icons/game.svg</normaloff>:/img/icons/game.svg</iconset>
+   </property>
+   <property name="text">
+    <string>Test Play (Whole Game)(&amp;G)</string>
+   </property>
+   <property name="shortcut">
+    <string>F7</string>
+   </property>
+  </action>
+  <action name="actionBitmap_Tool">
+   <property name="text">
+    <string>Bitmap Conversion Tool(&amp;B)</string>
+   </property>
+  </action>
+  <action name="actionOpen_Project">
+   <property name="text">
+    <string>Open Project...</string>
+   </property>
+  </action>
+  <action name="actionSave_Project_As">
+   <property name="text">
+    <string>Save Project As...</string>
+   </property>
+  </action>
+  <action name="actionClose_Project">
+   <property name="text">
+    <string>Close Project</string>
+   </property>
+  </action>
+ </widget>
+ <resources>
+  <include location="../resources/resources.qrc"/>
+ </resources>
+ <connections/>
+</ui>

@@ -1,0 +1,19 @@
+<RCC>
+  <qresource prefix="/">
+    <file>img/icons/item.svg</file>
+    <file>img/icons/area.svg</file>
+    <file>img/icons/fill.svg</file>
+    <file>img/icons/line.svg</file>
+    <file>img/icons/pen.svg</file>
+    <file>img/icons/props.svg</file>
+    <file>img/icons/game.svg</file>
+    <file>img/icons/test.svg</file>
+    <file>img/icons/block.svg</file>
+    <file>img/icons/character.svg</file>
+    <file>python/acted4.py</file>
+    <file>img/icons/redo.svg</file>
+    <file>fonts/Anonymous Pro.ttf</file>
+    <file>fonts/Inconsolata-Regular.ttf</file>
+    <file>img/icons/undo.svg</file>
+  </qresource>
+</RCC>
