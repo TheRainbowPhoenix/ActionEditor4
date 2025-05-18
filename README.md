@@ -14,6 +14,7 @@ An experimental re-implementation of the editor is ongoing under the "editor" fo
 ![Picture.png](editor/docs/Picture.png)
 ![Sound.png](editor/docs/Sound.png)
 ![CharaEffect.png](editor/docs/CharaEffect.png)
+![Effect.png](editor/docs/Effect.png)
 
 The idea is to test quickly the various format parsing and compare them against the original engine to understand it better
 

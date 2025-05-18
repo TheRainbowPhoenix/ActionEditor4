@@ -7,11 +7,11 @@
     - Anime
     - Bmp_CharaExc      [OK]
     - SwordType
-    - Effect
-    - CharaEffect
+    - Effect            [OK]
+    - CharaEffect       [OK]
     - ScrEffect
     - Picture           [OK]
-    - Sound
+    - Sound             [OK]
     - Bgm
 - Parse data:
     - GValInfo

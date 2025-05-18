@@ -90,6 +90,29 @@ class CharaEffectElement:
 class CharaEffectData:
     elements: List[CharaEffectElement] = field(default_factory=list)
 
+@dataclass
+class EffectAnimation:
+    header: int = 2
+    start: int = 0
+    end: int = 0
+    unknown: int = 0
+
+@dataclass
+class EffectElement:
+    header: int = 0
+    is_name_same_path: int = 0
+    width: int = 0
+    height: int = 0
+    is_giant: int = 0
+    unknown: int = 2  # always 2?
+    name: str = ""
+    path: str = ""
+    animations: List[EffectAnimation] = field(default_factory=list)
+
+@dataclass
+class EffectData:
+    elements: List[EffectElement] = field(default_factory=list)
+
 class AnimeSet(ActedBinaryFile):
     def __init__(self, file_path: Union[str, Path]):
         super().__init__(file_path)
@@ -225,7 +248,58 @@ class BmpCharaExc(ActedBinaryFile):
             return False
 
 class SwordType(ActedBinaryFile): pass
-class Effect(ActedBinaryFile): pass
+
+class Effect(ActedBinaryFile):
+    def __init__(self, file_path: Union[str, Path]):
+        super().__init__(file_path)
+        self.data = EffectData()
+    
+    def parse(self) -> bool:
+        if not self.load():
+            return False
+            
+        try:
+            magic = self.read_u32()
+            if magic not in self.VERSIONS:
+                print("Invalid magic number")
+                return False
+                
+            anim_set_count = self.read_u32()
+            
+            for _ in range(anim_set_count):
+                element = EffectElement()
+                element.header = self.read_u32()
+                element.is_name_same_path = self.read_u32()
+                element.width = self.read_u32()
+                element.height = self.read_u32()
+                element.is_giant = self.read_u32()
+                element.unknown = self.read_u32()
+
+                name_length = self.read_u32()
+                if name_length > 1:
+                    element.name = self.read_str(name_length)
+                
+                path_length = self.read_u32()
+                if path_length > 1:
+                    element.path = self.read_str(path_length)
+                    
+                animation_count = self.read_u32()
+                for _ in range(animation_count):
+                    anim = EffectAnimation()
+                    anim.header = self.read_u32()
+                    anim.start = self.read_u32()
+                    anim.end = self.read_u32()
+                    anim.unknown = self.read_u32()
+                    element.animations.append(anim)
+                    
+                self.data.elements.append(element)
+                
+            return True
+            
+        except Exception as e:
+            print(f"Error parsing Effect: {e}")
+            return False
+
 class CharaEffect(ActedBinaryFile):
     def __init__(self, file_path: Union[str, Path]):
         super().__init__(file_path)

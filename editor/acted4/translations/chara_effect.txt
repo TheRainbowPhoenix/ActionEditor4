@@ -110,3 +110,10 @@ Direct3D無効時: 画面が16bit色以上だと遅い  | When Direct3D is d
 
 ---
 
+横幅     | Width
+縦幅     | Height
+巨大化を許可 | Allow Enlargement / Allow Giant Size
+アニメ    | Animation
+挿入     | Insert
+編集     | Edit
+削除     | Delete

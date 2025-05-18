@@ -10,6 +10,7 @@ from .bmp_chara_exc import BmpCharaExcDialog
 from .picture import PictureDialog
 from .sound import SoundDialog
 from .chara_effect import CharaEffectDialog
+from .effect import EffectDialog
 # TODO: Import other dialog classes
 
 class DatabaseDialog(QDialog):
@@ -20,10 +21,8 @@ class DatabaseDialog(QDialog):
         "Picture": PictureDialog,
         "Sound": SoundDialog,
         "Character Effect": CharaEffectDialog,
-        # TODO: Add other dialogs
-        # "Anime": AnimeDialog,
-        # "Character": BmpCharaExcDialog,
-        # etc...
+        "Effect": EffectDialog,
+        # TODO: Add more, and plugins ??
     }
     
     def __init__(self, project: ProjectData, parent=None):
@@ -73,6 +72,7 @@ class DatabaseDialog(QDialog):
     def _create_tabs(self):
         """Create all database tabs"""
         for title, dialog_class in self.TAB_DIALOGS.items():
+            # TODO: try-catch error to only fail the bad tab, not the whole dialog
             dialog = dialog_class(self.project, self)
             
             # Set background color from dialog palette
