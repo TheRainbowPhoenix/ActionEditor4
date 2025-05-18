@@ -50,6 +50,18 @@ class AnimeSetData:
 class BmpCharaExcData:
     elements: List[BmpCharaExcElement] = field(default_factory=list)
 
+@dataclass
+class PictureElement:
+    header: int = 1 # always 1 ??
+    is_name_same_path: int = 0
+    unknown2: int = 2 # always 2 ??
+    name: str = ""
+    path: str = ""
+
+@dataclass
+class PictureData:
+    elements: List[PictureElement] = field(default_factory=list)
+
 class AnimeSet(ActedBinaryFile):
     def __init__(self, file_path: Union[str, Path]):
         super().__init__(file_path)
@@ -188,7 +200,46 @@ class SwordType(ActedBinaryFile): pass
 class Effect(ActedBinaryFile): pass
 class CharaEffect(ActedBinaryFile): pass
 class ScrEffect(ActedBinaryFile): pass
-class Picture(ActedBinaryFile): pass
+
+class Picture(ActedBinaryFile):
+    def __init__(self, file_path: Union[str, Path]):
+        super().__init__(file_path)
+        self.data = PictureData()
+    
+    def parse(self) -> bool:
+        if not self.load():
+            return False
+            
+        try:
+            magic = self.read_u32()
+            if magic not in self.VERSIONS:
+                print("Invalid magic number")
+                return False
+                
+            element_count = self.read_u32()
+            
+            for _ in range(element_count):
+                element = PictureElement()
+                element.header = self.read_u32()
+                element.is_name_same_path = self.read_u32()
+                element.unknown2 = self.read_u32()
+
+                name_length = self.read_u32()
+                if name_length > 1:
+                    element.name = self.read_str(name_length)
+                
+                path_length = self.read_u32()
+                if path_length > 1:
+                    element.path = self.read_str(path_length)
+                    
+                self.data.elements.append(element)
+                
+            return True
+            
+        except Exception as e:
+            print(f"Error parsing Picture: {e}")
+            return False
+
 class Sound(ActedBinaryFile): pass
 class Bgm(ActedBinaryFile): pass
 class CommonPalette(ActedBinaryFile): pass

@@ -3,14 +3,14 @@
 - Convert all dialogs from Win32 to QT Designer
 
 - Reimplement all DataBase:
-    - AnimeSet
+    - AnimeSet          [OK]
     - Anime
-    - Bmp_CharaExc
+    - Bmp_CharaExc      [OK]
     - SwordType
     - Effect
     - CharaEffect
     - ScrEffect
-    - Picture
+    - Picture           [OK]
     - Sound
     - Bgm
 - Parse data:

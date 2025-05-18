@@ -7,6 +7,7 @@ from typing import Dict, Type
 from .base_dialog import BaseTabDialog
 from .anime_set import AnimeSetDialog
 from .bmp_chara_exc import BmpCharaExcDialog
+from .picture import PictureDialog
 # TODO: Import other dialog classes
 
 class DatabaseDialog(QDialog):
@@ -14,6 +15,7 @@ class DatabaseDialog(QDialog):
     TAB_DIALOGS = {
         "Anime Set": AnimeSetDialog,
         "Character-Specific BMP": BmpCharaExcDialog,
+        "Picture": PictureDialog,
         # TODO: Add other dialogs
         # "Anime": AnimeDialog,
         # "Character": BmpCharaExcDialog,
