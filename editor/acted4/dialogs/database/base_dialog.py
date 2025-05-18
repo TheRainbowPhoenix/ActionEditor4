@@ -54,7 +54,24 @@ class SideListTabDialog(BaseTabDialog):
         real_idx = idx + 1 if self.skip_first else idx
         self._list_data[real_idx] = value
 
+    def _update_format(self, total_items: int) -> None:
+        """Update format based on number of items"""
+        if total_items > 99:
+            self._format_item = lambda i, e: f"{i:03d} {e.name}"
+        elif total_items > 9:
+            self._format_item = lambda i, e: f"{i:02d} {e.name}"
+        else:
+            self._format_item = lambda i, e: f"{i} {e.name}"
+            
+    def _refresh_format_and_list(self, list_widget: QListWidget):
+        """Update format and refresh all items"""
+        total = len(self.list_data)
+        self._update_format(total)
         
+        for i in range(list_widget.count()):
+            element = self.list_data[i]
+            list_widget.item(i).setText(self._format_item(self.offset(i), element))
+            
     def init_side_list(self, 
                         list_widget: QListWidget,
                         new_btn: QPushButton,
@@ -62,20 +79,13 @@ class SideListTabDialog(BaseTabDialog):
                         count_btn: QPushButton,
                         data_list: List[Any],
                         new_element_factory: Callable[[], Any],
-                        format_item: Callable[[int, Any], str] = lambda i, e: f"{i} {e.name}"):
-        """Initialize a side list with standard controls
-        
-        Args:
-            list_widget: The list widget to populate
-            new_btn: Button for adding new elements
-            clear_btn: Button for clearing selected element
-            count_btn: Button for setting element count
-            data_list: Reference to the data list to manage
-            new_element_factory: Function to create new elements
-            format_item: Function to format list items (index, element) -> str
-        """
+                        format_item: Callable[[int, Any], str] = None):
+        """Initialize a side list with standard controls"""
         self._list_data = data_list
-        self._format_item = format_item
+        if format_item:
+            self._format_item = format_item
+        else:
+            self._update_format(len(data_list))
         
         # Connect standard buttons
         new_btn.clicked.connect(lambda: self._on_list_new(list_widget, new_element_factory))
@@ -109,7 +119,15 @@ class SideListTabDialog(BaseTabDialog):
         element = new_element_factory()
         self._list_data.append(element)
         new_index = len(self.list_data)
-        list_widget.addItem(self._format_item(self.offset(new_index-1), element))
+        
+        # Update format if needed
+        old_format = self._format_item
+        self._update_format(new_index)
+        if old_format != self._format_item:
+            self._refresh_format_and_list(list_widget)
+        else:
+            list_widget.addItem(self._format_item(self.offset(new_index-1), element))
+            
         list_widget.setCurrentRow(list_widget.count() - 1)
         self.mark_dirty()
 
@@ -151,13 +169,18 @@ class SideListTabDialog(BaseTabDialog):
         if count > current_count:
             # Add new elements
             for i in range(count - current_count):
-                self._on_list_new(list_widget, new_element_factory)
+                # self._on_list_new(list_widget, new_element_factory)
+                element = new_element_factory()
+                self._list_data.append(element)
+                list_widget.addItem("") 
         else:
             # Remove elements from end
             self.list_data = self.list_data[:count]
             while list_widget.count() > count:
                 list_widget.takeItem(list_widget.count() - 1)
                 
+        # Update format and refresh all items
+        self._refresh_format_and_list(list_widget)
         self.mark_dirty()
         
     def update_list_item(self, list_widget: QListWidget, row: int, element: Any):

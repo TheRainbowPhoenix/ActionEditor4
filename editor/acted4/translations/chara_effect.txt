@@ -1,0 +1,112 @@
+破裂 | Burst
+分割（横） | Split (Horizontal)
+分割（縦） | Split (Vertical)
+波 | Wave
+波点 | Wave Point
+回転A | Rotate A
+回転B | Rotate B
+回転（奥） | Rotate (Depth)
+円 | Circle
+拡大 | Expand / Enlarge
+ノイズ | Noise
+変化 | Change
+色変化 | Color Change
+透明 | Transparency
+半透明 | Semi-Transparency
+モザイク | Mosaic
+ぼかし | Blur
+
+---
+
+実行時間(1/10s) | Duration (1/10s)
+開始位置(dot) | Start Position (dot)
+終了位置(dot) | End Position (dot)
+
+---
+
+実行時間(1/10s) | Duration (1/10s)
+開始位置(dot) | Start Position (dot)
+終了位置(dot) | End Position (dot)
+分割数 | Number of Divisions
+
+---
+
+実行時間(1/10s) | Duration (1/10s)
+開始幅(dot)   | Start Width (dot)
+終了幅(dot)   | End Width (dot)
+波の数      | Number of Waves
+波の粗さ(dot)  | Wave Roughness (dot)
+
+Direct3D無効時: やや遅い    | When Direct3D is disabled: Slightly slow
+
+---
+
+Direct3D有効時：速い | When Direct3D is enabled: Fast
+Direct3D無効時：速い | When Direct3D is disabled: Fast
+実行時間(1/10s)    | Duration (1/10s)
+点滅間隔(1/60s)    | Blinking Interval (1/60s)
+
+---
+
+Direct3D有効時: 回転Aと回転Bは同じ | When Direct3D is enabled: Rotation A and Rotation B are the same
+Direct3D無効時: 巨大キャラには実行速度重視 | When Direct3D is disabled: For giant characters, prioritize execution speed
+実行時間(1/10s) | Duration (1/10s)
+開始角度 | Start Angle
+終了角度 | End Angle
+
+---
+
+実行時間(1/10s)  | Duration (1/10s)
+開始位置(dot)   | Start Position (dot)
+終了位置(dot)   | End Position (dot)
+
+---
+
+実行時間(1/10s)    | Duration (1/10s)
+開始半径(dot)     | Start Radius (dot)
+終了半径(dot)     | End Radius (dot)
+円の粗さ(dot)    | Circle Roughness (dot)
+
+---
+
+実行時間(1/10s)  | Duration (1/10s)
+開始幅(dot)    | Start Width (dot)
+終了幅(dot)    | End Width (dot)
+
+---
+
+
+Direct3D有効時：遅過ぎ   | When Direct3D is enabled: Too slow
+Direct3D無効時：遅い    | When Direct3D is disabled: Slow
+実行時間(1/10s)       | Duration (1/10s)
+開始距離          | Start Distance
+終了距離          | End Distance
+ズレX(dot)         | X Offset (dot)
+ズレY(dot)         | Y Offset (dot)
+
+---
+
+Direct3D有効時:  | When Direct3D is enabled:
+Direct3D無効時: 画面が8bit色→精度悪い、16bit色以上→やや遅い  | When Direct3D is disabled: If the screen is 8-bit color → Low precision, if 16-bit color or higher → Slightly slow
+実行時間(1/10s)  | Duration (1/10s)
+開始合成度    | Start Composite Level (or Start Opacity)
+終了合成度    | End Composite Level (or End Opacity)
+色         | Color
+
+---
+
+Direct3D有効時:  | When Direct3D is enabled:
+Direct3D無効時: 画面が8bit色→精度悪い、16bit色以上→遅過ぎ  | When Direct3D is disabled: If the screen is 8-bit color → Low precision, if 16-bit color or higher → Too slow
+実行時間(1/10s)   | Duration (1/10s)
+点滅間隔(1/60s)   | Blinking Interval (1/60s)
+
+---
+
+Direct3D有効時:  | When Direct3D is enabled:
+Direct3D無効時: 画面が16bit色以上だと遅い  | When Direct3D is disabled: If the screen is 16-bit color or higher, it is slow
+実行時間(1/10s)  | Duration (1/10s)
+開始強度     | Start Intensity
+終了強度     | End Intensity
+
+---
+

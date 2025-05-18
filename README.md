@@ -11,5 +11,10 @@ An experimental re-implementation of the editor is ongoing under the "editor" fo
 ![QuickStart.png](editor/docs/QuickStart.png)
 ![Database.png](editor/docs/Database.png)
 ![BmpCharaExc.png](editor/docs/BmpCharaExc.png)
+![Picture.png](editor/docs/Picture.png)
+![Sound.png](editor/docs/Sound.png)
+![CharaEffect.png](editor/docs/CharaEffect.png)
 
 The idea is to test quickly the various format parsing and compare them against the original engine to understand it better
+
+If you just need a parser / converter (to JSON or other engine) you can take a look at [files.py](editor\acted4\data\files.py) with clean dataclass parsing

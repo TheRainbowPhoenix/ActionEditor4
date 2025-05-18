@@ -8,6 +8,8 @@ from .base_dialog import BaseTabDialog
 from .anime_set import AnimeSetDialog
 from .bmp_chara_exc import BmpCharaExcDialog
 from .picture import PictureDialog
+from .sound import SoundDialog
+from .chara_effect import CharaEffectDialog
 # TODO: Import other dialog classes
 
 class DatabaseDialog(QDialog):
@@ -16,6 +18,8 @@ class DatabaseDialog(QDialog):
         "Anime Set": AnimeSetDialog,
         "Character-Specific BMP": BmpCharaExcDialog,
         "Picture": PictureDialog,
+        "Sound": SoundDialog,
+        "Character Effect": CharaEffectDialog,
         # TODO: Add other dialogs
         # "Anime": AnimeDialog,
         # "Character": BmpCharaExcDialog,
