@@ -32,8 +32,23 @@ class AnimeSetElement:
     animations: List[Animation] = field(default_factory=list)
 
 @dataclass
+class BmpCharaExcElement:
+    header: int = 0
+    is_name_same_path: int = 0
+    is_giant: int = 0
+    scale_mode: int = 1
+    unknown: int = 2 # always 2 ??
+    name: str = ""
+    path: str = ""
+
+@dataclass
 class AnimeSetData:
     elements: List[AnimeSetElement] = field(default_factory=list)
+
+
+@dataclass
+class BmpCharaExcData:
+    elements: List[BmpCharaExcElement] = field(default_factory=list)
 
 class AnimeSet(ActedBinaryFile):
     def __init__(self, file_path: Union[str, Path]):
@@ -127,7 +142,48 @@ class GValInfo(ActedBinaryFile):
 
 # Add more stub classes for other .dat files
 class Anime(ActedBinaryFile): pass
-class BmpCharaExc(ActedBinaryFile): pass
+
+class BmpCharaExc(ActedBinaryFile):
+    def __init__(self, file_path: Union[str, Path]):
+        super().__init__(file_path)
+        self.data = BmpCharaExcData()
+    
+    def parse(self) -> bool:
+        if not self.load():
+            return False
+            
+        try:
+            magic = self.read_u32()
+            if magic not in self.VERSIONS:
+                print("Invalid magic number")
+                return False
+                
+            bmp_set_count = self.read_u32()
+            
+            for _ in range(bmp_set_count):
+                element = BmpCharaExcElement()
+                element.header = self.read_u32() # should be 3
+                element.is_name_same_path = self.read_u32()
+                element.is_giant = self.read_u32()
+                element.scale_mode = self.read_u32()
+                element.unknown = self.read_u32()
+
+                name_length = self.read_u32()
+                if name_length > 1:
+                    element.name = self.read_str(name_length)
+                
+                path_length = self.read_u32()
+                if path_length > 1:
+                    element.path = self.read_str(path_length)
+                    
+                self.data.elements.append(element)
+                
+            return True
+            
+        except Exception as e:
+            print(f"Error parsing AnimeSet: {e}")
+            return False
+
 class SwordType(ActedBinaryFile): pass
 class Effect(ActedBinaryFile): pass
 class CharaEffect(ActedBinaryFile): pass

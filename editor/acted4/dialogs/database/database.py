@@ -6,12 +6,14 @@ from ...core.project import ProjectData
 from typing import Dict, Type
 from .base_dialog import BaseTabDialog
 from .anime_set import AnimeSetDialog
+from .bmp_chara_exc import BmpCharaExcDialog
 # TODO: Import other dialog classes
 
 class DatabaseDialog(QDialog):
     # Map of tab names to dialog classes
     TAB_DIALOGS = {
         "Anime Set": AnimeSetDialog,
+        "Character-Specific BMP": BmpCharaExcDialog,
         # TODO: Add other dialogs
         # "Anime": AnimeDialog,
         # "Character": BmpCharaExcDialog,

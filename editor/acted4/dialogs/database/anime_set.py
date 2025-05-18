@@ -1,8 +1,33 @@
-from PySide6.QtWidgets import QWidget, QInputDialog, QMessageBox
+from PySide6.QtWidgets import QWidget, QInputDialog, QMessageBox, QFrame
+from PySide6.QtCore import Qt, QTime
+from PySide6.QtGui import QPainter, QPen, QColor
 from .base_dialog import BaseTabDialog
 from .ui_AnimeSet import Ui_AnimeSetWidget
 from ...core.project import ProjectData
 from ...data.files import AnimeSetElement, Animation
+from enum import Enum, auto
+import os
+import time
+
+class SampleType(Enum):
+    BLOCK = "Block"
+    CHARACTER = "Character"
+    ITEM = "Item"
+    SHOT = "Screenshot"
+    DEDICATED = "Dedicated BMP"
+    
+    @property
+    def display_name(self) -> str:
+        """Get localized display name"""
+        # TODO: Make this translation-ready
+        # For now, keep Japanese names for compatibility
+        return {
+            SampleType.BLOCK: "ブロック",
+            SampleType.CHARACTER: "キャラ",
+            SampleType.ITEM: "アイテム",
+            SampleType.SHOT: "ショット",
+            SampleType.DEDICATED: "専用bmp"
+        }[self]
 
 class AnimeSetDialog(BaseTabDialog):
     def __init__(self, project: ProjectData, parent=None):
@@ -16,12 +41,30 @@ class AnimeSetDialog(BaseTabDialog):
         self.ui.flyingOffSpinBox.setRange(0, 999)
         self.ui.invincibleOffSpinBox.setRange(0, 999)
         self.ui.blockOffSpinBox.setRange(0, 999)
+        self.ui.frameStartSpinBox.setRange(0, 239)
+        
+        # Setup combo box
+        self._setup_sample_box()
         
         # Connect signals
         self._connect_signals()
         
         # Load initial data
         self._load_data()
+        
+        # Initial preview refresh
+        self.refresh_preview()
+        
+    def _setup_sample_box(self):
+        """Setup sample combo box"""
+        self.ui.sampleComboBox.clear()
+        
+        # Add all sample types
+        for sample_type in SampleType:
+            self.ui.sampleComboBox.addItem(sample_type.display_name)
+            
+        # Update controls for initial selection
+        self._update_sample_controls()
         
     def _connect_signals(self):
         """Connect UI signals to slots"""
@@ -37,9 +80,20 @@ class AnimeSetDialog(BaseTabDialog):
         self.ui.invincibleOffSpinBox.valueChanged.connect(self._on_invincible_offset_changed)
         self.ui.blockOffSpinBox.valueChanged.connect(self._on_block_offset_changed)
         
+        # Sample controls
+        self.ui.sampleComboBox.currentIndexChanged.connect(self._on_sample_type_changed)
+        self.ui.sampleListButton.clicked.connect(self._on_sample_list)
+        
         # Pattern list
         self.ui.animPatList.currentRowChanged.connect(self._on_selected_pattern_changed)
+        self.ui.animPatList.itemDoubleClicked.connect(self._on_edit_pattern)
         self.ui.animPatButton.clicked.connect(self._on_edit_pattern)
+        
+        # Preview updates
+        self.ui.animList.currentRowChanged.connect(self.refresh_preview)
+        self.ui.sampleComboBox.currentIndexChanged.connect(self.refresh_preview)
+        self.ui.sampleCountSpinBox.valueChanged.connect(self.refresh_preview)
+        self.ui.frameStartSpinBox.valueChanged.connect(self.refresh_preview)
         
     def _load_data(self):
         """Load data from project"""
@@ -72,6 +126,31 @@ class AnimeSetDialog(BaseTabDialog):
         self.ui.animPatList.clear()
         for anim in element.animations:
             self.ui.animPatList.addItem(f"{anim.animation_name} ~{len(anim.frames)}")
+            
+    def _update_sample_controls(self):
+        """Update sample-related controls based on current selection"""
+        current_type = SampleType(list(SampleType)[self.ui.sampleComboBox.currentIndex()].value)
+        
+        if current_type == SampleType.DEDICATED:
+            # Count BMP files for dedicated mode - TODO: should be pulled later from the tab about custom pictures
+            chara_sp_dir = os.path.join(self.project.path, "chara_sp")
+            if os.path.exists(chara_sp_dir):
+                bmp_count = len([f for f in os.listdir(chara_sp_dir) if f.lower().endswith('.bmp')])
+                # Add 1 for null/empty image option
+                self.ui.sampleCountSpinBox.setValue(bmp_count)
+            else:
+                self.ui.sampleCountSpinBox.setValue(1)
+                
+            # self.ui.sampleCountSpinBox.setEnabled(False)
+            self.ui.sampleListButton.setEnabled(False)
+        else:
+            # self.ui.sampleCountSpinBox.setEnabled(True)
+            self.ui.sampleListButton.setEnabled(True)
+
+        # Only enable for some ???
+        self.ui.frameStartSpinBox.setEnabled(
+            current_type in [SampleType.DEDICATED, SampleType.CHARACTER]
+        )
             
     def _on_selected_element_changed(self, row):
         """Handle animation set selection change"""
@@ -172,6 +251,15 @@ class AnimeSetDialog(BaseTabDialog):
         self.project.anime_set.data.elements[current_row].block_offset = value
         self.mark_dirty()
         
+    def _on_sample_type_changed(self, index):
+        """Handle sample type selection change"""
+        self._update_sample_controls()
+        
+    def _on_sample_list(self):
+        """Handle sample list button click"""
+        # TODO: Implement tile picker dialog
+        QMessageBox.information(self, "Not Implemented", "Tile Picker not yet implemented")
+        
     def _on_selected_pattern_changed(self, row):
         """Handle animation pattern selection change"""
         # TODO: Implement when needed
@@ -181,6 +269,47 @@ class AnimeSetDialog(BaseTabDialog):
         """Open animation pattern editor"""
         # TODO: Implement animation pattern editor
         QMessageBox.information(self, "Not Implemented", "Animation Pattern Editor not yet implemented")
+        
+    def refresh_preview(self, *args):
+        """Update preview frame with current animation frame"""
+        if not hasattr(self.ui, 'previewFrame'):
+            return
+            
+        class PreviewPainter(QFrame):
+            def paintEvent(self, event):
+                super().paintEvent(event)
+                painter = QPainter(self)
+                painter.setRenderHint(QPainter.Antialiasing)
+                
+                # Get frame dimensions
+                w = self.width()
+                h = self.height()
+                
+                # Create green pen
+                pen = QPen(QColor(0, 255, 0))
+                pen.setWidth(2)
+                painter.setPen(pen)
+                
+                # Move line based on time
+                offset = int(time.time() * 1000) % w
+                
+                # Draw diagonal line that moves
+                painter.drawLine(offset, 0, (offset + 10) % w, h)
+                
+        # Replace frame with custom painted frame
+        old_frame = self.ui.previewFrame
+        new_frame = PreviewPainter(self.ui.widget)
+        new_frame.setObjectName(u"previewFrame")
+        new_frame.setGeometry(old_frame.geometry())
+        new_frame.setAutoFillBackground(False)
+        new_frame.setFrameShape(QFrame.Shape.Box)
+        new_frame.setFrameShadow(QFrame.Shadow.Plain)
+        old_frame.hide()
+        new_frame.show()
+        self.ui.previewFrame = new_frame
+        
+        # Force immediate update
+        self.ui.previewFrame.update()
         
     def apply_changes(self) -> bool:
         """Apply changes to project data"""

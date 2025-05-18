@@ -10,5 +10,6 @@ An experimental re-implementation of the editor is ongoing under the "editor" fo
 
 ![QuickStart.png](editor/docs/QuickStart.png)
 ![Database.png](editor/docs/Database.png)
+![BmpCharaExc.png](editor/docs/BmpCharaExc.png)
 
 The idea is to test quickly the various format parsing and compare them against the original engine to understand it better
