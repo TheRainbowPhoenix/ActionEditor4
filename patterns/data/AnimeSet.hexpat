@@ -32,9 +32,9 @@ struct Animation {
 
 struct AnimeSet {
     u32 header [[color("00143C")]];
-    u32 flying_offset;
-    u32 block_offset;
     u32 invincibility_offset;
+    u32 block_offset;
+    u32 flying_offset;
     u32 unknown;
 
     // Resource name dynamic size
