@@ -113,6 +113,48 @@ class EffectElement:
 class EffectData:
     elements: List[EffectElement] = field(default_factory=list)
 
+@dataclass
+class BgmElement:
+    header: int = 2  # always 2?
+    is_name_same_path: int = 0
+    volume: int = 100
+    unknown: int = 2  # always 2?
+    name: str = ""
+    path: str = ""
+
+@dataclass
+class BgmData:
+    elements: List[BgmElement] = field(default_factory=list)
+
+@dataclass
+class SwordPosition:
+    header: int = 2
+    x: int = 0
+    y: int = 0
+    unknown1: int = 0
+    unknown2: int = 0
+    unknown3: int = 0
+    unknown4: int = 0
+    unknown5: int = 0
+    width: int = 0
+    height: int = 0
+    index: int = 0
+    unknown6: int = 0
+
+@dataclass
+class SwordTypeElement:
+    header: int = 0
+    is_name_same_path: int = 0
+    unknown: int = 3  # always 3?
+    name: str = ""
+    path_left: str = ""
+    path_right: str = ""
+    positions: List[SwordPosition] = field(default_factory=list)
+
+@dataclass
+class SwordTypeData:
+    elements: List[SwordTypeElement] = field(default_factory=list)
+
 class AnimeSet(ActedBinaryFile):
     def __init__(self, file_path: Union[str, Path]):
         super().__init__(file_path)
@@ -247,7 +289,65 @@ class BmpCharaExc(ActedBinaryFile):
             print(f"Error parsing AnimeSet: {e}")
             return False
 
-class SwordType(ActedBinaryFile): pass
+class SwordType(ActedBinaryFile):
+    def __init__(self, file_path: Union[str, Path]):
+        super().__init__(file_path)
+        self.data = SwordTypeData()
+    
+    def parse(self) -> bool:
+        if not self.load():
+            return False
+            
+        try:
+            magic = self.read_u32()
+            if magic not in self.VERSIONS:
+                print("Invalid magic number")
+                return False
+                
+            element_count = self.read_u32()
+            
+            for _ in range(element_count):
+                element = SwordTypeElement()
+                element.header = self.read_u32()
+                element.is_name_same_path = self.read_u32()
+                element.unknown = self.read_u32()
+
+                name_length = self.read_u32()
+                if name_length > 1:
+                    element.name = self.read_str(name_length)
+                    
+                path_left_length = self.read_u32()
+                if path_left_length > 1:
+                    element.path_left = self.read_str(path_left_length)
+                    
+                path_right_length = self.read_u32()
+                if path_right_length > 1:
+                    element.path_right = self.read_str(path_right_length)
+                    
+                pos_count = self.read_u32()
+                for _ in range(pos_count):
+                    pos = SwordPosition()
+                    pos.header = self.read_u32()
+                    pos.x = self.read_s32()
+                    pos.y = self.read_s32()
+                    pos.unknown1 = self.read_u32()
+                    pos.unknown2 = self.read_u32()
+                    pos.unknown3 = self.read_u32()
+                    pos.unknown4 = self.read_u32()
+                    pos.unknown5 = self.read_u32()
+                    pos.width = self.read_u32()
+                    pos.height = self.read_u32()
+                    pos.index = self.read_u32()
+                    pos.unknown6 = self.read_u32()
+                    element.positions.append(pos)
+                    
+                self.data.elements.append(element)
+                
+            return True
+            
+        except Exception as e:
+            print(f"Error parsing SwordType: {e}")
+            return False
 
 class Effect(ActedBinaryFile):
     def __init__(self, file_path: Union[str, Path]):
@@ -420,7 +520,46 @@ class Sound(ActedBinaryFile):
             print(f"Error parsing Sound: {e}")
             return False
 
-class Bgm(ActedBinaryFile): pass
+class Bgm(ActedBinaryFile):
+    def __init__(self, file_path: Union[str, Path]):
+        super().__init__(file_path)
+        self.data = BgmData()
+    
+    def parse(self) -> bool:
+        if not self.load():
+            return False
+            
+        try:
+            magic = self.read_u32()
+            if magic not in self.VERSIONS:
+                print("Invalid magic number")
+                return False
+                
+            element_count = self.read_u32()
+            
+            for _ in range(element_count):
+                element = BgmElement()
+                element.header = self.read_u32()
+                element.is_name_same_path = self.read_u32()
+                element.volume = self.read_u32()
+                element.unknown = self.read_u32()
+
+                name_length = self.read_u32()
+                if name_length > 1:
+                    element.name = self.read_str(name_length)
+                
+                path_length = self.read_u32()
+                if path_length > 1:
+                    element.path = self.read_str(path_length)
+                    
+                self.data.elements.append(element)
+                
+            return True
+            
+        except Exception as e:
+            print(f"Error parsing BGM: {e}")
+            return False
+
 class CommonPalette(ActedBinaryFile): pass
 class PrjOption(ActedBinaryFile): pass
 class WorldMap(ActedBinaryFile): pass

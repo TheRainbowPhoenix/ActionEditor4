@@ -47,6 +47,11 @@ class ActedBinaryFile:
         self._position += 4
         return value
         
+    def read_s32(self) -> int:
+        value = struct.unpack_from("<i", self._data, self._position)[0]
+        self._position += 4
+        return value
+        
     def read_str(self, length: int) -> str:
         data = self._data[self._position:self._position + length]
         self._position += length

@@ -11,6 +11,8 @@ from .picture import PictureDialog
 from .sound import SoundDialog
 from .chara_effect import CharaEffectDialog
 from .effect import EffectDialog
+from .bgm import BgmDialog
+from .sword_type import SwordTypeDialog
 # TODO: Import other dialog classes
 
 class DatabaseDialog(QDialog):
@@ -22,6 +24,8 @@ class DatabaseDialog(QDialog):
         "Sound": SoundDialog,
         "Character Effect": CharaEffectDialog,
         "Effect": EffectDialog,
+        "BGM": BgmDialog,
+        "Sword Type": SwordTypeDialog,
         # TODO: Add more, and plugins ??
     }
     

@@ -56,12 +56,20 @@ class SideListTabDialog(BaseTabDialog):
 
     def _update_format(self, total_items: int) -> None:
         """Update format based on number of items"""
-        if total_items > 99:
-            self._format_item = lambda i, e: f"{i:03d} {e.name}"
-        elif total_items > 9:
-            self._format_item = lambda i, e: f"{i:02d} {e.name}"
+        if self.skip_first:
+            if total_items > 99:
+                self._format_item = lambda i, e: f"{i:03d} {e.name}"
+            elif total_items > 9:
+                self._format_item = lambda i, e: f"{i:02d} {e.name}"
+            else:
+                self._format_item = lambda i, e: f"{i} {e.name}"
         else:
-            self._format_item = lambda i, e: f"{i} {e.name}"
+            if total_items > 99:
+                self._format_item = lambda i, e: f"{i+1:03d} {e.name}"
+            elif total_items > 9:
+                self._format_item = lambda i, e: f"{i+1:02d} {e.name}"
+            else:
+                self._format_item = lambda i, e: f"{i+1} {e.name}"
             
     def _refresh_format_and_list(self, list_widget: QListWidget):
         """Update format and refresh all items"""
