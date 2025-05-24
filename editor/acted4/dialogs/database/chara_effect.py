@@ -43,7 +43,7 @@ class CharaEffectDialog(SideListTabDialog):
                 ("Duration (1/10s)", 5, True, 1, 9999),
                 ("Start Position (dot)", 0, True, 0, 999),
                 ("End Position (dot)", 32, True, 0, 999),
-                ("Number of Divisions", 4, True, 2, 16),
+                ("Split Count", 4, True, 2, 16),
                 ("", 0, False, 0, 999)
             ],
             "note": "Direct3D ON:\nDirect3D OFF:"
@@ -53,7 +53,7 @@ class CharaEffectDialog(SideListTabDialog):
                 ("Duration (1/10s)", 5, True, 1, 9999),
                 ("Start Position (dot)", 0, True, 0, 999),
                 ("End Position (dot)", 32, True, 0, 999),
-                ("Number of Divisions", 4, True, 2, 16),
+                ("Split Count", 4, True, 2, 16),
                 ("", 0, False, 0, 999)
             ],
             "note": "Direct3D ON:\nDirect3D OFF:"

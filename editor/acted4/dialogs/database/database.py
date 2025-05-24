@@ -13,19 +13,24 @@ from .chara_effect import CharaEffectDialog
 from .effect import EffectDialog
 from .bgm import BgmDialog
 from .sword_type import SwordTypeDialog
+from .anime import AnimeDialog
+from .screen_effect import ScreenEffectDialog
 # TODO: Import other dialog classes
 
 class DatabaseDialog(QDialog):
     # Map of tab names to dialog classes
     TAB_DIALOGS = {
         "Anime Set": AnimeSetDialog,
+        "Anime": AnimeDialog,
         "Character-Specific BMP": BmpCharaExcDialog,
+        "Sword Type": SwordTypeDialog,
+        "Effect": EffectDialog,
+        "Character Effect": CharaEffectDialog,
+
+        "Screen Effect": ScreenEffectDialog,
         "Picture": PictureDialog,
         "Sound": SoundDialog,
-        "Character Effect": CharaEffectDialog,
-        "Effect": EffectDialog,
         "BGM": BgmDialog,
-        "Sword Type": SwordTypeDialog,
         # TODO: Add more, and plugins ??
     }
     

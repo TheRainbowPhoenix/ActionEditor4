@@ -5,6 +5,7 @@ from .base_dialog import BaseTabDialog
 from .ui_AnimeSet import Ui_AnimeSetWidget
 from ...core.project import ProjectData
 from ...data.files import AnimeSetElement, Animation
+from .dlg.anime_pattern import AnimePatternDialog
 from enum import Enum, auto
 import os
 import time
@@ -125,7 +126,7 @@ class AnimeSetDialog(BaseTabDialog):
         # Update animation patterns
         self.ui.animPatList.clear()
         for anim in element.animations:
-            self.ui.animPatList.addItem(f"{anim.animation_name} ~{len(anim.frames)}")
+            self.ui.animPatList.addItem(f"{anim.name} ~{len(anim.frames)}")
             
     def _update_sample_controls(self):
         """Update sample-related controls based on current selection"""
@@ -267,8 +268,21 @@ class AnimeSetDialog(BaseTabDialog):
         
     def _on_edit_pattern(self):
         """Open animation pattern editor"""
-        # TODO: Implement animation pattern editor
-        QMessageBox.information(self, "Not Implemented", "Animation Pattern Editor not yet implemented")
+        current_row = self.ui.animList.currentRow()
+        if current_row < 0 or not self.project.anime_set:
+            return
+            
+        pattern_row = self.ui.animPatList.currentRow()
+        if pattern_row < 0:
+            return
+            
+        element = self.project.anime_set.data.elements[current_row]
+        anim = element.animations[pattern_row]
+        dialog = AnimePatternDialog(self, anim.frames, basic_mode=True)
+        if dialog.exec():
+            # Frames are updated by reference
+            self._update_element_ui()
+            self.mark_dirty()
         
     def refresh_preview(self, *args):
         """Update preview frame with current animation frame"""

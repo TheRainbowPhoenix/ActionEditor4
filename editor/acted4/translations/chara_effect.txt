@@ -27,7 +27,7 @@
 実行時間(1/10s) | Duration (1/10s)
 開始位置(dot) | Start Position (dot)
 終了位置(dot) | End Position (dot)
-分割数 | Number of Divisions
+分割数 | Split Count
 
 ---
 

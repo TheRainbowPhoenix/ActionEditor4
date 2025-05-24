@@ -8,7 +8,7 @@ import std.mem;
 // Frame structure definition
 struct AnimationFrame {
     u32 header [[color("00143C")]];
-    u32 u32 frame_index;
+    u32 frame_index;
     u32 display_time;
     u32 exec_commands;
     u32 unknown2;
@@ -30,30 +30,14 @@ struct Animation {
     AnimationFrame anim_frames[anim_frame_count];
 };
 
-struct AnimeSet {
-    u32 header [[color("00143C")]];
-    u32 invincibility_offset;
-    u32 block_offset;
-    u32 flying_offset;
-    u32 unknown;
 
-    // Resource name dynamic size
-    u32 name_length             [[color("20B2AA")]];
-    char name[name_length]      [[color("9370DB")]];
-    
-    // Number of animations in the set
-    u32 animation_count;
-    Animation animations[animation_count]; // animation_count
-   
-};
-
-struct AnimationsSetFile {
+struct AnimationsFile {
     // Header with magic and count
     u32 magic;
-    u32 anim_set_count;
+    u32 anim_count;
     
-    AnimeSet anim_sets[anim_set_count]; // anim_set_count];
+    Animation anims[anim_count]; // anim_set_count];
 
 };
 
-AnimationsSetFile animations_set @ 0x0;
+AnimationsFile animations @ 0x0;

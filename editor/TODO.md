@@ -4,15 +4,15 @@
 
 - Reimplement all DataBase:
     - AnimeSet          [OK]
-    - Anime
+    - Anime             [OK]
     - Bmp_CharaExc      [OK]
-    - SwordType
+    - SwordType         [OK]
     - Effect            [OK]
     - CharaEffect       [OK]
-    - ScrEffect
+    - ScrEffect         [OK]
     - Picture           [OK]
     - Sound             [OK]
-    - Bgm
+    - Bgm               [OK]
 - Parse data:
     - GValInfo
     - System

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>AnimeSetWidget</class>
- <widget class="QWidget" name="AnimeSetWidget">
+ <class>AnimeWidget</class>
+ <widget class="QWidget" name="AnimeWidget">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Basic Animation Set</string>
+   <string>Anime</string>
   </property>
   <layout class="QHBoxLayout" name="horizontalLayout_3" stretch="0,0">
    <property name="sizeConstraint">
@@ -30,7 +30,7 @@
     <number>0</number>
    </property>
    <item>
-    <layout class="QVBoxLayout" name="animVList" stretch="0,0">
+    <layout class="QVBoxLayout" name="animeVList" stretch="0,0">
      <property name="sizeConstraint">
       <enum>QLayout::SizeConstraint::SetMinimumSize</enum>
      </property>
@@ -47,7 +47,7 @@
       <number>8</number>
      </property>
      <item>
-      <widget class="QListWidget" name="animList">
+      <widget class="QListWidget" name="animeList">
        <property name="sizePolicy">
         <sizepolicy hsizetype="MinimumExpanding" vsizetype="Expanding">
          <horstretch>0</horstretch>
@@ -57,7 +57,7 @@
       </widget>
      </item>
      <item>
-      <layout class="QHBoxLayout" name="animLButtons">
+      <layout class="QHBoxLayout" name="animeLButtons">
        <item>
         <spacer name="horizontalSpacer">
          <property name="orientation">
@@ -72,7 +72,7 @@
         </spacer>
        </item>
        <item>
-        <widget class="QPushButton" name="animLNewButton">
+        <widget class="QPushButton" name="animeLNewButton">
          <property name="maximumSize">
           <size>
            <width>80</width>
@@ -85,7 +85,7 @@
         </widget>
        </item>
        <item>
-        <widget class="QPushButton" name="animLClearButton">
+        <widget class="QPushButton" name="animeLClearButton">
          <property name="maximumSize">
           <size>
            <width>80</width>
@@ -98,7 +98,7 @@
         </widget>
        </item>
        <item>
-        <widget class="QPushButton" name="animLCountButton">
+        <widget class="QPushButton" name="animeLCountButton">
          <property name="maximumSize">
           <size>
            <width>80</width>
@@ -134,135 +134,63 @@
        <height>400</height>
       </size>
      </property>
-     <widget class="QWidget" name="gridLayoutWidget_2">
+     <widget class="QWidget" name="gridLayoutWidget">
       <property name="geometry">
        <rect>
         <x>10</x>
-        <y>42</y>
-        <width>201</width>
-        <height>101</height>
+        <y>15</y>
+        <width>211</width>
+        <height>36</height>
        </rect>
       </property>
-      <layout class="QGridLayout" name="gridLayout_2">
-       <property name="sizeConstraint">
-        <enum>QLayout::SizeConstraint::SetMaximumSize</enum>
-       </property>
-       <item row="2" column="0">
-        <widget class="QLabel" name="label_5">
-         <property name="text">
-          <string>Block Offset</string>
-         </property>
-        </widget>
-       </item>
+      <layout class="QGridLayout" name="gridLayout">
        <item row="0" column="0">
-        <widget class="QLabel" name="label_3">
-         <property name="text">
-          <string>Flying Offset</string>
-         </property>
-        </widget>
-       </item>
-       <item row="1" column="0">
-        <widget class="QLabel" name="label_4">
-         <property name="text">
-          <string>Invincibility Offset</string>
-         </property>
-        </widget>
-       </item>
-       <item row="0" column="1">
-        <widget class="QSpinBox" name="flyingOffSpinBox">
-         <property name="maximumSize">
-          <size>
-           <width>40</width>
-           <height>16777215</height>
-          </size>
-         </property>
-        </widget>
-       </item>
-       <item row="1" column="1">
-        <widget class="QSpinBox" name="invincibleOffSpinBox">
-         <property name="maximumSize">
-          <size>
-           <width>40</width>
-           <height>16777215</height>
-          </size>
-         </property>
-        </widget>
-       </item>
-       <item row="2" column="1">
-        <widget class="QSpinBox" name="blockOffSpinBox">
-         <property name="maximumSize">
-          <size>
-           <width>40</width>
-           <height>16777215</height>
-          </size>
-         </property>
-        </widget>
-       </item>
-      </layout>
-     </widget>
-     <widget class="QGroupBox" name="groupBox">
-      <property name="geometry">
-       <rect>
-        <x>10</x>
-        <y>152</y>
-        <width>201</width>
-        <height>191</height>
-       </rect>
-      </property>
-      <property name="title">
-       <string>Animation Pattern</string>
-      </property>
-      <widget class="QPushButton" name="animPatButton">
-       <property name="geometry">
-        <rect>
-         <x>60</x>
-         <y>20</y>
-         <width>75</width>
-         <height>24</height>
-        </rect>
-       </property>
-       <property name="text">
-        <string>Edit</string>
-       </property>
-      </widget>
-      <widget class="QListWidget" name="animPatList">
-       <property name="geometry">
-        <rect>
-         <x>10</x>
-         <y>50</y>
-         <width>181</width>
-         <height>131</height>
-        </rect>
-       </property>
-      </widget>
-     </widget>
-     <widget class="QWidget" name="horizontalLayoutWidget">
-      <property name="geometry">
-       <rect>
-        <x>10</x>
-        <y>2</y>
-        <width>201</width>
-        <height>41</height>
-       </rect>
-      </property>
-      <layout class="QHBoxLayout" name="horizontalLayout_4">
-       <item>
         <widget class="QLabel" name="label_2">
          <property name="text">
           <string>Name</string>
          </property>
         </widget>
        </item>
-       <item>
-        <widget class="QLineEdit" name="nameLineEdit"/>
+       <item row="0" column="1">
+        <layout class="QHBoxLayout" name="horizontalLayout_4">
+         <item>
+          <widget class="QLineEdit" name="nameLineEdit"/>
+         </item>
+        </layout>
        </item>
       </layout>
+     </widget>
+     <widget class="QLabel" name="label_7">
+      <property name="geometry">
+       <rect>
+        <x>160</x>
+        <y>115</y>
+        <width>16</width>
+        <height>21</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>of</string>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_8">
+      <property name="geometry">
+       <rect>
+        <x>60</x>
+        <y>140</y>
+        <width>116</width>
+        <height>21</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Frame (Start Position)</string>
+      </property>
      </widget>
      <widget class="QLabel" name="label_6">
       <property name="geometry">
        <rect>
         <x>10</x>
-        <y>352</y>
+        <y>115</y>
         <width>49</width>
         <height>21</height>
        </rect>
@@ -271,21 +199,11 @@
        <string>Sample</string>
       </property>
      </widget>
-     <widget class="QComboBox" name="sampleComboBox">
-      <property name="geometry">
-       <rect>
-        <x>57</x>
-        <y>352</y>
-        <width>91</width>
-        <height>22</height>
-       </rect>
-      </property>
-     </widget>
      <widget class="QSpinBox" name="sampleCountSpinBox">
       <property name="geometry">
        <rect>
         <x>180</x>
-        <y>352</y>
+        <y>115</y>
         <width>40</width>
         <height>21</height>
        </rect>
@@ -297,24 +215,11 @@
        </size>
       </property>
      </widget>
-     <widget class="QLabel" name="label_7">
-      <property name="geometry">
-       <rect>
-        <x>160</x>
-        <y>352</y>
-        <width>16</width>
-        <height>21</height>
-       </rect>
-      </property>
-      <property name="text">
-       <string>of</string>
-      </property>
-     </widget>
      <widget class="QPushButton" name="sampleListButton">
       <property name="geometry">
        <rect>
         <x>225</x>
-        <y>350</y>
+        <y>113</y>
         <width>31</width>
         <height>26</height>
        </rect>
@@ -323,11 +228,34 @@
        <string>List</string>
       </property>
      </widget>
+     <widget class="QComboBox" name="sampleComboBox">
+      <property name="geometry">
+       <rect>
+        <x>57</x>
+        <y>115</y>
+        <width>91</width>
+        <height>22</height>
+       </rect>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="animPatButton">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>65</y>
+        <width>116</width>
+        <height>31</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Edit pattern</string>
+      </property>
+     </widget>
      <widget class="QFrame" name="previewFrame">
       <property name="geometry">
        <rect>
         <x>270</x>
-        <y>352</y>
+        <y>115</y>
         <width>24</width>
         <height>24</height>
        </rect>
@@ -342,24 +270,11 @@
        <enum>QFrame::Shadow::Plain</enum>
       </property>
      </widget>
-     <widget class="QLabel" name="label_8">
-      <property name="geometry">
-       <rect>
-        <x>60</x>
-        <y>377</y>
-        <width>116</width>
-        <height>21</height>
-       </rect>
-      </property>
-      <property name="text">
-       <string>Frame (Start Position)</string>
-      </property>
-     </widget>
      <widget class="QSpinBox" name="frameStartSpinBox">
       <property name="geometry">
        <rect>
         <x>180</x>
-        <y>377</y>
+        <y>140</y>
         <width>40</width>
         <height>21</height>
        </rect>
