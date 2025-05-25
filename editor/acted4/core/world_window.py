@@ -16,6 +16,12 @@ class EditMode(Enum):
     MAP_CHIP = auto()
     EVENT = auto()
 
+class EditOperation(Enum):
+    NONE = auto()
+    SINGLE_TILE = auto()
+    SELECT_AREA = auto()
+    PAINT_BLOCK = auto()
+
 class MapViewport(QFrame):
     """Custom widget for displaying the world map"""
     TILE_SIZE = 32
@@ -26,6 +32,9 @@ class MapViewport(QFrame):
         self.setFrameStyle(QFrame.Panel | QFrame.Sunken)
         self.setAttribute(Qt.WA_StyledBackground, True)
         self.setAutoFillBackground(True)
+        self.operation = EditOperation.NONE
+        self.selection_start = QPoint(-1, -1)
+        self.selection_end = QPoint(-1, -1)
         self.is_painting = False  # Track painting state for drag
         
         # Map state
@@ -69,18 +78,34 @@ class MapViewport(QFrame):
             self.update()
             
     def mousePressEvent(self, event):
-        """Handle mouse press for tile painting start"""
+        """Handle mouse press"""
         if event.button() == Qt.LeftButton:
             self.is_painting = True
-            if hasattr(self.parent().parent(), "_place_tile"):
-                self.parent().parent()._place_tile(event.pos())
-            event.accept()
+            self.operation = EditOperation.SINGLE_TILE
+            if hasattr(self._parent, "_place_tile"):
+                self._parent._place_tile(event.pos())
+            elif hasattr(self._parent, "_place_block"):
+                self._parent._place_block(event.pos())
+        elif event.button() == Qt.RightButton:
+            self.operation = EditOperation.SELECT_AREA
+            self.selection_start = QPoint(
+                event.pos().x() // self.TILE_SIZE,
+                event.pos().y() // self.TILE_SIZE
+            )
+            self.selection_end = self.selection_start
+        event.accept()
             
     def mouseReleaseEvent(self, event):
-        """Handle mouse release to stop painting"""
+        """Handle mouse release"""
         if event.button() == Qt.LeftButton:
             self.is_painting = False
-            event.accept()
+        elif event.button() == Qt.RightButton and self.operation == EditOperation.SELECT_AREA:
+            # Finalize selection and switch to block paint mode
+            if self.selection_start != QPoint(-1, -1):
+                self.operation = EditOperation.PAINT_BLOCK
+                if hasattr(self._parent, "_finalize_selection"):
+                    self._parent._finalize_selection(self.selection_start, self.selection_end)
+        event.accept()
             
     def mouseMoveEvent(self, event):
         """Track mouse for grid highlight and painting"""
@@ -95,9 +120,9 @@ class MapViewport(QFrame):
                 self.hover_pos = QPoint(grid_x, grid_y)
                 self.mouseMoved.emit(self.hover_pos)
                 
-                # Continue painting if mouse button is held
-                if self.is_painting:
-                    
+                if self.operation == EditOperation.SELECT_AREA:
+                    self.selection_end = QPoint(grid_x, grid_y)
+                elif self.operation == EditOperation.SINGLE_TILE and self.is_painting:
                     if hasattr(self._parent, "_place_tile"):
                         self._parent._place_tile(pos)
                 self.update()
@@ -147,6 +172,19 @@ class MapViewport(QFrame):
                         self.hover_pos.y() * self.TILE_SIZE,
                         self.TILE_SIZE, self.TILE_SIZE)
             painter.drawRect(rect)
+            
+        # Draw selection rectangle if active
+        if self.operation in [EditOperation.SELECT_AREA, EditOperation.PAINT_BLOCK]:
+            if self.selection_start != QPoint(-1, -1):
+                pen = QPen(QColor(0xFF, 0x00, 0x80))
+                painter.setPen(pen)
+                
+                x1 = min(self.selection_start.x(), self.selection_end.x()) * self.TILE_SIZE
+                y1 = min(self.selection_start.y(), self.selection_end.y()) * self.TILE_SIZE
+                x2 = max(self.selection_start.x(), self.selection_end.x()) * self.TILE_SIZE + self.TILE_SIZE
+                y2 = max(self.selection_start.y(), self.selection_end.y()) * self.TILE_SIZE + self.TILE_SIZE
+                
+                painter.drawRect(QRect(x1, y1, x2 - x1, y2 - y1))
 
 class WorldWindow(QMainWindow):
     def __init__(self, project: ProjectData, parent=None):
@@ -154,6 +192,7 @@ class WorldWindow(QMainWindow):
         self.project = project
         self.selected_tile = 0
         self.edit_mode = EditMode.MAP_CHIP  # Default to map chip mode
+        self.selected_block = None  # Store selected block area
         
         # Window setup
         self.setWindowTitle("World Map Editor")
@@ -190,7 +229,7 @@ class WorldWindow(QMainWindow):
         self.chip_picker.show()  # Show by default since we start in MAP_CHIP mode
         
         # Connect mouse events for tile placement
-        self.map_view.mousePressEvent = self._on_map_click
+        # self.map_view.mousePressEvent = self._on_map_click
         
         # Load map data
         self.load_map_data()
@@ -314,6 +353,8 @@ class WorldWindow(QMainWindow):
         
     def closeEvent(self, event):
         """Handle window close"""
+        if self.chip_picker:
+            self.chip_picker.close()
         WindowManager.instance().show_main_window()
         super().closeEvent(event)
         
@@ -347,12 +388,63 @@ class WorldWindow(QMainWindow):
                 self.map_view.tiles[idx] = self.selected_tile
                 self.map_view.update()
 
+    def _place_block(self, pos: QPoint):
+        """Place selected block at position"""
+        if not self.selected_block or self.edit_mode != EditMode.MAP_CHIP:
+            return
+            
+        grid_x = pos.x() // self.map_view.TILE_SIZE
+        grid_y = pos.y() // self.map_view.TILE_SIZE
+        
+        # Place block tiles
+        for y in range(self.selected_block['height']):
+            for x in range(self.selected_block['width']):
+                target_x = grid_x + x
+                target_y = grid_y + y
+                
+                if target_x >= 0 and target_x < self.map_view.map_width and \
+                   target_y >= 0 and target_y < self.map_view.map_height:
+                    block_idx = y * self.selected_block['width'] + x
+                    map_idx = target_y * self.map_view.map_width + target_x
+                    
+                    if block_idx < len(self.selected_block['tiles']) and \
+                       map_idx < len(self.map_view.tiles):
+                        self.map_view.tiles[map_idx] = self.selected_block['tiles'][block_idx]
+                        
+        self.map_view.update()
+        
+    def _finalize_selection(self, start: QPoint, end: QPoint):
+        """Handle area selection completion"""
+        # Get block bounds
+        x1 = min(start.x(), end.x())
+        y1 = min(start.y(), end.y())
+        x2 = max(start.x(), end.x())
+        y2 = max(start.y(), end.y())
+        
+        # Create block data
+        block_width = x2 - x1 + 1
+        block_height = y2 - y1 + 1
+        block = []
+        
+        for y in range(y1, y2 + 1):
+            for x in range(x1, x2 + 1):
+                idx = y * self.map_view.map_width + x
+                if idx < len(self.map_view.tiles):
+                    block.append(self.map_view.tiles[idx])
+                    
+        self.selected_block = {
+            'width': block_width,
+            'height': block_height,
+            'tiles': block
+        }
+
     def _on_map_click(self, event):
         """Handle map click for tile placement"""
         if event.button() == Qt.LeftButton:
             self.map_view.is_painting = True
             self._place_tile(event.pos())
             event.accept()
+        
                 
     def _set_edit_mode(self, mode: EditMode):
         """Switch between edit modes"""
