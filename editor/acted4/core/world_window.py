@@ -22,6 +22,7 @@ class MapViewport(QFrame):
     mouseMoved = Signal(QPoint)  # Add signal at class level
     def __init__(self, parent=None):
         super().__init__(parent)
+        self._parent: WorldWindow = parent
         self.setFrameStyle(QFrame.Panel | QFrame.Sunken)
         self.setAttribute(Qt.WA_StyledBackground, True)
         self.setAutoFillBackground(True)
@@ -67,30 +68,39 @@ class MapViewport(QFrame):
             self.background_image = QImage(str(path))
             self.update()
             
-    def mouseMoveEvent(self, event):
-        """Track mouse for grid highlight and painting"""
-        pos = event.pos()
-        grid_x = pos.x() // self.TILE_SIZE
-        grid_y = pos.y() // self.TILE_SIZE
-        
-        # Update hover position
-        if (grid_x != self.hover_pos.x() or grid_y != self.hover_pos.y()) and \
-           grid_x >= 0 and grid_x < self.map_width and \
-           grid_y >= 0 and grid_y < self.map_height:
-            self.hover_pos = QPoint(grid_x, grid_y)
-            self.mouseMoved.emit(self.hover_pos)
-            
-            # Continue painting if mouse button is held
-            if self.is_painting:
-                if hasattr(self.parent().parent(), "_place_tile"):
-                    self.parent().parent()._place_tile(pos)
-            self.update()
+    def mousePressEvent(self, event):
+        """Handle mouse press for tile painting start"""
+        if event.button() == Qt.LeftButton:
+            self.is_painting = True
+            if hasattr(self.parent().parent(), "_place_tile"):
+                self.parent().parent()._place_tile(event.pos())
+            event.accept()
             
     def mouseReleaseEvent(self, event):
         """Handle mouse release to stop painting"""
         if event.button() == Qt.LeftButton:
             self.is_painting = False
             event.accept()
+            
+    def mouseMoveEvent(self, event):
+        """Track mouse for grid highlight and painting"""
+        pos = event.pos()
+        grid_x = pos.x() // self.TILE_SIZE
+        grid_y = pos.y() // self.TILE_SIZE
+        
+        if grid_x >= 0 and grid_x < self.map_width and \
+           grid_y >= 0 and grid_y < self.map_height:
+            # Update hover position if changed
+            if grid_x != self.hover_pos.x() or grid_y != self.hover_pos.y():
+                self.hover_pos = QPoint(grid_x, grid_y)
+                self.mouseMoved.emit(self.hover_pos)
+                
+                # Continue painting if mouse button is held
+                if self.is_painting:
+                    
+                    if hasattr(self._parent, "_place_tile"):
+                        self._parent._place_tile(pos)
+                self.update()
             
     def paintEvent(self, event):
         """Draw the map"""
@@ -131,7 +141,7 @@ class MapViewport(QFrame):
                            
         # Draw hover highlight
         if self.hover_pos.x() >= 0:
-            pen = QPen(QColor(255, 255, 0))
+            pen = QPen(QColor(0x80, 0x00, 0xFF))
             painter.setPen(pen)
             rect = QRect(self.hover_pos.x() * self.TILE_SIZE,
                         self.hover_pos.y() * self.TILE_SIZE,
@@ -151,7 +161,7 @@ class WorldWindow(QMainWindow):
         
         # Create central widget with scrolling
         scroll = QScrollArea()
-        self.map_view = MapViewport()
+        self.map_view = MapViewport(self)
         scroll.setWidget(self.map_view)
         self.setCentralWidget(scroll)
         
