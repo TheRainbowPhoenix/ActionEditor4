@@ -72,8 +72,8 @@ struct WorldMapFile {
     u32 width;
     u32 height;
     
-    u32 unk1; // 32
-    u32 unk2; // 5
+    u32 chunk_width; // 32
+    u32 chunk_pow; // 5
     
     u32 init_x;
     u32 init_y;
