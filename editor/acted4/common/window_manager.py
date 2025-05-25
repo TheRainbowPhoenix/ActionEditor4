@@ -5,6 +5,7 @@ from typing import Optional
 class WindowManager:
     _instance = None
     _current_window: Optional[QMainWindow] = None
+    _main_window: Optional[QMainWindow] = None
     
     @classmethod
     def instance(cls):
@@ -23,3 +24,12 @@ class WindowManager:
     def has_visible_windows(self) -> bool:
         """Check if there are any visible windows"""
         return self._current_window is not None and not self._current_window.isHidden()
+        
+    def show_main_window(self) -> None:
+        """Show main window and make it current"""
+        if self._main_window is not None:
+            self.show_window(self._main_window)
+            
+    def set_main_window(self, window: QMainWindow) -> None:
+        """Set the main window reference"""
+        self._main_window = window

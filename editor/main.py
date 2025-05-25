@@ -19,6 +19,7 @@ def main():
 
     # Create main window and show through window manager
     window = MainWindow(project=project)
+    WindowManager.instance().set_main_window(window)
     WindowManager.instance().show_window(window)
 
     # Keep running while there are visible windows

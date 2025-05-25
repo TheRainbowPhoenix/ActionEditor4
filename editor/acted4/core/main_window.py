@@ -306,6 +306,15 @@ class MainWindow(QMainWindow):
     def on_redo(self):
         pass
 
+    def on_palette_block(self):
+        pass
+
+    def on_palette_character(self):
+        pass
+
+    def on_palette_item(self):
+        pass
+
     def on_clear_all(self):
         pass
 
@@ -347,7 +356,11 @@ class MainWindow(QMainWindow):
         dialog.exec()
 
     def on_world_map(self):
-        pass
+        """Show world map editor"""
+        from .world_window import WorldWindow
+        
+        window = WorldWindow(self.project)
+        WindowManager.instance().show_window(window)
 
     def on_system(self):
         pass
