@@ -14,10 +14,10 @@ struct SwordPosition {
 };
 
 
-struct CharaEffectElement {
+struct SwordType {
     u32 header [[color("00143C")]];
     u32 is_name_same_path;
-    u32 unk; // always 3 ?
+    u32 unk; // always 3 ? -> "number of strings"
 
     // Resource name dynamic size
      u32 name_length             [[color("00020A")]];
@@ -40,15 +40,15 @@ struct CharaEffectElement {
    
 };
 
-struct CharaEffectFile {
+struct SwordTypesFile {
     // Header with magic and count
     u32 magic;
-    u32 anim_set_count;
+    u32 swords_count;
     
     
     
-    CharaEffectElement anim_sets[anim_set_count]; // anim_set_count];
+    SwordType swords[swords_count]; // anim_set_count];
 
 };
 
-CharaEffectFile animations_set @ 0x0;
+SwordTypesFile sword_types @ 0x0;

@@ -15,8 +15,8 @@ struct World_Map {
 	int background_color;
 	int unknown2;//background image and path specification (4 bytes if none)
 	int unknown3;//fixed at 2. number of strings?
-	std::string unknown4;
-	int unknown5;//fixed at 1?
+	std::string unknown4; // name_length
+	int unknown5;//fixed at 1? - NO: std::string bg_path
 	std::vector<World_Chip> world_chip_data;
 	std::vector<int> map_chip_data;
 	std::vector<Event> event_data;

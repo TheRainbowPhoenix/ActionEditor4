@@ -1,149 +1,193 @@
+struct StdString {
+    u32 length;
+    if (length > 1) { // A length of 1 means an empty string "" with a null char.
+        char data[length] [[color("9370DB")]];
+    }
+};
+
 struct DeathFade {
-    u32 list_size; // normally should read only this size of items
+    u32 list_size; // std::vector<int>
     // List items :
     
     // Checkboxes
-    u32 auto_dissapear;
+    u32 auto_dissapear_left;
     u32 auto_dissapear_right;
     u32 auto_dissapear_top;
     u32 auto_dissapear_bottom;
     
     // Values, like 10 or 5
-    u32 disappear_left_bl;
-    u32 disappear_right_bl;
-    u32 disappear_top_bl;
-    u32 disappear_bottom_bl;
+    u32 disappear_left_range;
+    u32 disappear_right_range;
+    u32 disappear_top_range;
+    u32 disappear_bottom_range;
     // Null terminator
-    u32 void_padding;
+    u32 block_end;
 };
 
 struct PlayerCollision {
-    u32 walk_block_w;
-    u32 walk_block_h;
+    u32 walking_block_width;
+    u32 walking_block_height;
     
-    u32 fly_block_w;
-    u32 fly_block_h;
+    u32 flying_block_width;
+    u32 flying_block_height;
     
-    u32 walk_character_w;
-    u32 walk_character_h;
+    u32 walking_character_width;
+    u32 walking_character_height;
     
-    u32 fly_character_w;
-    u32 fly_character_h;
+    u32 flying_character_width;
+    u32 flying_character_height;
     
     // In the two following are inverted
-    u32 shot_collision_w;
-    u32 shot_collision_h;
+    u32 shot_width;
+    u32 shot_height;
     
-    u32 item_collision_w;
-    u32 item_collision_h;
+    u32 item_width;
+    u32 item_height;
     
     // Positions modes
-    u32 walk_block_mode;
-    u32 fly_block_mode;
-    u32 walk_character_mode;
-    u32 fly_character_mode;
+    u32 walking_block_position;
+    u32 flying_block_position;
+    u32 walking_character_position;
+    u32 flying_character_position;
     
     // Dropdown - show, hide, border_only
-    u32 display_mode_1;
-    u32 display_mode_2;
-    u32 display_mode_item;
-    u32 display_mode_shot;
+    u32 block_display;
+    u32 character_display;
+    u32 shot_display;
+    u32 item_display;
     
     // Colors  - blue_purple, red_green, blue_yellow, purple, blue, black_rainbow
-    u32 color_1;
-    u32 color_2;
-    u32 color_item;
-    u32 color_shot;
+    u32 block_display_color;
+    u32 character_display_color;
+    u32 shot_display_color;
+    u32 item_display_color;
 };
 
 struct EnemyCollision {
-    u32 walk_block_w;
-    u32 walk_block_h;
+    u32 walking_block_width;
+    u32 walking_block_height;
     
-    u32 fly_block_w;
-    u32 fly_block_h;
+    u32 flying_block_width;
+    u32 flying_block_height;
     
-    u32 walk_character_w;
-    u32 walk_character_h;
+    u32 walking_character_width;
+    u32 walking_character_height;
     
-    u32 fly_character_w;
-    u32 fly_character_h;
+    u32 flying_character_width;
+    u32 flying_character_height;
     
-    u32 shot_collision_w;
-    u32 shot_collision_h;
+    u32 shot_width;
+    u32 shot_height;
     
     // Dropdown - bottom, center
-    u32 position_setting_walk;
-    u32 position_setting_fly;
-    u32 position_setting_walk_character;
-    u32 position_setting_fly_character;
+    u32 walking_block_position;
+    u32 flying_block_position;
+    u32 walking_character_position;
+    u32 flying_character_position;
 };
 
 struct ActorHitbox {
     // Actors have special hitbox for enemies and bullets (shot)
-    u32 shot_w;
-    u32 shot_h;
+    u32 shot_width;
+    u32 shot_height;
     
-    u32 character_w;
-    u32 character_h;
+    u32 character_width;
+    u32 character_height;
 };
 
 
-struct StageBlockDisplayCondition {
-    u32 header;
+struct BasicCondition {
+    u32 header; // 17
+    u8 type;
+    
+    u32 right_side_constant;
+	u32 right_side_random_lower_limit;
+	u32 right_side_random_upper_limit;
+	u8 left_side_status_target;
+	u8 left_side_status_number;//range display color for distance condition
+	u8 left_side_type;//range display presence/absence for distance condition
+	u8 left_side_common_variable_or_stage_variable;
+	u16 left_side_variable_number;
+	u8 left_side_flow_variable_number;
+	u8 right_side_type;//display even if self not present for distance condition
+	u8 right_side_status_target;//display even if self transparent for distance condition
+	u8 right_side_status_number;
+	u8 right_side_common_variable_or_stage_variable;
+	u16 right_side_variable_number;//distance in dot for distance condition
+	u8 right_side_flow_variable_number;
+	u8 how_to_compare;
+	u8 specify_in_percent;
+	u8 left_side_coordinate_type;
+	u8 right_side_coordinate_type;
+	u8 left_side_gigantic_character_coordinate_position;
+	u8 right_side_gigantic_character_coordinate_position;
+	
     u8 unk1;
-    
-    u32 unk11;
-    u32 unk12;
-    u32 unk13;     
-    u32 unk14;    
-    u32 unk15;
-    u32 unk16; 
-         
-    u8 unkL[13];     
+	u8 unk2;
+	u8 unk3;
+	u8 unk4;
+	u8 unk5;  
     
 };
 
-struct StageBlockElement {
-    u32 header;
+struct Block {
+    u32 header; // 12
     u8 inherit_palette;
-    u32 inherit_data;
+    u16 inherit_palette_data;
     
-    u32 unk1;
-    u32 unk2;
-    u16 unk3;
-    u8 unk4;
-    u8 unk5;
+	u8 any_of_appearance_conditions_true;
+	u8 appearance_condition_once_met_always_true;
     
-    u32 unk6;
-    u32 unk7;
+    u16 image_number;
+    u16 image_type;
     
+    u8 unknown1;
+	u8 in_front_of_character;
+
+    u8 transparency;
+	u8 mark_display; //0:don't display 1:display 2:display only in editor
+	u8 mark_number;
+
+	u8 unknown2;
+
+	u8 block_type; //0:no collision 1:collision 2:instant death on collision
+	u8 invalid_faction; //255 if none, the faction number if present
+	u8 action;
+	u32 action_parameter;
+	u8 acquired_item_palette;
+	u16 acquired_item_palette_data_number;
+	u8 block_summon_invalid;
+
+    u32 strings_count; // 1 - std::vector<std::string>
+    StdString name;
     
-    u8 unk9;
-    u32 unk10; // 1 ?
+    s16 position_x;
+    s16 position_y;
     
-    u32 name_length             [[color("00020A")]];
-    if (name_length > 1) {
-        char name[name_length]      [[color("9370DB")]];
-    }
+    u32 inherited_data_count; // 11 - std::vector<u8>
+    u8 inherit_block_name            [[color("907060")]];
+    u8 inherit_appearance_condition  [[color("907060")]];
+    u8 inherit_image                 [[color("907060")]];
+    u8 inherit_in_front_of_character [[color("907060")]];
+    u8 inherit_transparency          [[color("907060")]];
+    u8 inherit_mark                  [[color("907060")]];
+    u8 inherit_block_type            [[color("907060")]];
+    u8 inherit_invalid_faction       [[color("907060")]];
+    u8 inherit_action                [[color("907060")]];
+    u8 inherit_acquired_item         [[color("907060")]];
+    u8 inherit_block_summon          [[color("907060")]];
     
-    u32 unk11;
-    u32 read_u8_len;
-    
-    u8 flags[read_u8_len];
-    
-    u32 display_conditions_count;
-    
-    StageBlockDisplayCondition display_conditions[display_conditions_count];
+    u32 display_conditions_count; // 2 - std::vector<BasicCondition>
+    BasicCondition display_conditions[display_conditions_count];
     
 };
 
-//StageBlockElement stg2 @0x31c;
+Block stg2 @0x31c;
 
 struct StagePalette {
+    // std::vector<Block>
     u32 blocks_count;
-    // StageBlockElement blocks[5];
-    StageBlockElement blocks[blocks_count];
+    Block blocks[blocks_count];
     
     
    
@@ -151,7 +195,7 @@ struct StagePalette {
 
 struct StagePaletteFile {
     u32 magic;
-    u32 some_count;
+    u32 some_count; // 99 - std::vector<int>
     
     u32 width;
     
@@ -160,15 +204,15 @@ struct StagePaletteFile {
    
     u32 height;
     
-    u32 enable_left_min_h_scroll;
-    u32 enable_left_max_h_scroll;
-    u32 enable_min_v_scroll; // top left
-    u32 enable_max_v_scroll; // bottom
+    u32 enable_horizontal_scroll_minimum;
+    u32 enable_horizontal_scroll_maximum;
+    u32 enable_vertical_scroll_minimum; // top left
+    u32 enable_vertical_scroll_maximum; // bottom
     
-    u32 left_min_h_scroll;
-    u32 left_max_h_scroll;
-    u32 min_v_scroll;
-    u32 max_v_scroll;
+    u32 horizontal_scroll_minimum_value;
+    u32 horizontal_scroll_maximum_value;
+    u32 vertical_scroll_minimum_value;
+    u32 vertical_scroll_maximum_value;
     
     // Page 2
     
@@ -186,27 +230,24 @@ struct StagePaletteFile {
     double gravity;
     
     u32 hit_detection_level;
-    u32 character_shot_collision_accuracy;
+    u32 character_shot_collision_detection_accuracy;
     
-    u32 unk11    [[color("4e4e4e")]]; // 5 ?
-
-    // BGM
+    u32 bgm_number;
     u32 bgm_loop_playback;
     u32 dont_restart_bgm_if_no_change;
     
     
     u32 enable_z_coordinate;
     
-    u32 inherit_status_on_start;
-    u32 save_status_on_clear;
-    
+    u32 inherit_status_from_stock;
+    u32 store_status_to_stock;
     u32 show_status_window;
     
-    u32 skip_scene_switch_wait_after_clear;
+    u32 switch_scene_immediately_on_clear;
     u32 allow_replay_save;
     
     // show text images
-    u32 show_stage_x;
+    u32 show_stage;
     u32 show_ready;
     u32 show_clear;
     u32 show_gameover;
@@ -215,8 +256,8 @@ struct StagePaletteFile {
     
     EnemyCollision enemy_collide;
     
-    u32 item_collision_w;
-    u32 item_collision_h;   
+    u32 item_collision_width;
+    u32 item_collision_height;   
 
     ActorHitbox player_hitbox;
     ActorHitbox enemy_hitbox;
@@ -224,8 +265,9 @@ struct StagePaletteFile {
     // Okay this is original, but this limit the number of "ctrl-z"
     u32 undo_max_times;
 
-    u32 unk73    [[color("4e4e4e")]];
-    u32 unk74    [[color("4e4e4e")]];
+    u32 x_coordinate_upper_limit;
+    u32 y_coordinate_upper_limit;
+
     u32 unk75    [[color("4e4e4e")]];
     u32 unk76    [[color("4e4e4e")]];
     u32 unk77    [[color("4e4e4e")]];
@@ -248,18 +290,16 @@ struct StagePaletteFile {
     u32 enemy_invincibility_from_same_player_duration;
     u32 enemy_invincibility_duration;
     
-    u32 unk92    [[color("4e4e4e")]];
-    u32 name_length;
-    char stage_name[name_length];
+    u32 stage_names    [[color("4e4e4e")]]; // std::vector<std::string>
+    StdString stage_name;
     
-
-    u32 unk94    [[color("4e4e4e")]]; // 5 ?
+    u32 ranking_size    [[color("4e4e4e")]]; // 5  - std::vector<int>
     // Ranking
-    u32 show_score;
-    u32 show_remaining_time;
-    u32 show_clear_time;
-    u32 show_remaining_hp;
-    u32 show_remaining_sp;
+    u32 ranking_score;
+    u32 ranking_remaining_time;
+    u32 ranking_clear_time;
+    u32 ranking_remaining_hp;
+    u32 ranking_remaining_sp;
 
     // DeathFade : fade animation on death
     DeathFade nonblock_enemy_death;
