@@ -1,0 +1,183 @@
+#pragma once
+#include <string>
+#include <vector>
+#include "Stage_Block.h"
+#include "Stage_Character.h"
+#include "Stage_Item.h"
+#include "Background.h"
+#include "Stage_Palette.h"
+
+struct Stage {
+	int version;
+	int unknown1;
+	int horizontal_width;
+	int vertical_movement_change_amount;//how much the position value changes when moving vertically
+	int vertical_movement_change_amount_exponent;
+	int vertical_width;
+	int horizontal_scroll_minimum_value_enabled;
+	int horizontal_scroll_maximum_value_enabled;
+	int vertical_scroll_minimum_value_enabled;
+	int vertical_scroll_maximum_value_enabled;
+	int horizontal_scroll_minimum_value;
+	int horizontal_scroll_maximum_value;
+	int vertical_scroll_minimum_value;
+	int vertical_scroll_maximum_value;
+	int frame_rate;
+	int time_limit_enabled;
+	int time_limit;
+	int warning_sound_start_time;
+	int horizontal_auto_scroll_enabled;
+	int vertical_auto_scroll_enabled;
+	int horizontal_auto_scroll_speed;
+	int vertical_auto_scroll_speed;
+	double gravity;
+	int collision_detection_level;
+	int character_vs_shot_collision_detection_accuracy;
+	int bgm_number;
+	int bgm_loop;
+	int do_not_replay_same_bgm;
+	int z_coordinate_enabled;
+	int inherit_status_from_stock;
+	int store_status_to_stock;
+	int status_window_display;
+	int switch_scene_immediately_on_clear;
+	int allow_replay_saving;
+	int stage_display;
+	int ready_display;
+	int clear_display;
+	int gameover_display;
+	int collision_detection_main_character_walking_vs_block_horizontal_width;
+	int collision_detection_main_character_walking_vs_block_vertical_width;
+	int collision_detection_main_character_flying_vs_block_horizontal_width;
+	int collision_detection_main_character_flying_vs_block_vertical_width;
+	int collision_detection_main_character_walking_vs_character_horizontal_width;
+	int collision_detection_main_character_walking_vs_character_vertical_width;
+	int collision_detection_main_character_flying_vs_character_horizontal_width;
+	int collision_detection_main_character_flying_vs_character_vertical_width;
+	int collision_detection_main_character_vs_shot_horizontal_width;
+	int collision_detection_main_character_vs_shot_vertical_width;
+	int collision_detection_main_character_vs_item_horizontal_width;
+	int collision_detection_main_character_vs_item_vertical_width;
+	int collision_detection_main_character_walking_vs_block_position;
+	int collision_detection_main_character_flying_vs_block_position;
+	int collision_detection_main_character_walking_vs_character_position;
+	int collision_detection_main_character_flying_vs_character_position;
+	int collision_detection_main_character_vs_block_display;
+	int collision_detection_main_character_vs_character_display;
+	int collision_detection_main_character_vs_shot_display;
+	int collision_detection_main_character_vs_item_display;
+	int collision_detection_main_character_vs_block_display_color;
+	int collision_detection_main_character_vs_character_display_color;
+	int collision_detection_main_character_vs_shot_display_color;
+	int collision_detection_main_character_vs_item_display_color;
+	int collision_detection_enemy_walking_vs_block_horizontal_width;
+	int collision_detection_enemy_walking_vs_block_vertical_width;
+	int collision_detection_enemy_flying_vs_block_horizontal_width;
+	int collision_detection_enemy_flying_vs_block_vertical_width;
+	int collision_detection_enemy_walking_vs_character_horizontal_width;
+	int collision_detection_enemy_walking_vs_character_vertical_width;
+	int collision_detection_enemy_flying_vs_character_horizontal_width;
+	int collision_detection_enemy_flying_vs_character_vertical_width;
+	int collision_detection_enemy_vs_shot_horizontal_width;
+	int collision_detection_enemy_vs_shot_vertical_width;
+	int collision_detection_enemy_walking_vs_block_position;
+	int collision_detection_enemy_flying_vs_block_position;
+	int collision_detection_enemy_walking_vs_character_position;
+	int collision_detection_enemy_flying_vs_character_position;
+	int collision_detection_item_vs_character_horizontal_width;
+	int collision_detection_item_vs_character_vertical_width;
+	int collision_detection_main_character_shots_vs_character_horizontal_width;
+	int collision_detection_main_character_shots_vs_character_vertical_width;
+	int collision_detection_main_character_shots_vs_shot_horizontal_width;
+	int collision_detection_main_character_shots_vs_shot_vertical_width;
+	int collision_detection_enemy_shots_vs_character_horizontal_width;
+	int collision_detection_enemy_shots_vs_character_vertical_width;
+	int collision_detection_enemy_shots_vs_shot_horizontal_width;
+	int collision_detection_enemy_shots_vs_shot_vertical_width;
+	int unknown2;
+	int x_coordinate_upper_limit;
+	int y_coordinate_upper_limit;
+	char bytes361_408[48];
+	int do_not_take_damage_outside_screen;
+	int main_character_same_character_continuous_damage_invalidation_time;
+	int main_character_continuous_damage_invalidation_time;
+	int enemy_same_character_continuous_damage_invalidation_time;
+	int enemy_continuous_damage_invalidation_time;
+	int unknown3;
+	int stage_name_length;
+	std::string stage_name;
+	int number_of_ranking_items;//5 items
+	int ranking_score;
+	int ranking_remaining_time;
+	int ranking_clear_time;
+	int ranking_remaining_hp;
+	int ranking_remaining_sp;
+	int automatic_disappearance_non_block_characters_number_of_items;// 8 items
+	int automatic_disappearance_non_block_characters_left_enabled;
+	int automatic_disappearance_non_block_characters_right_enabled;
+	int automatic_disappearance_non_block_characters_up_enabled;
+	int automatic_disappearance_non_block_characters_down_enabled;
+	int automatic_disappearance_non_block_characters_left_range;
+	int automatic_disappearance_non_block_characters_right_range;
+	int automatic_disappearance_non_block_characters_up_range;
+	int automatic_disappearance_non_block_characters_down_range;
+	int automatic_disappearance_non_block_characters_end;// 0
+	int automatic_disappearance_block_characters_number_of_items;// 8 items
+	int automatic_disappearance_block_characters_left_enabled;
+	int automatic_disappearance_block_characters_right_enabled;
+	int automatic_disappearance_block_characters_up_enabled;
+	int automatic_disappearance_block_characters_down_enabled;
+	int automatic_disappearance_block_characters_left_range;
+	int automatic_disappearance_block_characters_right_range;
+	int automatic_disappearance_block_characters_up_range;
+	int automatic_disappearance_block_characters_down_range;
+	int automatic_disappearance_block_characters_end;// 0
+	int automatic_disappearance_items_number_of_items;// 8 items
+	int automatic_disappearance_items_left_enabled;
+	int automatic_disappearance_items_right_enabled;
+	int automatic_disappearance_items_up_enabled;
+	int automatic_disappearance_items_down_enabled;
+	int automatic_disappearance_items_left_range;
+	int automatic_disappearance_items_right_range;
+	int automatic_disappearance_items_up_range;
+	int automatic_disappearance_items_down_range;
+	int automatic_disappearance_items_end;// 0
+	int automatic_disappearance_main_character_shots_number_of_items;// 8 items
+	int automatic_disappearance_main_character_shots_left_enabled;
+	int automatic_disappearance_main_character_shots_right_enabled;
+	int automatic_disappearance_main_character_shots_up_enabled;
+	int automatic_disappearance_main_character_shots_down_enabled;
+	int automatic_disappearance_main_character_shots_left_range;
+	int automatic_disappearance_main_character_shots_right_range;
+	int automatic_disappearance_main_character_shots_up_range;
+	int automatic_disappearance_main_character_shots_down_range;
+	int automatic_disappearance_main_character_shots_end;// 0
+	int automatic_disappearance_enemy_shots_number_of_items;// 8 items
+	int automatic_disappearance_enemy_shots_left_enabled;
+	int automatic_disappearance_enemy_shots_right_enabled;
+	int automatic_disappearance_enemy_shots_up_enabled;
+	int automatic_disappearance_enemy_shots_down_enabled;
+	int automatic_disappearance_enemy_shots_left_range;
+	int automatic_disappearance_enemy_shots_right_range;
+	int automatic_disappearance_enemy_shots_up_range;
+	int automatic_disappearance_enemy_shots_down_range;
+	int automatic_disappearance_enemy_shots_end;// 0
+	struct Stage_Palette stage_palette;
+	int number_of_block_data;
+	std::vector<Stage_Block> block_data;
+	int number_of_character_data;
+	std::vector<Stage_Character> character_data;
+	int number_of_item_data;
+	std::vector<Stage_Item> item_data;
+	int number_of_background_data;
+	std::vector<Background> background_data;
+	int number_of_stage_variables;//currently 1000
+	int stage_variable_name_unknown1[1000];//always 0
+	int stage_variable_name_unknown2[1000];//always 1
+	int stage_variable_name_length[1000];
+	char stage_variable_name[1000][100];
+	int end;// value is 123456789
+};
+
+void Read_Stage(struct Stage* stage, FILE* read_file);
+void Write_Stage(struct Stage* stage, FILE* write_file);
