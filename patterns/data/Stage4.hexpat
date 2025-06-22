@@ -247,7 +247,6 @@ struct SwordDetails {
 	u8 attack;
 	u8 attack_id;
 	char bytes128_143[16];
-
 };
 
 struct Command {

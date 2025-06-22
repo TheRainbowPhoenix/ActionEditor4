@@ -142,8 +142,8 @@ struct KeyCondition {
     u16 maximum_input_time                                                [[color("702090")]];
     u8 input_time_1_to_infinity                                           [[color("702090")]];
     u8 judgment_type                                                      [[color("702090")]];
-    u32 unknown                                                            [[color("702090")]];
-    u32 number_of_key_data                                                 [[color("702090")]];
+    u32 unknown                                                           [[color("702090")]];
+    u32 number_of_key_data                                                [[color("702090")]];
     u8 direction_key_neutral                                              [[color("702090")]];
     u8 left_key                                                           [[color("702090")]];
     u8 right_key                                                          [[color("702090")]];
@@ -183,60 +183,82 @@ struct Background {
 };
 
 struct WaitDetails {
-    u16 execution_time;
-    u16 execution_time_double;
-    u8 parallel_execution;
-    char bytes[33];
+    u16 execution_time                      [[color("907060")]];
+    u16 execution_time_double               [[color("907060")]];
+    u8 parallel_execution                   [[color("907060")]];
+    char bytes[33]                          [[color("907060")]];
 };
 
 struct LinearMovementDetails {
-    u16 execution_time;
-    u16 execution_time_double;
-    u8 parallel_execution;
-    char bytes6_8[3];
-    u16 animation_and_other_type;
-    char bytes11_26[16];
-    u8 movement_direction_setting_type;
-    u8 movement_direction_direction;
-    u16 movement_direction_angle;
-    u16 movement_direction_angle_double;
-    u8 movement_direction_angle_reverse_rotation_if_facing_right;
-    u8 movement_direction_target_x_present;
-    u8 movement_direction_target_y_present;
-    u16 movement_direction_target_x;
-    u16 movement_direction_target_y;
-    u16 movement_direction_target_x_dot;
-    u16 movement_direction_target_y_dot;
-    u8 movement_direction_target_type;
-    u8 movement_direction_target_coordinate_unit; //0: bl 1: dot
-    char byte46;
-    u8 movement_direction_execute_until_target_coordinate_reached;
-    u8 movement_direction_invalidate_horizontal_movement;
-    u8 movement_direction_invalidate_vertical_movement;
-    u8 movement_direction_target_x_flip_if_facing_right;
-    u8 movement_direction_target_y_flip_if_facing_right;
-    u8 movement_direction_reverse_speed_if_direction_changes;
-    u8 movement_direction_prevent_blur;
-    u8 movement_direction_dont_change_character_direction;
-    u8 time_speed_distance_setting_type;
-    u16 time_speed_distance_speed;
-    u16 time_speed_distance_speed_double;
-    u16 time_speed_distance_distance;
-    u16 time_speed_distance_distance_double;
-    u8 time_speed_distance_distance_unit;
-    char bytes65_68[4];
-    u8 inertia_present;
-    u16 inertia_max_speed;
-    double inertia_speed_correction_on_direction_change;
-    u8 animation_type;
-    char bytes81_101[21];
+    u16 execution_time                                                  [[color("907060")]];
+    u16 execution_time_double                                           [[color("907060")]];
+    u8 parallel_execution                                               [[color("907060")]];
+    char bytes6_8[3]                                                    [[color("907060")]];
+    u16 animation_and_other_type                                        [[color("907060")]];
+    char bytes11_26[16]                                                 [[color("907060")]];
+    u8 movement_direction_setting_type                                  [[color("907060")]];
+    u8 movement_direction_direction                                     [[color("907060")]];
+    u16 movement_direction_angle                                        [[color("907060")]];
+    u16 movement_direction_angle_double                                 [[color("907060")]];
+    u8 movement_direction_angle_reverse_rotation_if_facing_right        [[color("907060")]];
+    u8 movement_direction_target_x_present                              [[color("907060")]];
+    u8 movement_direction_target_y_present                              [[color("907060")]];
+    u16 movement_direction_target_x                                     [[color("907060")]];
+    u16 movement_direction_target_y                                     [[color("907060")]];
+    u16 movement_direction_target_x_dot                                 [[color("907060")]];
+    u16 movement_direction_target_y_dot                                 [[color("907060")]];
+    u8 movement_direction_target_type                                   [[color("907060")]];
+    u8 movement_direction_target_coordinate_unit                        [[color("907060")]]; //0: bl 1: dot
+    char byte46                                                         [[color("907060")]];
+    u8 movement_direction_execute_until_target_coordinate_reached       [[color("907060")]];
+    u8 movement_direction_invalidate_horizontal_movement                [[color("907060")]];
+    u8 movement_direction_invalidate_vertical_movement                  [[color("907060")]];
+    u8 movement_direction_target_x_flip_if_facing_right                 [[color("907060")]];
+    u8 movement_direction_target_y_flip_if_facing_right                 [[color("907060")]];
+    u8 movement_direction_reverse_speed_if_direction_changes            [[color("907060")]];
+    u8 movement_direction_prevent_blur                                  [[color("907060")]];
+    u8 movement_direction_dont_change_character_direction               [[color("907060")]];
+    u8 time_speed_distance_setting_type                                 [[color("907060")]];
+    u16 time_speed_distance_speed                                       [[color("907060")]];
+    u16 time_speed_distance_speed_double                                [[color("907060")]];
+    u16 time_speed_distance_distance                                    [[color("907060")]];
+    u16 time_speed_distance_distance_double                             [[color("907060")]];
+    u8 time_speed_distance_distance_unit                                [[color("907060")]];
+    char bytes65_68[4]                                                  [[color("907060")]];
+    u8 inertia_present                                                  [[color("907060")]];
+    u16 inertia_max_speed                                               [[color("907060")]];
+    double inertia_speed_correction_on_direction_change                 [[color("907060")]];
+    u8 animation_type                                                   [[color("907060")]];
+    char bytes81_101[21]                                                [[color("907060")]];
+};
+
+struct GroundMovementDetails {
+	u16 execution_time          [[color("907060")]];
+	u16 execution_time_double   [[color("907060")]];
+	u8 parallel_execution       [[color("907060")]];
+	char bytes6_101[96]         [[color("907060")]];
+
 };
 
 struct CircularMovementDetails {
-	u16 execution_time          [[color("907060")]];;
-	u16 execution_time_double   [[color("907060")]];;
-	u8 parallel_execution       [[color("907060")]];;
-	char bytes6_101[96]         [[color("907060")]];;
+	u16 execution_time          [[color("907060")]];
+	u16 execution_time_double   [[color("907060")]];
+	u8 parallel_execution       [[color("907060")]];
+	char bytes6_101[96]         [[color("907060")]];
+};
+
+struct ChargeMovementDetails {
+	u16 execution_time          [[color("907060")]];
+	u16 execution_time_double   [[color("907060")]];
+	u8 parallel_execution       [[color("907060")]];
+	char bytes6_101[96]         [[color("907060")]];
+};
+
+struct GuidedMovementDetails {
+	u16 execution_time          [[color("907060")]];
+	u16 execution_time_double   [[color("907060")]];
+	u8 parallel_execution       [[color("907060")]];
+	char bytes6_101[96]         [[color("907060")]];
 };
 
 struct JumpDetails {
@@ -323,29 +345,29 @@ struct ShotDetails {
 };
 
 struct SwordDetails {
-    u32 execution_time;
-    u8 parallel_execution;
-    u16 sound_effect;
-    u8 play_if_outside_screen;
-    u16 animation;
-    char bytes11_63[53];
-    u8 z_coordinate;
-    u8 transparency;
-    u8 faction_same_as_user;
-    u16 faction;
-    u16 gigantic;
-    u32 sword_type;
-    char bytes75_104[30];
-    u32 power;
-    char bytes109_110[2];
-    u8 impact;
-    u16 effect;
-    u8 acquired_item_palette_type;
-    u16 acquired_item_palette_number;
-    char bytes117_125[9];
-    u8 attack;
-    u8 attack_id;
-    char bytes128_143[16];
+    u32 execution_time                                    [[color("907060")]];
+    u8 parallel_execution                                 [[color("907060")]];
+    u16 sound_effect                                      [[color("907060")]];
+    u8 play_if_outside_screen                             [[color("907060")]];
+    u16 animation                                         [[color("907060")]];
+    char bytes11_63[53]                                   [[color("907060")]];
+    u8 z_coordinate                                       [[color("907060")]];
+    u8 transparency                                       [[color("907060")]];
+    u8 faction_same_as_user                               [[color("907060")]];
+    u16 faction                                           [[color("907060")]];
+    u16 gigantic                                          [[color("907060")]];
+    u32 sword_type                                        [[color("907060")]];
+    char bytes75_104[30]                                  [[color("907060")]];
+    u32 power                                             [[color("907060")]];
+    char bytes109_110[2]                                  [[color("907060")]];
+    u8 impact                                             [[color("907060")]];
+    u16 effect                                            [[color("907060")]];
+    u8 acquired_item_palette_type                         [[color("907060")]];
+    u16 acquired_item_palette_number                      [[color("907060")]];
+    char bytes117_125[9]                                  [[color("907060")]];
+    u8 attack                                             [[color("907060")]];
+    u8 attack_id                                          [[color("907060")]];
+    char bytes128_143[16]                                 [[color("907060")]];
 };
 
 struct ScreenOutsideAvoidanceMovementDetails {
@@ -360,6 +382,13 @@ struct MovementInvalidationDetails {
     u16 execution_time_double       [[color("907060")]];
     u8 parallel_execution           [[color("907060")]];
     char bytes6_101[96]             [[color("907060")]];
+};
+
+struct DirectionChangeDetails {
+    u16 execution_time              [[color("907060")]];
+    u16 execution_time_double       [[color("907060")]];
+    u8 parallel_execution           [[color("907060")]];
+    char bytes6_42[37]              [[color("907060")]];
 };
 
 struct StatusOperationDetails {
@@ -445,11 +474,11 @@ struct StageClearDetails {
 };
 
 struct GameWaitDetails {
-    u16 execution_time;
-    u16 execution_time_double;
-    u8 parallel_execution;
-    char bytes6_38[33];
-    u32 game_wait_execution_time;
+    u16 execution_time                                  [[color("907060")]];
+    u16 execution_time_double                           [[color("907060")]];
+    u8 parallel_execution                               [[color("907060")]];
+    char bytes6_38[33]                                  [[color("907060")]];
+    u32 game_wait_execution_time                        [[color("907060")]];
 };
 
 struct MessageDetails {
@@ -480,27 +509,27 @@ struct MessageDetails {
 };
 
 struct WarpDetails {
-	char bytes1_26[26];
-	u8 setting_type;
-	u8 direction;
-	char bytes29_33[5];
-	u8 target_x_present;
-	u8 target_y_present;
-	u16 target_x_bl;
-	u16 target_y_bl;
-	u16 target_x_dot;
-	u16 target_y_dot;
-	u8 target_type;
-	u8 target_unit;
-	u8 gigantic_character_coordinate_position;
-	char bytes47_49[3];
-	u8 target_x_flip_if_facing_right;
-	u8 target_y_flip_if_facing_right;
-	char bytes52_59[8];
-	u16 distance;
-	u16 distance_double;
-	char bytes64_101[38];
-	u32 assign_return_value_to_flow;
+	char bytes1_26[26]                                [[color("907060")]];
+	u8 setting_type                                   [[color("907060")]];
+	u8 direction                                      [[color("907060")]];
+	char bytes29_33[5]                                [[color("907060")]];
+	u8 target_x_present                               [[color("907060")]];
+	u8 target_y_present                               [[color("907060")]];
+	u16 target_x_bl                                   [[color("907060")]];
+	u16 target_y_bl                                   [[color("907060")]];
+	u16 target_x_dot                                  [[color("907060")]];
+	u16 target_y_dot                                  [[color("907060")]];
+	u8 target_type                                    [[color("907060")]];
+	u8 target_unit                                    [[color("907060")]];
+	u8 gigantic_character_coordinate_position         [[color("907060")]];
+	char bytes47_49[3]                                [[color("907060")]];
+	u8 target_x_flip_if_facing_right                  [[color("907060")]];
+	u8 target_y_flip_if_facing_right                  [[color("907060")]];
+	char bytes52_59[8]                                [[color("907060")]];
+	u16 distance                                      [[color("907060")]];
+	u16 distance_double                               [[color("907060")]];
+	char bytes64_101[38]                              [[color("907060")]];
+	u32 assign_return_value_to_flow                   [[color("907060")]];
 };
 
 struct CharacterSummonDetails {
@@ -604,6 +633,19 @@ struct BasicAnimationSetChangeDetails {
 	u32 animation_set                           [[color("907060")]];
 };
 
+struct AnimationExecutionDetails {
+	u16 execution_time                          [[color("907060")]];
+	u16 execution_time_double                   [[color("907060")]];
+	u8 parallel_execution                       [[color("907060")]];
+	char bytes[41]                              [[color("907060")]];
+};
+
+struct EffectExecutionDetails {
+	char bytes1_38[38]                          [[color("907060")]];
+	char bytes[40]                              [[color("907060")]];
+
+};
+
 struct CharacterEffectExecutionDetails {
 	char bytes1_38[38]                          [[color("907060")]];
 	u32 effect                                  [[color("907060")]];
@@ -625,6 +667,14 @@ struct PictureDisplayDetails {
 	char bytes[113]                             [[color("907060")]];
 };
 
+struct BackgroundChangeDetails {
+	u16 execution_time                          [[color("907060")]];
+	u16 execution_time_double                   [[color("907060")]];
+	u8 parallel_execution                       [[color("907060")]];
+	char bytes[41]                              [[color("907060")]];
+
+};
+
 struct SoundEffectPlaybackDetails {
 	char bytes1_7[7]                            [[color("907060")]];
 	u8 play_if_outside_screen                   [[color("907060")]];
@@ -639,13 +689,22 @@ struct BGMPlaybackDetails {
 	char bytes[41]                              [[color("907060")]];
 };
 
+struct CodeExecutionDetails {
+	u16 execution_time                          [[color("907060")]];
+	u16 execution_time_double                   [[color("907060")]];
+	u8 parallel_execution                       [[color("907060")]];
+	char bytes6_14[9]                           [[color("907060")]];
+	StdString code                              [[color("907060")]];
+	char bytes19_38[20]                         [[color("907060")]];
+};
+
 struct ArrangementDetails {
-	char bytes1_38[38];
-	u32 command;
-	u32 parameter;
-	u32 operator_type;
-	u32 variable_type;
-	u32 variable_number;
+	char bytes1_38[38]                          [[color("907060")]];
+	u32 command                                 [[color("907060")]];
+	u32 parameter                               [[color("907060")]];
+	u32 operator_type                           [[color("907060")]];
+	u32 variable_type                           [[color("907060")]];
+	u32 variable_number                         [[color("907060")]];
 };
 
 struct LoopDetails {
@@ -654,22 +713,58 @@ struct LoopDetails {
 	u32 command_count       [[color("907060")]];
 };
 
+enum CommandType : u8 {
+    Wait = 1,
+    LinearMovement = 2,
+    GroundMovement = 3,
+    CircularMovement = 4,
+    ScreenAvoidance = 7,
+    MovementInvalidation = 8,
+    DirectionChange = 9,
+    Jump = 10,
+    Shot = 11,
+    Sword = 12,
+    CharacterSummon = 14,
+    ItemSummon = 15,
+    FlowOperation = 16,
+    StageClear = 17,
+    GameWait = 18,
+    Message = 19,
+    Warp = 20,
+    TargetSetting = 21,
+    StatusOp = 22,
+    StatusOp2 = 23,
+    Disappearance = 24,
+    ItemAcquisition = 25,
+    GraphicChange = 26,
+    BasicAnimChange = 27,
+    CharEffectExec = 30,
+    ScreenEffectExec = 31,
+    PictureDisplay = 32,
+    BackgroundChange = 34,
+    SFXPlayback = 35,
+    BGMPlayback = 36,
+    CodeExec = 37,
+    Arrangement = 38,
+    Loop = 39,
+};
+
 struct Command {
-    u32 header; // 8
-    u8 unk1;
-    u8 type;
+    u32 header              [[color("AB7D32")]]; // 8
+    u8 unk1                 [[color("AB7D32")]];
+    u8 type        [[color("D04617")]]; // CommandType type 
     
     if (header != 8) std::error("Invalid header !!");
 
     if (type == 1) WaitDetails details;
     else if (type == 2) LinearMovementDetails details;
-    // else if (type == 3) GroundMovementDetails details;
+    else if (type == 3) GroundMovementDetails details;
     else if (type == 4) CircularMovementDetails details;
-    // else if (type == 5) ChargeMovementDetails details;
-    // else if (type == 6) GuidedMovementDetails details;
+    else if (type == 5) ChargeMovementDetails details;
+    else if (type == 6) GuidedMovementDetails details;
     else if (type == 7) ScreenOutsideAvoidanceMovementDetails details;
     else if (type == 8) MovementInvalidationDetails details;
-    // else if (type == 9) DirectionChangeDetails details;
+    else if (type == 9) DirectionChangeDetails details;
     else if (type == 10) JumpDetails details;
     else if (type == 11) ShotDetails details;
     else if (type == 12) SwordDetails details;
@@ -688,16 +783,16 @@ struct Command {
     else if (type == 25) ItemAcquisitionDetails details;
     else if (type == 26) GraphicChangeDetails details;
     else if (type == 27) BasicAnimationSetChangeDetails details;
-    // else if (type == 28) AnimationExecutionDetails details;
-    // else if (type == 29) EffectExecutionDetails details;
+    else if (type == 28) AnimationExecutionDetails details;
+    else if (type == 29) EffectExecutionDetails details;
     else if (type == 30) CharacterEffectExecutionDetails details;
     else if (type == 31) ScreenEffectExecutionDetails details;
     else if (type == 32) PictureDisplayDetails details;
     // else if (type == 33) ScreenColorChangeDetails details;
-    // else if (type == 34) BackgroundChangeDetails details;
+    else if (type == 34) BackgroundChangeDetails details;
     else if (type == 35) SoundEffectPlaybackDetails details;
     else if (type == 36) BGMPlaybackDetails details;
-    // else if (type == 37) CodeExecutionDetails details;
+    else if (type == 37) CodeExecutionDetails details;
     else if (type == 38) ArrangementDetails details;
     else if (type == 39) LoopDetails details;
     else  std::error("Invalid type !!");
@@ -956,16 +1051,16 @@ struct ItemEffect {
     if (type == 10) ItemAcquisitionDetails details;
     if (type == 11) GraphicChangeDetails details;
     if (type == 12) BasicAnimationSetChangeDetails details;
-    // if (type == 13) AnimationExecutionDetails details;
-    // if (type == 14) EffectExecutionDetails details;
+    if (type == 13) AnimationExecutionDetails details;
+    if (type == 14) EffectExecutionDetails details;
     if (type == 15) CharacterEffectExecutionDetails details;
     if (type == 16) ScreenEffectExecutionDetails details;
     if (type == 17) PictureDisplayDetails details;
     // if (type == 18) ScreenColorChangeDetails details;
-    // if (type == 19) BackgroundChangeDetails details;
+    if (type == 19) BackgroundChangeDetails details;
     if (type == 20) SoundEffectPlaybackDetails details;
     if (type == 21) BGMPlaybackDetails details;
-    // if (type == 22) CodeExecutionDetails details;
+    if (type == 22) CodeExecutionDetails details;
     if (type == 23) ArrangementDetails details;
     if (type == 24) LoopDetails details;
 
@@ -1213,5 +1308,5 @@ struct StagePaletteFile {
 };
 
 
-#pragma pattern_limit 231072
+#pragma pattern_limit 531072
 StagePaletteFile stage_pal_file @ 0x0;
