@@ -178,7 +178,6 @@ struct Background {
     double horizontal_auto_scroll_speed         [[color("15093F")]];
     double vertical_auto_scroll_speed           [[color("15093F")]];
     char bytes61_80[20]                         [[color("15093F")]];
-    u32 image_path_length                       [[color("15093F")]];
     StdString image_path                        [[color("15093F")]];
 };
 
@@ -368,6 +367,46 @@ struct SwordDetails {
     u8 attack                                             [[color("907060")]];
     u8 attack_id                                          [[color("907060")]];
     char bytes128_143[16]                                 [[color("907060")]];
+};
+
+struct BlockSummonDetails {
+    u16 execution_time                                     [[color("907060")]];
+	u16 execution_time_double                              [[color("907060")]];
+	u8 parallel_execution                                  [[color("907060")]];
+	u16 sound_effect                                       [[color("907060")]];
+	u8 play_sound_effect_if_outside_screen                 [[color("907060")]];
+	u8 animation                                           [[color("907060")]];
+	char bytes10_30[21]                                    [[color("907060")]];
+	u8 count                                               [[color("907060")]];
+	u8 formation                                           [[color("907060")]];
+	u16 interval                                           [[color("907060")]];
+	u16 number_of_columns                                  [[color("907060")]];
+	u16 column_interval                                    [[color("907060")]];
+	u8 target                                              [[color("907060")]];
+	u8 direction                                           [[color("907060")]];
+	char byte41                                            [[color("907060")]];
+	u8 target2                                             [[color("907060")]];
+	char bytes43_51[9]                                     [[color("907060")]];
+	u32 summon_position_offset_x                           [[color("907060")]];
+	u32 summon_position_offset_y                           [[color("907060")]];
+	u8 summon_position_offset_x_flip                       [[color("907060")]];
+	u8 summon_position_offset_y_flip                       [[color("907060")]];
+	char bytes62_66[5]                                     [[color("907060")]];
+	u8 faction                                             [[color("907060")]];
+	char bytes68_88[21]                                    [[color("907060")]];
+	u16 existence_time                                     [[color("907060")]];
+	u8 existence_time_present                              [[color("907060")]];
+	char bytes92_119[28]                                   [[color("907060")]];
+	u8 palette_type                                        [[color("907060")]];
+	u16 palette_data_number                                [[color("907060")]];
+	u8 faction_specification_method                        [[color("907060")]];
+	u8 set_acquired_score_to_0                             [[color("907060")]];
+	u8 direction_flip                                      [[color("907060")]];
+	u8 attack                                              [[color("907060")]];
+	u8 attack_flow                                         [[color("907060")]];
+	char bytes128_143[16]                                  [[color("907060")]];
+	u8 return_value_to_flow_variable                       [[color("907060")]];
+	char bytes145_147[3]                                   [[color("907060")]];
 };
 
 struct ScreenOutsideAvoidanceMovementDetails {
@@ -768,7 +807,7 @@ struct Command {
     else if (type == 10) JumpDetails details;
     else if (type == 11) ShotDetails details;
     else if (type == 12) SwordDetails details;
-    // else if (type == 13) BlockSummonDetails details;
+    else if (type == 13) BlockSummonDetails details;
     else if (type == 14) CharacterSummonDetails details;
     else if (type == 15) ItemSummonDetails details;
     else if (type == 16) FlowOperationDetails details;
@@ -1157,11 +1196,7 @@ struct StagePalette {
     }
     
 
-    // std::vector<Background>
-    // u32 background_count;
-    /* if (background_count > 0) {
-        Background backgrounds[background_count];
-    } */
+    // std::vector<Background> ??
    
 };
 
@@ -1173,6 +1208,11 @@ struct StageBlock {
 struct StageCharacter {
     u32 position;
     Character character;
+};
+
+struct StageItem {
+    u32 position;
+    Item item;
 };
 
 struct StagePaletteFile {
@@ -1303,6 +1343,19 @@ struct StagePaletteFile {
     u32 character_count;
     if (character_count > 0) {
         StageCharacter characters[character_count];
+    }
+
+    // std::vector<Item>
+    u32 item_count;
+    if (item_count > 0) {
+        StageItem items[item_count]          [[color("9370DB")]];
+    }
+    
+
+    // std::vector<Background>
+    u32 background_count;
+    if (background_count > 0) {
+        Background backgrounds[background_count];
     }
 
 };
