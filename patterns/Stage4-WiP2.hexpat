@@ -1215,6 +1215,12 @@ struct StageItem {
     Item item;
 };
 
+struct StageVar {
+    u32 some_count              [[color("15364D")]]; // std::vector<smth> ? always 0
+    u32 some_count_too          [[color("15364D")]]; // std::vector<smth> ? always 1
+    StdString variable_name     [[color("15364D")]];
+};
+
 struct StagePaletteFile {
     u32 magic               [[color("A17020")]];
     u32 some_count          [[color("A17020")]]; // 99 - std::vector<int>
@@ -1334,7 +1340,7 @@ struct StagePaletteFile {
     StagePalette palette;
 
     // std::vector<StageBlock>
-    u32 block_count                         [[color("413050")]];
+    u32 block_count                         [[color("A17020")]];
     if (block_count > 0) {
         StageBlock blocks[block_count];
     }
@@ -1355,9 +1361,15 @@ struct StagePaletteFile {
     // std::vector<Background>
     u32 background_count;
     if (background_count > 0) {
-        Background backgrounds[background_count];
+        Background backgrounds[background_count]        [[color("A17020")]];
     }
 
+    u32 number_of_stage_variables                       [[color("A17020")]]; //currently 1000
+    if (number_of_stage_variables > 0) {
+        StageVar stage_vars[number_of_stage_variables];
+    }
+    
+	u32 end                                             [[color("A17020")]]; // value is 123456789
 };
 
 
