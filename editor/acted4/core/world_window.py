@@ -219,13 +219,22 @@ class WorldWindow(QMainWindow):
         # Connect viewport signals
         self.map_view.mouseMoved.connect(self.on_map_hover)
         
-        # Create chip picker window
+        # Create floating palette windows
         from ..dialogs.world.chip_picker import ChipPicker
+        from ..dialogs.world.event_palette import EventPalette
+
         self.chip_picker = ChipPicker(self)
         self.chip_picker.set_edit_mode(True)  # Start in MAP_CHIP mode
-        
-        # Connect chip picker signals
+
+        self.event_palette = EventPalette(self)
+
+        # Connect palette signals
         self.chip_picker.tileSelected.connect(self._on_tile_selected)
+        self.event_palette.insertRequested.connect(self._on_insert_event)
+        self.event_palette.editRequested.connect(self._on_edit_event)
+        self.event_palette.deleteRequested.connect(self._on_delete_event)
+        self.event_palette.dataCountRequested.connect(self._on_change_event_count)
+
         self.chip_picker.show()  # Show by default since we start in MAP_CHIP mode
         
         # Connect mouse events for tile placement
@@ -340,6 +349,17 @@ class WorldWindow(QMainWindow):
             # Initialize chip picker
             self.chip_picker.set_tiles(data.tiles_types, tileset_path)
             self.chip_picker.show()
+
+            # Populate event palette with entries from the project
+            from ..dialogs.world.event_palette import EventListEntry
+
+            entries = []
+            for idx, event in enumerate(data.events_pal, start=1):
+                name_attr = getattr(event, "name", "")
+                name = name_attr.strip() if name_attr else "Unnamed Event"
+                entries.append(EventListEntry(slot=idx, name=name))
+
+            self.event_palette.set_entries(entries)
                 
     def on_save_as(self):
         """Handle save as action"""
@@ -355,6 +375,8 @@ class WorldWindow(QMainWindow):
         """Handle window close"""
         if self.chip_picker:
             self.chip_picker.close()
+        if hasattr(self, "event_palette") and self.event_palette:
+            self.event_palette.close()
         WindowManager.instance().show_main_window()
         super().closeEvent(event)
         
@@ -455,9 +477,12 @@ class WorldWindow(QMainWindow):
         if mode == EditMode.MAP_CHIP:
             self.chip_picker.set_edit_mode(True)
             self.chip_picker.show()
+            self.event_palette.hide()
         else:
             self.chip_picker.set_edit_mode(False)
             self.chip_picker.hide()
+            self.event_palette.show()
+            self.event_palette.raise_()
             
     def on_mapchip(self):
         """Handle map chip mode selection"""
@@ -466,8 +491,39 @@ class WorldWindow(QMainWindow):
     def on_event(self):
         """Handle event mode selection"""
         self._set_edit_mode(EditMode.EVENT)
-        # TODO: Show event palette
-            
+
+    def _on_insert_event(self):
+        """Placeholder handler for inserting a new event."""
+        QMessageBox.information(
+            self,
+            "Insert Event",
+            "Event creation is not implemented yet.",
+        )
+
+    def _on_edit_event(self, index: int):
+        """Placeholder handler for editing an existing event."""
+        QMessageBox.information(
+            self,
+            "Edit Event",
+            f"Editing event #{index + 1} is not implemented yet.",
+        )
+
+    def _on_delete_event(self, index: int):
+        """Placeholder handler for deleting an event."""
+        QMessageBox.information(
+            self,
+            "Delete Event",
+            f"Deleting event #{index + 1} is not implemented yet.",
+        )
+
+    def _on_change_event_count(self, new_count: int):
+        """Placeholder handler for changing the number of event templates."""
+        QMessageBox.information(
+            self,
+            "Event Count",
+            f"Changing the event count to {new_count} is not implemented yet.",
+        )
+
     def on_clear_mapchips(self):
         """Handle clear map chips action"""
         reply = QMessageBox.question(

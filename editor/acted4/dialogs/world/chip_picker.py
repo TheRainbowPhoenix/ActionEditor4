@@ -1,9 +1,14 @@
-from PySide6.QtWidgets import (QMainWindow, QStatusBar, QLabel, QWidget, 
-                              QVBoxLayout, QScrollArea, QFrame)
-from PySide6.QtCore import Qt, QSize, QPoint, QRect, Signal
+from PySide6.QtWidgets import (
+    QStatusBar,
+    QLabel,
+    QWidget,
+    QVBoxLayout,
+    QScrollArea,
+    QFrame,
+)
+from PySide6.QtCore import Qt, QRect, Signal
 from PySide6.QtGui import QPainter, QImage, QPen, QColor, QMouseEvent
 from typing import List, Optional
-import os
 
 class TilePickerWidget(QFrame):
     """Widget to display and select tiles"""
@@ -79,18 +84,14 @@ class TilePickerWidget(QFrame):
                 self.tileSelected.emit(index)
                 self.update()
 
-class ChipPicker(QMainWindow):
+from .base_palette import FloatingPaletteWindow
+
+
+class ChipPicker(FloatingPaletteWindow):
     """Floating window for selecting map chips"""
     tileSelected = Signal(int)  # Signal emitted when tile is selected
     def __init__(self, parent=None):
-        super().__init__(parent)
-        self.setWindowTitle("Map Chip Picker")
-        self.setWindowFlags(
-            Qt.Tool |  # Floating tool window
-            Qt.WindowStaysOnTopHint |  # Stay on top
-            Qt.CustomizeWindowHint |  # Custom window frame
-            Qt.WindowTitleHint  # Show only title bar
-        )
+        super().__init__("Map Chip Picker", parent)
         
         # Create central widget
         central = QWidget()
@@ -110,7 +111,8 @@ class ChipPicker(QMainWindow):
         self.setStatusBar(self.statusBar)
         self.info_label = QLabel("")
         self.statusBar.addWidget(self.info_label)
-          # Connect signals
+
+        # Connect signals
         self.picker.tileSelected.connect(self._on_tile_selected)
         self.hide()  # Hidden by default
         self.resize(200, 400)
