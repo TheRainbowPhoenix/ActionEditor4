@@ -748,12 +748,19 @@ class WorldMap(ActedBinaryFile):
             return False
             
         try:
+            self.data.tiles_types.clear()
+            self.data.tiles.clear()
+            self.data.events.clear()
+            self.data.events_pal.clear()
+
             magic = self.read_u32()
             if magic not in self.VERSIONS:
                 print("Invalid magic number")
                 return False
                 
-            some_count = self.read_u32()  # TODO: Figure out what this is
+            self.version = magic
+            self._settings_count = self.read_u32()
+
             self.data.width = self.read_u32()
             self.data.height = self.read_u32()
             
@@ -768,35 +775,33 @@ class WorldMap(ActedBinaryFile):
             
             self.data.strings_count = self.read_u32()  # 2
             
-            name_length = self.read_u32()
-            if name_length > 1:
-                self.data.name = self.read_str(name_length)
-                
-            bg_path_length = self.read_u32()
-            if bg_path_length > 1:
-                self.data.bg_path = self.read_str(bg_path_length)
+            self.data.name = self.read_std_string()
+
+            self.data.bg_path = self.read_std_string()
                 
             # Read tile types (WorldChip)
             tiles_types_count = self.read_u32()
             for _ in range(tiles_types_count):
-                tile = WorldChip()
-                tile.header = self.read_u32()
-                tile.tile_index = self.read_u32()
-                tile.locked = self.read_u32()
-                tile.graphic = self.read_u32()
-                tile.strings_count = self.read_u32()  # 2
+                self.data.tiles_types.append(self._read_world_chip())
                 
-                # Read first string (name)
-                name_length = self.read_u32()
-                if name_length > 1:
-                    tile.name = self.read_str(name_length)
+                # tile = WorldChip()
+                # tile.header = self.read_u32()
+                # tile.tile_index = self.read_u32()
+                # tile.locked = self.read_u32()
+                # tile.graphic = self.read_u32()
+                # tile.strings_count = self.read_u32()  # 2
                 
-                # Read second string (unused_string)
-                unused_string_length = self.read_u32()
-                if unused_string_length > 1:
-                    tile.unused_string = self.read_str(unused_string_length)
+                # # Read first string (name)
+                # name_length = self.read_u32()
+                # if name_length > 1:
+                #     tile.name = self.read_str(name_length)
+                
+                # # Read second string (unused_string)
+                # unused_string_length = self.read_u32()
+                # if unused_string_length > 1:
+                #     tile.unused_string = self.read_str(unused_string_length)
                     
-                self.data.tiles_types.append(tile)
+                # self.data.tiles_types.append(tile)
                 
             # Read tiles with proper chunking
             tiles_count = self.read_u32()
@@ -804,10 +809,16 @@ class WorldMap(ActedBinaryFile):
             # actual_tiles = self.data.width * self.data.height
             
             # Read all chunks
-            for i in range(tiles_count):
-                tile = self.read_u32()
-                if (i % self.data.chunk_width) < self.data.width:
-                    self.data.tiles.append(tile)
+            for index in range(tiles_count):
+                tile_value = self.read_u32()
+                x = index % max(1, self.data.chunk_width)
+                y = index // max(1, self.data.chunk_width)
+                if x < self.data.width and y < self.data.height:
+                    self.data.tiles.append(tile_value)
+            # for i in range(tiles_count):
+            #     tile = self.read_u32()
+            #     if (i % self.data.chunk_width) < self.data.width:
+            #         self.data.tiles.append(tile)
                 
             # Read events
             events_count = self.read_u32()
@@ -827,41 +838,103 @@ class WorldMap(ActedBinaryFile):
             print(f"Error parsing WorldMap: {e}")
             return False
             
-    def save(self) -> bool:
+    def serialize(self) -> bool:
         try:
+            self.start_writing()
+
+            self.write_u32(self.version)  # Write magic number
+            self.write_u32(self._settings_count)  # Write settings count
+            
+            # Write map dimensions and chunk info
+            self.write_u32(self.data.width)
+            self.write_u32(self.data.height)
+            
             # Calculate proper chunk size
             chunk_size = self._calculate_chunk_size(self.data.width)
             actual_tiles = self.data.width * self.data.height
             
-            self.write_u32(self.VERSIONS[0])  # Write magic number
-            self.write_u32(len(self.data.tiles_types))  # Write tile types count
+            self.write_u32(self.data.chunk_width)
+            self.write_u32(self.data.chunk_pow)
             
-            # Write tiles count (chunk size)
-            self.write_u32(chunk_size)
+            # Write init position
+            self.write_u32(self.data.init_x)
+            self.write_u32(self.data.init_y)
             
-            # Write actual tiles
-            for tile in self.data.tiles:
-                self.write_u32(tile)
-                
-            # Pad remaining chunk space with zeros
-            for _ in range(chunk_size - actual_tiles):
-                self.write_u32(0)
-                
+            # Write background info
+            self.write_u32(self.data.background_index)
+            self.write_u32(self.data.use_background)
+            
+            # Write strings count and strings
+            self.write_u32(self.data.strings_count)
+            self.write_std_string(self.data.name)
+            self.write_std_string(self.data.bg_path)
+            
+            # Write tile types count and tile types
+            self.write_u32(len(self.data.tiles_types))
+            for chip in self.data.tiles_types:
+                self._write_world_chip(chip)
+            
+            # Write tiles count and tiles
+            tiles_count = self.data.chunk_width * self.data.height
+            tiles_count = max(tiles_count, (self.data.height - 1) * self.data.chunk_width + self.data.width)
+            
+            self.write_u32(tiles_count)
+            
+            tiles_to_write = [0] * tiles_count
+
+            tile_idx = 0
+            for y in range(self.data.height):
+                for x in range(self.data.width):
+                    index = y * self.data.chunk_width + x
+                    if index < tiles_count and tile_idx < len(self.data.tiles):
+                        tiles_to_write[index] = self.data.tiles[tile_idx]
+                        tile_idx += 1
+                        
+            # self.write_u32(len(self.data.tiles))
+            # for tile in self.data.tiles:
+            #     self.write_u32(tile)
+
+            # Write all tiles
+            for tile_value in tiles_to_write:
+                self.write_u32(tile_value)
+            
             # Write events
             self.write_u32(len(self.data.events))
             for event in self.data.events:
                 self._write_world_event(event)
-                
+            
             # Write event palette
             self.write_u32(len(self.data.events_pal))
             for event in self.data.events_pal:
                 self._write_world_event(event)
-                
+                    
             return True
-            
+                
         except Exception as e:
-            print(f"Error saving WorldMap: {e}")
+            print(f"Error serializing WorldMap: {e}")
             return False
+        finally:
+            self.finish_writing()
+        
+    def _read_world_chip(self) -> WorldChip:
+        chip = WorldChip()
+        chip.header = self.read_u32()
+        chip.tile_index = self.read_u32()
+        chip.locked = self.read_u32()
+        chip.graphic = self.read_u32()
+        chip.strings_count = self.read_u32()
+        chip.name = self.read_std_string()
+        chip.unused_string = self.read_std_string()
+        return chip
+
+    def _write_world_chip(self, chip: WorldChip) -> None:
+        self.write_u32(chip.header)
+        self.write_u32(chip.tile_index)
+        self.write_u32(chip.locked)
+        self.write_u32(chip.graphic)
+        self.write_u32(chip.strings_count or 2)
+        self.write_std_string(chip.name)
+        self.write_std_string(chip.unused_string)
 
     def _read_world_event(self) -> WorldEventBase:
         """Helper to read a world event structure"""
@@ -873,9 +946,7 @@ class WorldMap(ActedBinaryFile):
         event.strings_count = self.read_u32()  # 1
         
         # Read event name
-        name_length = self.read_u32()
-        if name_length > 1:
-            event.name = self.read_str(name_length)
+        event.name = self.read_std_string()
         
         # Read pages count
         event.pages_count = self.read_u32()
@@ -912,14 +983,10 @@ class WorldMap(ActedBinaryFile):
         page.strings_count = self.read_u32()  # 2
         
         # Read world_name
-        world_name_length = self.read_u32()
-        if world_name_length > 1:
-            page.world_name = self.read_str(world_name_length)
+        page.world_name = self.read_std_string()
         
         # Read start_stage
-        start_stage_length = self.read_u32()
-        if start_stage_length > 1:
-            page.start_stage = self.read_str(start_stage_length)
+        page.start_stage = self.read_std_string()
             
         return page
 
@@ -929,11 +996,11 @@ class WorldMap(ActedBinaryFile):
         self.write_u32(event.placement_x)
         self.write_u32(event.placement_y)
         
-        self.write_u32(len(event.name))
-        if event.name:
-            self.write_str(event.name)
+        self.write_u32(event.strings_count or 1)
+
+        self.write_std_string(event.name)
         
-        self.write_u32(event.pages_count)
+        self.write_u32(len(event.pages)) # event.pages_count
         
         for page in event.pages:
             self._write_world_event_page(page)
@@ -959,10 +1026,6 @@ class WorldMap(ActedBinaryFile):
         self.write_u32(page.variation_variable)
         self.write_u32(page.variation_constant)
         
-        self.write_u32(len(page.world_name))
-        if page.world_name:
-            self.write_str(page.world_name)
-        
-        self.write_u32(len(page.start_stage))
-        if page.start_stage:
-            self.write_str(page.start_stage)
+        self.write_u32(page.strings_count or 2)
+        self.write_std_string(page.world_name)
+        self.write_std_string(page.start_stage)

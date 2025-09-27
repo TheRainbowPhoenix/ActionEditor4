@@ -46,6 +46,7 @@ class MapViewport(QFrame):
         self.tiles = []
         self.tiles_image: Optional[QImage] = None
         self.background_image: Optional[QImage] = None
+        self.event_positions: set[tuple[int, int]] = set()
         
         # Mouse tracking for grid highlight
         self.setMouseTracking(True)
@@ -61,6 +62,15 @@ class MapViewport(QFrame):
     def set_tiles(self, tiles: list):
         """Set map tiles"""
         self.tiles = tiles
+        self.update()
+
+    def set_events(self, events: list):
+        """Set event placements for highlighting."""
+        self.event_positions = {
+            (event.placement_x, event.placement_y)
+            for event in events
+            if hasattr(event, "placement_x") and hasattr(event, "placement_y")
+        }
         self.update()
         
     def load_tileset(self, path: Union[str, Path]):
@@ -132,7 +142,7 @@ class MapViewport(QFrame):
             
     def paintEvent(self, event):
         """Draw the map"""
-        super().paintEvent(event)
+        # super().paintEvent(event)
         painter = QPainter(self)
         
         # Draw background if available
@@ -166,7 +176,24 @@ class MapViewport(QFrame):
         for y in range(self.map_height + 1):
             painter.drawLine(0, y * self.TILE_SIZE,
                            self.map_width * self.TILE_SIZE, y * self.TILE_SIZE)
-                           
+        
+        # Draw event markers on top of the grid
+        if self.event_positions:
+            painter.setPen(QPen(QColor(255, 64, 64)))
+            painter.setBrush(QColor(255, 64, 64, 160))
+            marker_size = max(6, self.TILE_SIZE // 2)
+            offset = (self.TILE_SIZE - marker_size) // 2
+            for x, y in self.event_positions:
+                if 0 <= x < self.map_width and 0 <= y < self.map_height:
+                    rect = QRect(
+                        x * self.TILE_SIZE + offset,
+                        y * self.TILE_SIZE + offset,
+                        marker_size,
+                        marker_size,
+                    )
+                    painter.drawEllipse(rect)
+            painter.setBrush(Qt.NoBrush)
+        
         # Draw hover highlight
         if self.hover_pos.x() >= 0:
             pen = QPen(QColor(0x80, 0x00, 0xFF))
@@ -367,8 +394,44 @@ class WorldWindow(QMainWindow):
                 
     def on_save_as(self):
         """Handle save as action"""
-        # TODO: Implement save as
-        pass
+        if not self.project.world_map:
+            QMessageBox.warning(self, "Save World Map", "World map data is not available.")
+            return
+
+        # TODO: there should not be location picker. This is a bogus translation
+        default_path = getattr(self.project.world_map, "file_path", None)
+        if default_path is None:
+            default_path = self.project.path / "data" / "WorldMap.dat"
+
+        file_path, _ = QFileDialog.getSaveFileName(
+            self,
+            "Save World Map As",
+            str(default_path),
+            "World Map (*.dat);;All Files (*)",
+        )
+
+        if not file_path:
+            return
+
+        if not self.project.world_map.serialize():
+            QMessageBox.critical(
+                self,
+                "Save World Map",
+                "Failed to serialize world map.",
+            )
+            return
+
+        if not self.project.world_map.save_to(file_path):
+            QMessageBox.critical(
+                self,
+                "Save World Map",
+                "Failed to save the world map file.",
+            )
+            return
+
+        # self.project.world_map.file_path = Path(file_path)
+        if hasattr(self, "statusBar") and self.statusBar:
+            self.statusBar.showMessage(f"Saved world map to {file_path}", 5000)
         
     def on_exit(self):
         """Handle exit action"""
