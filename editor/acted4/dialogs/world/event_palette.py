@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Iterable, List, Optional
 
-from PySide6.QtCore import Qt, Signal
+from PySide6.QtCore import Signal
 from PySide6.QtWidgets import (
     QAbstractItemView,
     QCheckBox,
@@ -49,12 +49,10 @@ class EventPalette(FloatingPaletteWindow):
     * ``データ数`` -> "Data Count"
 
     The implementation below uses standard Qt widgets so designers can use the
-    application while we wait for the dedicated Qt Designer layouts.  A request
-    to the UI designer is attached in :meth:`_show_designer_placeholder` and
-    explains the visual requirements captured from the reference screenshots.
+    application while we wait for the dedicated Qt Designer layouts.
     """
 
-    insertRequested = Signal()
+    insertRequested = Signal(int)
     editRequested = Signal(int)
     deleteRequested = Signal(int)
     dataCountRequested = Signal(int)
@@ -81,17 +79,13 @@ class EventPalette(FloatingPaletteWindow):
         layout.addWidget(self.auto_number_checkbox)
 
         # List of event templates
-        self.event_list = QListWidget(self)
-        self.event_list.setSelectionMode(QAbstractItemView.SingleSelection)
-        self.event_list.itemDoubleClicked.connect(self._handle_edit_action)
-        layout.addWidget(self.event_list)
 
         # Action buttons
         buttons_row = QHBoxLayout()
         self.insert_button = QPushButton("Insert", self)
         self.edit_button = QPushButton("Edit", self)
         self.delete_button = QPushButton("Delete", self)
-        self.count_button = QPushButton("Data Count", self)
+        self.count_button = QPushButton("Count", self)
 
         self.insert_button.clicked.connect(self._handle_insert_action)
         self.edit_button.clicked.connect(self._handle_edit_action)
@@ -102,16 +96,23 @@ class EventPalette(FloatingPaletteWindow):
             buttons_row.addWidget(button)
 
         layout.addLayout(buttons_row)
-
-        # Designer instructions placeholder
-        self._show_designer_placeholder(layout)
+        
+        self.event_list = QListWidget(self)
+        self.event_list.setSelectionMode(QAbstractItemView.SingleSelection)
+        self.event_list.itemDoubleClicked.connect(self._handle_edit_action)
+        layout.addWidget(self.event_list)
 
         self.setCentralWidget(central)
         self.hide()
 
     # ------------------------------------------------------------------
     # Public API
-    def set_entries(self, entries: Iterable[EventListEntry]) -> None:
+    def set_entries(
+        self,
+        entries: Iterable[EventListEntry],
+        *,
+        selected_index: Optional[int] = None,
+    ) -> None:
         """Populate the event template list."""
 
         self.entries = list(entries)
@@ -122,7 +123,10 @@ class EventPalette(FloatingPaletteWindow):
             self.event_list.addItem(item)
 
         if self.event_list.count():
-            self.event_list.setCurrentRow(0)
+            if selected_index is None:
+                selected_index = 0
+            selected_index = max(0, min(selected_index, self.event_list.count() - 1))
+            self.event_list.setCurrentRow(selected_index)
 
     def current_index(self) -> Optional[int]:
         """Return the currently selected row or ``None``."""
@@ -133,9 +137,13 @@ class EventPalette(FloatingPaletteWindow):
     # ------------------------------------------------------------------
     # Internal helpers
     def _handle_insert_action(self) -> None:
+        target_index = self.current_index()
+        if target_index is None:
+            target_index = self.event_list.count()
+
         dialog = EventEditorDialog(self)
         if dialog.exec() == QDialog.Accepted:
-            self.insertRequested.emit()
+            self.insertRequested.emit(target_index)
 
     def _handle_edit_action(self, *_args) -> None:
         index = self.current_index()
@@ -153,6 +161,10 @@ class EventPalette(FloatingPaletteWindow):
             QMessageBox.information(self, "Delete Event", "Select an event to delete.")
             return
 
+        if self.event_list.count() <= 1:
+            QMessageBox.information(self, "Delete Event", "At least one event template is required.")
+            return
+
         reply = QMessageBox.question(
             self,
             "Delete Event",
@@ -167,21 +179,6 @@ class EventPalette(FloatingPaletteWindow):
         dialog = EventDataCountDialog(self.event_list.count(), self)
         if dialog.exec() == QDialog.Accepted:
             self.dataCountRequested.emit(dialog.value())
-
-    def _show_designer_placeholder(self, layout: QVBoxLayout) -> None:
-        """Displays instructions for the designer until a final UI arrives."""
-
-        note = QLabel(self)
-        note.setWordWrap(True)
-        note.setAlignment(Qt.AlignLeft | Qt.AlignTop)
-        note.setStyleSheet("color: #666; font-size: 11px;")
-        note.setText(
-            "Designer TODO: replace this placeholder with the dedicated Qt "
-            "Designer dialog matching the legacy 'Event Palette'. Include "
-            "the three checkboxes, the sortable template list, and action "
-            "buttons ('Insert', 'Edit', 'Delete', 'Data Count')."
-        )
-        layout.addWidget(note)
 
 
 class EventEditorDialog(QDialog):
@@ -220,14 +217,18 @@ class EventEditorDialog(QDialog):
 class EventDataCountDialog(QDialog):
     """Simple dialog that lets the user pick the number of event slots."""
 
+    MIN_COUNT = 1
+    MAX_COUNT = 99
+
     def __init__(self, current_value: int, parent=None) -> None:
         super().__init__(parent)
         self.setWindowTitle("Event Count")
 
         layout = QFormLayout(self)
         self.spin = QSpinBox(self)
-        self.spin.setRange(0, 999)
-        self.spin.setValue(max(0, current_value))
+        self.spin.setRange(self.MIN_COUNT, self.MAX_COUNT)
+        clamped = max(self.MIN_COUNT, min(self.MAX_COUNT, current_value))
+        self.spin.setValue(clamped)
         layout.addRow(QLabel("Number of entries:"), self.spin)
 
         buttons = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)

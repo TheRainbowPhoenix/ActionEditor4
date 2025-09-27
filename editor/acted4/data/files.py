@@ -177,41 +177,45 @@ class ScreenEffectData:
     elements: List[ScreenEffectElement] = field(default_factory=list)
 
 @dataclass
-class WorldTile:
+class WorldChip:
     header: int = 0
     tile_index: int = 0
     locked: int = 0
     graphic: int = 0
-    unknown1: int = 2  # always 2?
+    strings_count: int = 2  # 2 - std::vector<std::string>
     name: str = ""
-    unknown2: int = 1  # always 1?
+    unused_string: str = ""
+
+@dataclass
+class WorldEventPage:
+    start: int = 0
+    event_type: int = 0
+    graphic: int = 0
+    world_number: int = 0
+    pass_without_clear: int = 0
+    play_after_clear: int = 0
+    on_game_clear: int = 0
+    appearance_condition_world: int = 1  # 1
+    appearance_condition_variable: int = 0  # dropdown
+    appearance_condition_constant: int = 0  # spinner
+    appearance_condition_comparison_content: int = 0  # small dropdown
+    appearance_condition_total_score: int = 0
+    variation_setting_present: int = 0
+    variation_variable: int = 0
+    variation_constant: int = 0
+    strings_count: int = 2  # 2 - std::vector<std::string>
+    world_name: str = ""  # std::string
+    start_stage: str = ""  # std::string
 
 @dataclass
 class WorldEventBase:
     header: int = 0
-    unknown1: int = 0
-    unknown2: int = 0
-    unknown3: int = 0
+    placement_x: int = 0
+    placement_y: int = 0
+    strings_count: int = 0  # 1 - std::vector<std::string>
     name: str = ""
-    unknown4: int = 0
-    unknown5: int = 0
-    event_type: int = 0
-    graphic: int = 0
-    world_clear: int = 0
-    pass_without_clear: int = 0
-    play_after_clear: int = 0
-    on_game_clear: int = 0
-    unknown14: int = 1
-    spawn_event_id: int = 0
-    spawn_cond_val: int = 0
-    spawn_cond_type: int = 0
-    total_score: int = 0
-    unknown19: int = 0
-    variation_id: int = 0
-    variation_val: int = 0
-    unknown96: int = 2  # always 2?
-    world_name: str = ""
-    start_stage: str = ""
+    pages_count: int = 0
+    pages: List[WorldEventPage] = field(default_factory=list)
 
 @dataclass
 class WorldMapData:
@@ -226,7 +230,7 @@ class WorldMapData:
     strings_count: int = 2   # always 2?
     name: str = ""
     bg_path: str = ""
-    tiles_types: List[WorldTile] = field(default_factory=list)
+    tiles_types: List[WorldChip] = field(default_factory=list)
     tiles: List[int] = field(default_factory=list)
     events: List[WorldEventBase] = field(default_factory=list)
     events_pal: List[WorldEventBase] = field(default_factory=list)
@@ -772,21 +776,26 @@ class WorldMap(ActedBinaryFile):
             if bg_path_length > 1:
                 self.data.bg_path = self.read_str(bg_path_length)
                 
-            # Read tile types
+            # Read tile types (WorldChip)
             tiles_types_count = self.read_u32()
             for _ in range(tiles_types_count):
-                tile = WorldTile()
+                tile = WorldChip()
                 tile.header = self.read_u32()
                 tile.tile_index = self.read_u32()
                 tile.locked = self.read_u32()
                 tile.graphic = self.read_u32()
-                tile.unknown1 = self.read_u32()
+                tile.strings_count = self.read_u32()  # 2
                 
+                # Read first string (name)
                 name_length = self.read_u32()
                 if name_length > 1:
                     tile.name = self.read_str(name_length)
+                
+                # Read second string (unused_string)
+                unused_string_length = self.read_u32()
+                if unused_string_length > 1:
+                    tile.unused_string = self.read_str(unused_string_length)
                     
-                tile.unknown2 = self.read_u32()
                 self.data.tiles_types.append(tile)
                 
             # Read tiles with proper chunking
@@ -858,81 +867,102 @@ class WorldMap(ActedBinaryFile):
         """Helper to read a world event structure"""
         event = WorldEventBase()
         event.header = self.read_u32()
-        event.unknown1 = self.read_u32()
-        event.unknown2 = self.read_u32()
-        event.unknown3 = self.read_u32()
+        event.placement_x = self.read_u32()
+        event.placement_y = self.read_u32()
         
+        event.strings_count = self.read_u32()  # 1
+        
+        # Read event name
         name_length = self.read_u32()
         if name_length > 1:
             event.name = self.read_str(name_length)
-            
-        event.unknown4 = self.read_u32()
-        event.unknown5 = self.read_u32()
-        event.event_type = self.read_u32()
-        event.graphic = self.read_u32()
         
-        event.world_clear = self.read_u32()
-        event.pass_without_clear = self.read_u32()
-        event.play_after_clear = self.read_u32()
-        event.on_game_clear = self.read_u32()
-        event.unknown14 = self.read_u32()
-        event.spawn_event_id = self.read_u32()
-        event.spawn_cond_val = self.read_u32()
-        event.spawn_cond_type = self.read_u32()
-        event.total_score = self.read_u32()
-        event.unknown19 = self.read_u32()
+        # Read pages count
+        event.pages_count = self.read_u32()
         
-        event.variation_id = self.read_u32()
-        event.variation_val = self.read_u32()
-        
-        event.unknown96 = self.read_u32()
-        
-        world_name_length = self.read_u32()
-        if world_name_length > 1:
-            event.world_name = self.read_str(world_name_length)
-            
-        start_stage_length = self.read_u32()
-        if start_stage_length > 1:
-            event.start_stage = self.read_str(start_stage_length)
+        # Read pages
+        for _ in range(event.pages_count):
+            page = self._read_world_event_page()
+            event.pages.append(page)
             
         return event
+
+    def _read_world_event_page(self) -> WorldEventPage:
+        """Helper to read a world event page structure"""
+        page = WorldEventPage()
+        page.start = self.read_u32()
+        page.event_type = self.read_u32()
+        page.graphic = self.read_u32()
+        
+        page.world_number = self.read_u32()
+        page.pass_without_clear = self.read_u32()
+        page.play_after_clear = self.read_u32()
+        page.on_game_clear = self.read_u32()
+        
+        page.appearance_condition_world = self.read_u32()
+        page.appearance_condition_variable = self.read_u32()
+        page.appearance_condition_constant = self.read_u32()
+        page.appearance_condition_comparison_content = self.read_u32()
+        page.appearance_condition_total_score = self.read_u32()
+        
+        page.variation_setting_present = self.read_u32()
+        page.variation_variable = self.read_u32()
+        page.variation_constant = self.read_u32()
+        
+        page.strings_count = self.read_u32()  # 2
+        
+        # Read world_name
+        world_name_length = self.read_u32()
+        if world_name_length > 1:
+            page.world_name = self.read_str(world_name_length)
+        
+        # Read start_stage
+        start_stage_length = self.read_u32()
+        if start_stage_length > 1:
+            page.start_stage = self.read_str(start_stage_length)
+            
+        return page
 
     def _write_world_event(self, event: WorldEventBase):
         """Helper to write a world event structure"""
         self.write_u32(event.header)
-        self.write_u32(event.unknown1)
-        self.write_u32(event.unknown2)
-        self.write_u32(event.unknown3)
+        self.write_u32(event.placement_x)
+        self.write_u32(event.placement_y)
         
         self.write_u32(len(event.name))
         if event.name:
             self.write_str(event.name)
-            
-        self.write_u32(event.unknown4)
-        self.write_u32(event.unknown5)
-        self.write_u32(event.event_type)
-        self.write_u32(event.graphic)
         
-        self.write_u32(event.world_clear)
-        self.write_u32(event.pass_without_clear)
-        self.write_u32(event.play_after_clear)
-        self.write_u32(event.on_game_clear)
-        self.write_u32(event.unknown14)
-        self.write_u32(event.spawn_event_id)
-        self.write_u32(event.spawn_cond_val)
-        self.write_u32(event.spawn_cond_type)
-        self.write_u32(event.total_score)
-        self.write_u32(event.unknown19)
+        self.write_u32(event.pages_count)
         
-        self.write_u32(event.variation_id)
-        self.write_u32(event.variation_val)
+        for page in event.pages:
+            self._write_world_event_page(page)
+
+    def _write_world_event_page(self, page: WorldEventPage):
+        """Helper to write a world event page structure"""
+        self.write_u32(page.start)
+        self.write_u32(page.event_type)
+        self.write_u32(page.graphic)
         
-        self.write_u32(event.unknown96)
+        self.write_u32(page.world_number)
+        self.write_u32(page.pass_without_clear)
+        self.write_u32(page.play_after_clear)
+        self.write_u32(page.on_game_clear)
         
-        self.write_u32(len(event.world_name))
-        if event.world_name:
-            self.write_str(event.world_name)
-            
-        self.write_u32(len(event.start_stage))
-        if event.start_stage:
-            self.write_str(event.start_stage)
+        self.write_u32(page.appearance_condition_world)
+        self.write_u32(page.appearance_condition_variable)
+        self.write_u32(page.appearance_condition_constant)
+        self.write_u32(page.appearance_condition_comparison_content)
+        self.write_u32(page.appearance_condition_total_score)
+        
+        self.write_u32(page.variation_setting_present)
+        self.write_u32(page.variation_variable)
+        self.write_u32(page.variation_constant)
+        
+        self.write_u32(len(page.world_name))
+        if page.world_name:
+            self.write_str(page.world_name)
+        
+        self.write_u32(len(page.start_stage))
+        if page.start_stage:
+            self.write_str(page.start_stage)

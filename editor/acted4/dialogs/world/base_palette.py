@@ -22,7 +22,7 @@ class FloatingPaletteWindow(QMainWindow):
         self.setWindowTitle(title)
         self.setWindowFlags(
             Qt.Tool
-            | Qt.WindowStaysOnTopHint
+            # | Qt.WindowStaysOnTopHint
             | Qt.CustomizeWindowHint
             | Qt.WindowTitleHint
         )

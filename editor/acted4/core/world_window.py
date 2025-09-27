@@ -11,6 +11,8 @@ from enum import Enum, auto
 from .project import ProjectData
 from ..common.window_manager import WindowManager
 from ..common.app_state import AppStateManager, PaletteMode
+from ..data.files import WorldEventBase
+from ..dialogs.world.event_palette import EventListEntry, EventPalette
 from ..dialogs.world.world_map_settings_dialog import WorldMapSettingsDialog
 
 class EditMode(Enum):
@@ -361,6 +363,7 @@ class WorldWindow(QMainWindow):
                 entries.append(EventListEntry(slot=idx, name=name))
 
             self.event_palette.set_entries(entries)
+        self._refresh_event_palette()
                 
     def on_save_as(self):
         """Handle save as action"""
@@ -484,6 +487,108 @@ class WorldWindow(QMainWindow):
             self.chip_picker.hide()
             self.event_palette.show()
             self.event_palette.raise_()
+    
+    def _on_insert_event(self, index: int) -> None:
+        """Insert a new event before the selected row."""
+
+        data = self._get_world_map_data()
+        if data is None:
+            return
+
+        events = data.events_pal
+        index = max(0, min(index, len(events)))
+        events.insert(index, WorldEventBase())
+
+        self._refresh_event_palette(selected_index=index)
+
+    def _on_edit_event(self, index: int) -> None:
+        """Handle edits confirmed by the event palette dialog."""
+
+        data = self._get_world_map_data()
+        if data is None or not data.events_pal:
+            return
+
+        if index < 0 or index >= len(data.events_pal):
+            return
+
+        # TODO: Wire EventEditorDialog data back into the event structure.
+
+    def _on_delete_event(self, index: int) -> None:
+        """Delete the selected event unless it is the last remaining entry."""
+
+        data = self._get_world_map_data()
+        if data is None:
+            return
+
+        events = data.events_pal
+        if len(events) <= 1:
+            QMessageBox.information(
+                self,
+                "Delete Event",
+                "At least one event template must remain.",
+            )
+            return
+
+        if index < 0 or index >= len(events):
+            return
+
+        del events[index]
+
+        next_index = min(index, len(events) - 1)
+        self._refresh_event_palette(selected_index=next_index)
+
+    def _on_change_event_count(self, new_count: int) -> None:
+        """Update the number of event templates in the palette."""
+
+        data = self._get_world_map_data()
+        if data is None:
+            return
+
+        new_count = max(1, min(99, new_count))
+        events = data.events_pal
+        current = len(events)
+
+        if new_count > current:
+            events.extend(WorldEventBase() for _ in range(new_count - current))
+        elif new_count < current:
+            del events[new_count:]
+
+        selected_index = self.event_palette.current_index()
+        if selected_index is None:
+            selected_index = 0
+        selected_index = max(0, min(selected_index, len(events) - 1))
+
+        self._refresh_event_palette(selected_index=selected_index)
+
+    def _get_world_map_data(self):
+        """Return the current world map data if available."""
+
+        if getattr(self.project, "world_map", None):
+            return self.project.world_map.data
+        return None
+
+    def _refresh_event_palette(self, *, selected_index: Optional[int] = None) -> None:
+        """Sync the event palette widget with the underlying data."""
+
+        if not hasattr(self, "event_palette"):
+            return
+
+        data = self._get_world_map_data()
+        if data is None:
+            self.event_palette.set_entries([])
+            return
+
+        events = data.events_pal
+        if not events:
+            events.append(WorldEventBase())
+
+        entries = []
+        for idx, event in enumerate(events, start=1):
+            name = (event.name or "").strip()
+            display_name = name if name else f"Event {idx}"
+            entries.append(EventListEntry(slot=idx, name=display_name))
+
+        self.event_palette.set_entries(entries, selected_index=selected_index)
             
     def on_mapchip(self):
         """Handle map chip mode selection"""
@@ -492,39 +597,7 @@ class WorldWindow(QMainWindow):
     def on_event(self):
         """Handle event mode selection"""
         self._set_edit_mode(EditMode.EVENT)
-
-    def _on_insert_event(self):
-        """Placeholder handler for inserting a new event."""
-        QMessageBox.information(
-            self,
-            "Insert Event",
-            "Event creation is not implemented yet.",
-        )
-
-    def _on_edit_event(self, index: int):
-        """Placeholder handler for editing an existing event."""
-        QMessageBox.information(
-            self,
-            "Edit Event",
-            f"Editing event #{index + 1} is not implemented yet.",
-        )
-
-    def _on_delete_event(self, index: int):
-        """Placeholder handler for deleting an event."""
-        QMessageBox.information(
-            self,
-            "Delete Event",
-            f"Deleting event #{index + 1} is not implemented yet.",
-        )
-
-    def _on_change_event_count(self, new_count: int):
-        """Placeholder handler for changing the number of event templates."""
-        QMessageBox.information(
-            self,
-            "Event Count",
-            f"Changing the event count to {new_count} is not implemented yet.",
-        )
-
+    
     def on_clear_mapchips(self):
         """Handle clear map chips action"""
         reply = QMessageBox.question(
