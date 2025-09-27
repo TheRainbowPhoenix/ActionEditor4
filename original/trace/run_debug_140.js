@@ -189,6 +189,16 @@ if (baseAddr === null) {
     //     }
     // });
 
+    const T = {
+        'はじめから': 'START',   // 5 → 5
+        'つづきから': 'LOAD?',   // 5 → 5
+        'チャレンジ': 'TRIAL',   // 5 → 5
+        'フリー':     'FRE',     // 3 → 3
+        'リプレイ':   'PLAY',    // 4 → 4
+        'オプション': 'OPTN',    // 5 → 4 (will pad)
+        'しゅうりょう':'QUIT!'   // 5 → 5
+    };
+
     Interceptor.attach(drawTextAAddr, {
         onEnter(args) {
             // args[0]=this, [1]=hdc, [2]=x, [3]=y, [4]=lpString, [5]=transparentBg
@@ -196,15 +206,27 @@ if (baseAddr === null) {
             // 1) Decode the original SJIS string to JS:
             const origPtr = args[3];
             if (origPtr.isNull()) return;
-
             
             var origText = Memory.readCString(origPtr);
 
-            // const origText = sjisPtrToUtf8(origPtr) || Memory.readAnsiString(origPtr);
-            // console.log("[*] DrawTextA original:", origText);
+            if (origText.startsWith("FPS")) return;
 
-            const repl = "A".repeat(origText.length);
-            origPtr.writeAnsiString(repl);
+            const utfText = sjisPtrToUtf8(origPtr) || Memory.readAnsiString(origPtr);
+            console.log("[*] DrawTextA original:", utfText);
+
+            const tr = T[utfText];
+            if (!tr) return;
+
+            let out = tr;
+            if (tr.length < origText.length) {
+                out = tr + ' '.repeat(origText.length - tr.length);
+            } else if (tr.length > origText.length) {
+                out = tr.slice(0, origText.length);
+            }
+            origPtr.writeAnsiString(out);
+
+            // const repl = "A".repeat(origText.length);
+            // origPtr.writeAnsiString(repl);
             // 2) Build a new string of the same length, all 'A's:
             // const length = origText ? origText.length : 0;                // number of characters
             // const replacement = origText.substring(1); // "A".repeat(length-1) + "\0";        // e.g. "AAAA..."
