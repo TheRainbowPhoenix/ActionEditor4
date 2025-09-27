@@ -1,11 +1,11 @@
 from PySide6.QtWidgets import QWidget, QInputDialog, QMessageBox, QFileDialog
-from .base_dialog import BaseTabDialog, SideListTabDialog
+from .base_dialog import BaseTabWidget, SideListTabWidget
 from .ui_BmpCharaExc import Ui_BmpCharaExcWidget
 from ...core.project import ProjectData
 from ...data.files import BmpCharaExcElement
 import os
 
-class BmpCharaExcDialog(SideListTabDialog):
+class BmpCharaExcDialog(SideListTabWidget):
     # Scale mode mapping (internal value -> display text)
     SCALE_MODES = {
         2: "x4",

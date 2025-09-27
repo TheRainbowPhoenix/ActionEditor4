@@ -1,8 +1,8 @@
-from PySide6.QtWidgets import QWidget, QListWidget, QPushButton, QInputDialog
+from PySide6.QtWidgets import QWidget, QListWidget, QPushButton, QInputDialog, QMessageBox
 from ...core.project import ProjectData
 from typing import Any, Callable, List
 
-class BaseTabDialog(QWidget):
+class BaseTabWidget(QWidget):
     def __init__(self, project: ProjectData, parent=None):
         super().__init__(parent)
         self.project = project
@@ -26,7 +26,7 @@ class BaseTabDialog(QWidget):
         """Reset any pending changes"""
         self._is_dirty = False
 
-class SideListTabDialog(BaseTabDialog):
+class SideListTabWidget(BaseTabWidget):
     def __init__(self, project: ProjectData, parent=None, skip_first=False):
         super().__init__(project, parent)
         self._list_data = None
@@ -102,22 +102,51 @@ class SideListTabDialog(BaseTabDialog):
         
         # Load initial data
         self._refresh_list(list_widget)
+
+    def init_side_list_dual(self, 
+                        list_widget: QListWidget,
+                        insert_btn: QPushButton,
+                        delete_btn: QPushButton,
+                        data_list: List[Any],
+                        new_element_factory: Callable[[], Any],
+                        format_item: Callable[[int, Any], str] = None):
+        self._list_data = data_list
+        self._list_widget = list_widget # Store for helper methods
+        self._new_element_factory = new_element_factory # Store for insert method
+
+        if format_item:
+            self._format_item = format_item
+        else:
+            # Use default formatting, accounting for skip_first if applicable
+            self._update_format(len(data_list))
+
+        # Connect standard buttons
+        insert_btn.clicked.connect(self._on_list_insert)
+        delete_btn.clicked.connect(self._on_list_delete)
         
-    def _refresh_list(self, list_widget: QListWidget):
+        # Load initial data
+        self._refresh_list(list_widget)
+        
+    def _refresh_list(self, list_widget: QListWidget = None):
         """Refresh list widget with current data"""
         if not self.list_data or not self._format_item:
             return
-            
+        
+        if list_widget is None:
+            list_widget = self._list_widget
+        
+        self._list_widget.blockSignals(True)
+
         list_widget.clear()
 
         list_data = self.list_data
-
         for i, element in enumerate(list_data):
-            
             list_widget.addItem(self._format_item(self.offset(i), element))
             
         if list_widget.count() > 0:
             list_widget.setCurrentRow(0)
+        
+        self._list_widget.blockSignals(False)
 
     def offset(self, i):
         return i +1 if self.skip_first else i
@@ -195,3 +224,56 @@ class SideListTabDialog(BaseTabDialog):
         """Update a single item in the list without full refresh"""
         if 0 <= row < list_widget.count():
             list_widget.item(row).setText(self._format_item(self.offset(row), element))
+    
+    def _on_list_insert(self):
+        """Insert a new element before the currently selected index."""
+        current_row = self._list_widget.currentRow()
+        
+        # If no item is selected, default to inserting at the end
+        if current_row < 0:
+            insert_index = len(self._list_data)
+        else:
+            # Insert *before* the selected item
+            insert_index = current_row
+
+        new_element = self._new_element_factory()
+        if new_element is None: # Factory might return None on cancel
+            return
+
+        # Insert into the underlying data list
+        self._list_data.insert(insert_index, new_element)
+        
+        # Refresh the list view to reflect the new item
+        self._refresh_list()
+        
+        # Optionally, select the newly inserted item
+        self._list_widget.setCurrentRow(insert_index)
+
+    def _on_list_delete(self):
+        """Delete the currently selected element."""
+        current_row = self._list_widget.currentRow()
+        
+        if current_row < 0 or current_row >= len(self._list_data):
+            # No valid selection or selection is out of bounds
+            QMessageBox.warning(self, "Delete Item", "Please select an item to delete.")
+            return
+
+        # Confirm deletion if desired
+        # reply = QMessageBox.question(self, "Delete Item", "Are you sure you want to delete the selected item?")
+        # if reply != QMessageBox.Yes:
+        #     return
+
+        # Remove from the underlying data list
+        del self._list_data[current_row]
+        
+        # Refresh the list view
+        self._refresh_list()
+        
+        # Adjust selection: select the item that moved into the deleted spot,
+        # or the last item if the last one was deleted.
+        new_row_count = self._list_widget.count()
+        if new_row_count > 0:
+            # Preferably select the item that was after the deleted one, now at current_row
+            # If the deleted item was the last one, select the new last item (current_row - 1)
+            select_row = min(current_row, new_row_count - 1)
+            self._list_widget.setCurrentRow(select_row)

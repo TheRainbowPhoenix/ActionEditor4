@@ -1,12 +1,12 @@
 from PySide6.QtWidgets import QWidget, QInputDialog, QMessageBox, QFileDialog
-from .base_dialog import SideListTabDialog
+from .base_dialog import SideListTabWidget
 from .ui_Effect import Ui_EffectWidget
 from ...core.project import ProjectData
 from ...data.files import EffectElement, EffectAnimation
 from .animation_list import ListManager, AnimationDialog
 import os
 
-class EffectDialog(SideListTabDialog):
+class EffectDialog(SideListTabWidget):
     def __init__(self, project: ProjectData, parent=None):
         super().__init__(project, parent, skip_first=True)
         

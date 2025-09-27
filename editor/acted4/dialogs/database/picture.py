@@ -1,11 +1,11 @@
 from PySide6.QtWidgets import QWidget, QInputDialog, QMessageBox, QFileDialog
-from .base_dialog import SideListTabDialog
+from .base_dialog import SideListTabWidget
 from .ui_Picture import Ui_PictureWidget
 from ...core.project import ProjectData
 from ...data.files import PictureElement
 import os
 
-class PictureDialog(SideListTabDialog):
+class PictureDialog(SideListTabWidget):
     def __init__(self, project: ProjectData, parent=None):
         super().__init__(project, parent, skip_first=True)
         

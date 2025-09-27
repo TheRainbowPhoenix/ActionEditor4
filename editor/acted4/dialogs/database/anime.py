@@ -1,7 +1,7 @@
 from PySide6.QtWidgets import QWidget, QInputDialog, QMessageBox, QFrame
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QPainter, QPen, QColor
-from .base_dialog import SideListTabDialog
+from .base_dialog import SideListTabWidget
 from .ui_Anime import Ui_AnimeWidget
 from .dlg.anime_pattern import AnimePatternDialog
 from ...core.project import ProjectData
@@ -10,7 +10,7 @@ from .anime_set import SampleType
 import time
 import os
 
-class AnimeDialog(SideListTabDialog):
+class AnimeDialog(SideListTabWidget):
     def __init__(self, project: ProjectData, parent=None):
         super().__init__(project, parent, skip_first=True)
         

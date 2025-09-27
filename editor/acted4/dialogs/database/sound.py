@@ -1,11 +1,11 @@
 from PySide6.QtWidgets import QWidget, QInputDialog, QMessageBox, QFileDialog
-from .base_dialog import SideListTabDialog
+from .base_dialog import SideListTabWidget
 from .ui_Sound import Ui_SoundWidget
 from ...core.project import ProjectData
 from ...data.files import SoundElement
 import os
 
-class SoundDialog(SideListTabDialog):
+class SoundDialog(SideListTabWidget):
     def __init__(self, project: ProjectData, parent=None):
         super().__init__(project, parent, skip_first=True)
         

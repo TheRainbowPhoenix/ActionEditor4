@@ -96,7 +96,7 @@ class EventPalette(FloatingPaletteWindow):
             buttons_row.addWidget(button)
 
         layout.addLayout(buttons_row)
-        
+
         self.event_list = QListWidget(self)
         self.event_list.setSelectionMode(QAbstractItemView.SingleSelection)
         self.event_list.itemDoubleClicked.connect(self._handle_edit_action)
@@ -141,9 +141,7 @@ class EventPalette(FloatingPaletteWindow):
         if target_index is None:
             target_index = self.event_list.count()
 
-        dialog = EventEditorDialog(self)
-        if dialog.exec() == QDialog.Accepted:
-            self.insertRequested.emit(target_index)
+        self.insertRequested.emit(target_index)
 
     def _handle_edit_action(self, *_args) -> None:
         index = self.current_index()
@@ -151,9 +149,7 @@ class EventPalette(FloatingPaletteWindow):
             QMessageBox.information(self, "Edit Event", "Select an event to edit.")
             return
 
-        dialog = EventEditorDialog(self)
-        if dialog.exec() == QDialog.Accepted:
-            self.editRequested.emit(index)
+        self.editRequested.emit(index)
 
     def _handle_delete_action(self) -> None:
         index = self.current_index()

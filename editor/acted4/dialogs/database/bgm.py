@@ -1,11 +1,11 @@
 from PySide6.QtWidgets import QWidget, QInputDialog, QMessageBox, QFileDialog
-from .base_dialog import SideListTabDialog
+from .base_dialog import SideListTabWidget
 from .ui_BGM import Ui_BGMWidget
 from ...core.project import ProjectData
 from ...data.files import BgmElement
 import os
 
-class BgmDialog(SideListTabDialog):
+class BgmDialog(SideListTabWidget):
     def __init__(self, project: ProjectData, parent=None):
         super().__init__(project, parent, skip_first=True)
         

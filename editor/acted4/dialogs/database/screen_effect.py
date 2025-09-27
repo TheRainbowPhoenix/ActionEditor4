@@ -1,5 +1,5 @@
 from PySide6.QtWidgets import QWidget, QInputDialog, QMessageBox
-from .base_dialog import SideListTabDialog
+from .base_dialog import SideListTabWidget
 from .ui_ScrEffect import Ui_ScrEffectWidget
 from ...core.project import ProjectData
 from ...data.files import ScreenEffectElement
@@ -20,7 +20,7 @@ class EffectType(Enum):
     LENS = "Lens"  # レンズ
     MOSAIC = "Mosaic"  # モザイク
 
-class ScreenEffectDialog(SideListTabDialog):
+class ScreenEffectDialog(SideListTabWidget):
     # Effect parameters configuration - reusing CharaEffect parameters for now
     EFFECT_PARAMS = {
         EffectType.MOVE: {

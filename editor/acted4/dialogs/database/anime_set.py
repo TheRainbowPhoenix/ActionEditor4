@@ -1,7 +1,7 @@
 from PySide6.QtWidgets import QWidget, QInputDialog, QMessageBox, QFrame
 from PySide6.QtCore import Qt, QTime
 from PySide6.QtGui import QPainter, QPen, QColor
-from .base_dialog import BaseTabDialog
+from .base_dialog import BaseTabWidget
 from .ui_AnimeSet import Ui_AnimeSetWidget
 from ...core.project import ProjectData
 from ...data.files import AnimeSetElement, Animation
@@ -30,7 +30,7 @@ class SampleType(Enum):
             SampleType.DEDICATED: "専用bmp"
         }[self]
 
-class AnimeSetDialog(BaseTabDialog):
+class AnimeSetDialog(BaseTabWidget):
     def __init__(self, project: ProjectData, parent=None):
         super().__init__(project, parent)
         

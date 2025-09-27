@@ -4,7 +4,7 @@ from PySide6.QtWidgets import (QDialog, QTabWidget, QDialogButtonBox,
 from PySide6.QtGui import QPalette
 from ...core.project import ProjectData
 from typing import Dict, Type
-from .base_dialog import BaseTabDialog
+from .base_dialog import BaseTabWidget
 from .anime_set import AnimeSetDialog
 from .bmp_chara_exc import BmpCharaExcDialog
 from .picture import PictureDialog
@@ -37,7 +37,7 @@ class DatabaseDialog(QDialog):
     def __init__(self, project: ProjectData, parent=None):
         super().__init__(parent)
         self.project = project
-        self.tabs: Dict[str, BaseTabDialog] = {}
+        self.tabs: Dict[str, BaseTabWidget] = {}
         
         self.setWindowTitle("Database")
         self.resize(600, 500)

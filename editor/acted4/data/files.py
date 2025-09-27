@@ -188,7 +188,7 @@ class WorldChip:
 
 @dataclass
 class WorldEventPage:
-    start: int = 0
+    header: int = 0
     event_type: int = 0
     graphic: int = 0
     world_number: int = 0
@@ -879,7 +879,7 @@ class WorldMap(ActedBinaryFile):
             tiles_count = max(tiles_count, (self.data.height - 1) * self.data.chunk_width + self.data.width)
             
             self.write_u32(tiles_count)
-            
+
             tiles_to_write = [0] * tiles_count
 
             tile_idx = 0
@@ -961,7 +961,7 @@ class WorldMap(ActedBinaryFile):
     def _read_world_event_page(self) -> WorldEventPage:
         """Helper to read a world event page structure"""
         page = WorldEventPage()
-        page.start = self.read_u32()
+        page.header = self.read_u32()
         page.event_type = self.read_u32()
         page.graphic = self.read_u32()
         
@@ -1007,7 +1007,7 @@ class WorldMap(ActedBinaryFile):
 
     def _write_world_event_page(self, page: WorldEventPage):
         """Helper to write a world event page structure"""
-        self.write_u32(page.start)
+        self.write_u32(page.header)
         self.write_u32(page.event_type)
         self.write_u32(page.graphic)
         

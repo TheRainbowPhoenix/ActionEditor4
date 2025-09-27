@@ -1,5 +1,5 @@
 from PySide6.QtWidgets import QWidget, QInputDialog, QMessageBox
-from .base_dialog import SideListTabDialog
+from .base_dialog import SideListTabWidget
 from .ui_CharaEffect import Ui_CharaEffectWidget
 from ...core.project import ProjectData
 from ...data.files import CharaEffectElement
@@ -25,7 +25,7 @@ class EffectType(Enum):
     MOSAIC = "Mosaic"
     BLUR = "Blur"
 
-class CharaEffectDialog(SideListTabDialog):
+class CharaEffectDialog(SideListTabWidget):
     # Effect parameters configuration
     EFFECT_PARAMS = {
         EffectType.BURST: {

@@ -14,6 +14,7 @@ from ..common.app_state import AppStateManager, PaletteMode
 from ..data.files import WorldEventBase
 from ..dialogs.world.event_palette import EventListEntry, EventPalette
 from ..dialogs.world.world_map_settings_dialog import WorldMapSettingsDialog
+from ..dialogs.world.world_event_dialog import WorldEventDialog
 
 class EditMode(Enum):
     MAP_CHIP = auto()
@@ -47,6 +48,7 @@ class MapViewport(QFrame):
         self.tiles_image: Optional[QImage] = None
         self.background_image: Optional[QImage] = None
         self.event_positions: set[tuple[int, int]] = set()
+        self.events = []
         
         # Mouse tracking for grid highlight
         self.setMouseTracking(True)
@@ -66,6 +68,7 @@ class MapViewport(QFrame):
 
     def set_events(self, events: list):
         """Set event placements for highlighting."""
+        self.events = events
         self.event_positions = {
             (event.placement_x, event.placement_y)
             for event in events
@@ -164,7 +167,25 @@ class MapViewport(QFrame):
                                          self.TILE_SIZE, self.TILE_SIZE)
                             source = QRect(tile_x, tile_y, self.TILE_SIZE, self.TILE_SIZE)
                             painter.drawImage(target, self.tiles_image, source)
-                            
+                    
+                    # Check if there's an event at this position and draw yellow corner indicator
+                    if (x, y) in self.event_positions:
+                        # Draw small yellow border in top-right corner (3/4 of tile size)
+                        corner_size = int(self.TILE_SIZE * 0.75)  # 3/4 of tile size
+                        corner_offset = self.TILE_SIZE - corner_size
+                        
+                        # Draw yellow border around the corner rectangle
+                        pen = QPen(QColor(255, 255, 0), 2)  # Yellow border, 2px width
+                        painter.setPen(pen)
+                        painter.setBrush(Qt.NoBrush)  # No fill
+                        rect = QRect(
+                            x * self.TILE_SIZE + corner_offset,
+                            y * self.TILE_SIZE,
+                            corner_size,
+                            corner_size
+                        )
+                        painter.drawRect(rect)
+        
         # Draw grid
         pen = QPen(QColor(200, 200, 200))
         painter.setPen(pen)
@@ -365,6 +386,9 @@ class WorldWindow(QMainWindow):
             
             # Load tiles
             self.map_view.set_tiles(data.tiles)
+
+            # Load events
+            self.map_view.set_events(data.events)
             
             # Load tileset
             tileset_path = os.path.join(self.project.path, "bmp", "WorldMapChip.bmp")
@@ -574,7 +598,10 @@ class WorldWindow(QMainWindow):
         if index < 0 or index >= len(data.events_pal):
             return
 
-        # TODO: Wire EventEditorDialog data back into the event structure.
+        event = data.events_pal[index]
+        project_path = getattr(self.project, "path", None)
+        if WorldEventDialog.edit_event(event, self, project_path=project_path):
+            self._refresh_event_palette(selected_index=index)
 
     def _on_delete_event(self, index: int) -> None:
         """Delete the selected event unless it is the last remaining entry."""

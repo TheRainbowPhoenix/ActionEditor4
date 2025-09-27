@@ -1,0 +1,33 @@
+イベント名 | Event Name
+挿入 | Insert
+削除 | Delete
+ページデータ | Page Data
+バリエーション | Variation
+＝ | =
+☆ワールド開始前にコモン変数を変更。例：コモン変数「難易度」でノーマルとハードを分ける | ☆Change common variables before world starts. Example: Use common variable Difficulty to separate Normal and Hard modes
+ワールド名 | World Name
+クリア後でもプレイ可能 | Playable after clearing
+イベントタイプ | Event Type
+ワールド番号 | World Number
+※0 なら番号なし（最初からクリア状態） | ※0 means no number (cleared from the start)
+出現条件 | Appearance Condition
+ワールド | World
+をクリアする（0 なら常に出現） | to clear (0 means always appear)
+トータルスコア | Total Score
+以上 | or above
+開始ステージ | Start Stage
+グラフィック | Graphic
+参照 | Browse
+ゲームクリア | On Game Clear
+クリアしなくても通行可能 | Passable without clearing
+
+ワールド番号 | World Number
+
+である | Is Equal To (or simply "Equals")
+でない | Is Not Equal To (or "Not Equals")
+以上 | Greater Than or Equal To
+以下 | Less Than or Equal To
+より上 | Greater Than
+より下 | Less Than
+の倍数である | Is Multiple Of
+の倍数でない | Is Not Multiple Of
