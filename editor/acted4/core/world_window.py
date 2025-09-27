@@ -11,6 +11,7 @@ from enum import Enum, auto
 from .project import ProjectData
 from ..common.window_manager import WindowManager
 from ..common.app_state import AppStateManager, PaletteMode
+from ..dialogs.world.world_map_settings_dialog import WorldMapSettingsDialog
 
 class EditMode(Enum):
     MAP_CHIP = auto()
@@ -550,8 +551,38 @@ class WorldWindow(QMainWindow):
             
     def on_settings(self):
         """Handle settings action"""
-        # TODO: Implement settings dialog
-        pass
+        if not self.project.world_map:
+            QMessageBox.warning(self, "World Map Settings", "World map data is not available.")
+            return
+
+        background_count = None
+        system_data = getattr(getattr(self.project, "system", None), "data", None)
+        if system_data is not None:
+            backgrounds = getattr(system_data, "world_map_backgrounds", None)
+            if backgrounds:
+                background_count = len(backgrounds)
+
+        dialog = WorldMapSettingsDialog(
+            self.project.world_map,
+            self.project.path,
+            background_count,
+            self,
+        )
+
+        if dialog.exec():
+            data = self.project.world_map.data
+            self.map_view.set_map_size(data.width, data.height)
+            self.map_view.set_tiles(data.tiles)
+
+            if data.use_background and data.bg_path:
+                normalized = data.bg_path.replace("\\", os.sep)
+                bg_path = os.path.join(self.project.path, normalized)
+                self.map_view.load_background(bg_path)
+            else:
+                self.map_view.background_image = None
+                self.map_view.update()
+
+            self.coord_label.setText("Coordinates (0,0)")
         
     def on_map_hover(self, pos: QPoint):
         """Update status bar with current coordinates"""

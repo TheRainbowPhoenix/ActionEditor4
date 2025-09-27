@@ -223,7 +223,7 @@ class WorldMapData:
     use_background: int = 0
     chunk_width: int = 32  # 32, 64, 128 ...
     chunk_pow: int = 5   # 32:5, 64:6, 128:7 ... power of 2 ?
-    unknown3: int = 2   # always 2?
+    strings_count: int = 2   # always 2?
     name: str = ""
     bg_path: str = ""
     tiles_types: List[WorldTile] = field(default_factory=list)
@@ -762,7 +762,7 @@ class WorldMap(ActedBinaryFile):
             self.data.background_index = self.read_u32()
             self.data.use_background = self.read_u32()
             
-            self.data.unknown3 = self.read_u32()  # 2
+            self.data.strings_count = self.read_u32()  # 2
             
             name_length = self.read_u32()
             if name_length > 1:
