@@ -106,14 +106,46 @@ struct SystemFile {
     u32 compat_v7_80;
     u32 compat_v7_81;
     u32 compat_v7_82;
+    u32 compat_v7_92;
+    u32 compat_v8_04;
+    u32 compat_v8_07;
+    u32 compat_v8_16;
+    u32 compat_v8_17;
+    u32 compat_v8_18;
+    u32 compat_v8_21;
+    u32 compat_v8_25;
+    u32 compat_v8_29;
+    u32 compat_v8_32;
+    // 9th page
+    u32 compat_v8_36;
+    u32 compat_v8_37;
+    u32 compat_v8_40;
+    u32 compat_v8_44_higherjump;
+    u32 compat_v8_44_delayedjump;
+    u32 compat_v8_44_lowerjump;
+    u32 compat_v8_44_detach_riders;
+    u32 compat_v8_60;
+    u32 compat_v8_73;
+    u32 compat_v8_90_wrap;
+    u32 compat_v8_90_statuscode;
+    u32 compat_v8_90_walkerY;
+    u32 compat_v8_96;
+    u32 compat_v9_03;
+    u32 compat_v9_11;
+    // 10th page
+    u32 compat_v9_12;
+    u32 compat_v9_80;
+    u32 compat_v9_85;
     
+    // 6th page
+    u32 direct3_color_depth; // 0 = 32bit, 1 = 16bit
+    u32 directdraw_color_depth; // 0 = 32bit, 1 = 16bit, 2 = 8bit
+    u32 go_title_after_stage_clear;
+    
+    // Now intersting stuff !
+    u32 strings_count; // 1 - std::vector<std::string>
+    StdString game_title;    
 };
 
 SystemFile system @ 0x0;
 
-
-struct PartialExp {
-    u32 strings_count; // 1 - std::vector<std::string>
-    StdString game_title;
-};
-PartialExp partialexp_at_0x18F @ 0x18F;
