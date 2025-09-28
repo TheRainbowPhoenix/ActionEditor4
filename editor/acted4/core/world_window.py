@@ -2,7 +2,7 @@ from PySide6.QtWidgets import (QMainWindow, QDockWidget, QToolBar, QMenuBar,
                               QStatusBar, QMessageBox, QMenu, QFileDialog, QScrollArea,
                               QWidget, QVBoxLayout, QFrame, QLabel)
 from PySide6.QtCore import Qt, QSettings, QPoint, QRect, QSize, Signal
-from PySide6.QtGui import QAction, QActionGroup, QPainter, QImage, QPen, QColor, QPixmap
+from PySide6.QtGui import QAction, QActionGroup, QPainter, QImage, QPen, QColor, QPixmap, QFont
 import os
 from typing import Union, Optional
 from pathlib import Path
@@ -11,7 +11,7 @@ from enum import Enum, auto
 from .project import ProjectData
 from ..common.window_manager import WindowManager
 from ..common.app_state import AppStateManager, PaletteMode
-from ..data.files import WorldEventBase
+from ..data.files import WorldEventBase, WorldEventPage
 from ..dialogs.world.event_palette import EventListEntry, EventPalette
 from ..dialogs.world.world_map_settings_dialog import WorldMapSettingsDialog
 from ..dialogs.world.world_event_dialog import WorldEventDialog
@@ -35,8 +35,9 @@ class MapViewport(QFrame):
         super().__init__(parent)
         self._parent: WorldWindow = parent
         self.setFrameStyle(QFrame.Panel | QFrame.Sunken)
-        self.setAttribute(Qt.WA_StyledBackground, True)
-        self.setAutoFillBackground(True)
+        self.setStyleSheet("background-color: black;")
+        # self.setAttribute(Qt.WA_StyledBackground, True)
+        # self.setAutoFillBackground(True)
         self.operation = EditOperation.NONE
         self.selection_start = QPoint(-1, -1)
         self.selection_end = QPoint(-1, -1)
@@ -50,6 +51,7 @@ class MapViewport(QFrame):
         self.background_image: Optional[QImage] = None
         self.event_positions: set[tuple[int, int]] = set()
         self.events = []
+        self.event_placement_order: dict[tuple[int, int], int] = {}
         self.event_spritesheet: Optional[QImage] = None
         
         # Mouse tracking for grid highlight
@@ -76,6 +78,13 @@ class MapViewport(QFrame):
             for event in events
             if hasattr(event, "placement_x") and hasattr(event, "placement_y")
         }
+        self.event_placement_order = {}
+        for event in events:
+            if hasattr(event, "placement_x") and hasattr(event, "placement_y") and hasattr(event, "pages") and event.pages:
+                pos = (event.placement_x, event.placement_y)
+                # Store the world_number from the first page
+                world_num = event.pages[0].world_number
+                self.event_placement_order[pos] = world_num
         self.update()
         
     def load_tileset(self, path: Union[str, Path]):
@@ -97,20 +106,30 @@ class MapViewport(QFrame):
             
     def mousePressEvent(self, event):
         """Handle mouse press"""
-        if event.button() == Qt.LeftButton:
-            self.is_painting = True
-            self.operation = EditOperation.SINGLE_TILE
-            if hasattr(self._parent, "_place_tile"):
-                self._parent._place_tile(event.pos())
-            elif hasattr(self._parent, "_place_block"):
-                self._parent._place_block(event.pos())
-        elif event.button() == Qt.RightButton:
-            self.operation = EditOperation.SELECT_AREA
-            self.selection_start = QPoint(
-                event.pos().x() // self.TILE_SIZE,
-                event.pos().y() // self.TILE_SIZE
-            )
-            self.selection_end = self.selection_start
+        grid_x = event.pos().x() // self.TILE_SIZE
+        grid_y = event.pos().y() // self.TILE_SIZE
+
+        if grid_x >= 0 and grid_x < self.map_width and \
+           grid_y >= 0 and grid_y < self.map_height:
+
+            if event.button() == Qt.LeftButton:
+                # Handle event placement
+                if self._parent.edit_mode == EditMode.EVENT:
+                    self._parent._place_event(grid_x, grid_y)
+                else: # Handle MAP_CHIP placement
+                    self.is_painting = True
+                    self.operation = EditOperation.SINGLE_TILE
+                    if hasattr(self._parent, "_place_tile"):
+                        self._parent._place_tile(event.pos())
+                    elif hasattr(self._parent, "_place_block"):
+                        self._parent._place_block(event.pos())
+            elif event.button() == Qt.RightButton:
+                self.operation = EditOperation.SELECT_AREA
+                self.selection_start = QPoint(
+                    event.pos().x() // self.TILE_SIZE,
+                    event.pos().y() // self.TILE_SIZE
+                )
+                self.selection_end = self.selection_start
         event.accept()
             
     def mouseReleaseEvent(self, event):
@@ -208,10 +227,20 @@ class MapViewport(QFrame):
                                 painter.drawImage(event_rect, scaled_sprite)
                         
                         # Draw yellow border around the event rectangle (half tile size)
-                        pen = QPen(QColor(255, 255, 0), 2)  # Yellow border, 2px width
+                        pen = QPen(QColor(255, 255, 0), 1)  # Yellow border, 2px width
                         painter.setPen(pen)
                         painter.setBrush(Qt.NoBrush)  # No fill
                         painter.drawRect(event_rect)
+
+                        # Draw the event placement number
+                        world_number = self.event_placement_order.get((x, y), 0)
+                        if world_number > 0:
+                            painter.setPen(QColor(255, 255, 255))
+                            painter.setFont(QFont("Arial", 8, QFont.Weight.Thin)) # Small bold font
+                            number_text = str(world_number)
+                            text_rect = event_rect
+                            painter.drawText(text_rect, Qt.AlignmentFlag.AlignCenter, number_text)
+
         
         # Draw grid
         pen = QPen(QColor(200, 200, 200))
@@ -342,7 +371,15 @@ class WorldWindow(QMainWindow):
         # Settings actions
         self.settings_action = QAction("World Map Settings(&W)", self)
         self.settings_action.triggered.connect(self.on_settings)
-        
+    
+    def _find_next_free_world_number(self, current_events: list[WorldEventBase]) -> int:
+        """Finds the next free world number (1-99) based on existing events."""
+        used_numbers = {event.pages[0].world_number for event in current_events if event.pages}
+        for num in range(1, 100):
+            if num not in used_numbers:
+                return num
+        return 0 
+
     def create_menus(self):
         """Create menu bar"""
         # File menu
@@ -494,6 +531,128 @@ class WorldWindow(QMainWindow):
     def _on_tile_selected(self, tile_index: int):
         """Handle tile selection from picker"""
         self.selected_tile = tile_index
+
+    def _place_event(self, grid_x: int, grid_y: int):
+        """Place a new event, edit an existing one, or replace based on palette settings."""
+        if self.edit_mode != EditMode.EVENT:
+            return
+
+        # Get the selected event template from the palette
+        selected_palette_index = self.event_palette.current_index()
+        if selected_palette_index is None or selected_palette_index < 0:
+            QMessageBox.warning(self, "Place Event", "Please select an event template from the palette.")
+            return
+
+        data = self._get_world_map_data()
+        if not data:
+            return
+
+        # Check if an event already exists at this position
+        existing_event_index = None
+        existing_event = None
+        for i, event in enumerate(data.events):
+            if event.placement_x == grid_x and event.placement_y == grid_y:
+                existing_event_index = i
+                existing_event = event
+                break
+
+        project_path = getattr(self.project, "path", None)
+
+        # Determine the action based on checkbox states
+        edit_existing = (
+            existing_event is not None and
+            self.event_palette.edit_placed_checkbox.isChecked()
+        )
+        edit_before_place = self.event_palette.edit_before_place_checkbox.isChecked()
+        auto_assign_number = self.event_palette.auto_number_checkbox.isChecked()
+
+        if edit_existing:
+            # An event exists and "Edit placed events" is checked - edit the existing event
+            if WorldEventDialog.edit_event(existing_event, self, project_path=project_path):
+                # The event was modified in the dialog and accepted.
+                # Refresh the map view to reflect the changes (numbering might change).
+                self.map_view.set_events(data.events)
+                self.statusBar.showMessage(f"Edited event at ({grid_x}, {grid_y})")
+        else:
+            # No existing event to edit, or "Edit placed events" is unchecked - place a new event
+            event_templates = data.events_pal
+            if not (0 <= selected_palette_index < len(event_templates)):
+                QMessageBox.warning(self, "Place Event", "Selected event template is invalid.")
+                return
+
+            selected_template = event_templates[selected_palette_index]
+
+            # Create a new event instance based on the template
+            new_event = WorldEventBase()
+            # Deep copy basic fields and pages from the template
+            new_event.header = selected_template.header
+            new_event.strings_count = selected_template.strings_count
+            new_event.name = selected_template.name # Or prompt for a name?
+            new_event.pages_count = selected_template.pages_count
+            # Deep copy pages using dataclass fields
+            new_event.pages = [WorldEventPage(**page.__dict__) for page in selected_template.pages]
+
+            # Set the placement coordinates
+            new_event.placement_x = grid_x
+            new_event.placement_y = grid_y
+
+             # Handle world number assignment based on checkbox and replacement
+            if auto_assign_number:
+                if existing_event is not None:
+                    # Replacing an existing event: keep its world number
+                    # Find the world number of the first page of the existing event
+                    if existing_event.pages:
+                        new_event.pages[0].world_number = existing_event.pages[0].world_number
+                    else:
+                        # Fallback if existing event has no pages
+                        new_event.pages[0].world_number = self._find_next_free_world_number(data.events)
+                else:
+                    # Placing a new event (not replacing): get the next free number
+                    new_event.pages[0].world_number = self._find_next_free_world_number(data.events)
+
+            # Determine if the dialog should open before placing
+            should_open_dialog = edit_before_place
+
+            if should_open_dialog:
+                # Open the dialog before placing
+                if WorldEventDialog.edit_event(new_event, self, project_path=project_path):
+                    # The new event was configured in the dialog and accepted.
+                    # It might have been assigned a world number in the dialog, or we assigned one above.
+                    # If auto-numbering is on and the dialog *didn't* change the number, ensure it's set correctly.
+                    # For simplicity, we'll rely on the number set above or in the dialog.
+                    # Add/replace the event in the map's events list
+                    if existing_event_index is not None:
+                        # Replace the existing event
+                        data.events[existing_event_index] = new_event
+                    else:
+                        # Add the new event
+                        data.events.append(new_event)
+                    # Refresh the map view
+                    self.map_view.set_events(data.events)
+                    self.statusBar.showMessage(f"Placed/Edited event '{new_event.name}' at ({grid_x}, {grid_y})")
+            else:
+                # Place the event directly without opening the dialog
+                # Add/replace the event in the map's events list
+                if existing_event_index is not None:
+                    # Replace the existing event
+                    data.events[existing_event_index] = new_event
+                else:
+                    # Add the new event
+                    data.events.append(new_event)
+                # Refresh the map view
+                self.map_view.set_events(data.events)
+                self.statusBar.showMessage(f"Placed event '{new_event.name}' at ({grid_x}, {grid_y})")
+
+
+            # Add the new event to the map's events list
+            # data.events.append(new_event)
+
+            # Refresh the map view to show the new event
+            # self.map_view.set_events(data.events) # Pass the updated list
+
+            # Optional: Select the newly placed event in the map view or show a confirmation
+            # For now, just update the status bar
+            # self.statusBar.showMessage(f"Placed event '{new_event.name}' at ({grid_x}, {grid_y})")
         
     def _place_tile(self, pos: QPoint):
         """Place a tile at the given grid position"""
@@ -719,7 +878,10 @@ class WorldWindow(QMainWindow):
             QMessageBox.No
         )
         if reply == QMessageBox.Yes:
-            # TODO: Implement clear
+            data = self._get_world_map_data()
+            if data:
+                data.events.clear() # Clear placed events
+                self.map_view.set_events(data.events) # Refresh the map view
             pass
             
     def on_settings(self):
