@@ -585,7 +585,7 @@ class WorldWindow(QMainWindow):
             # Create a new event instance based on the template
             new_event = WorldEventBase()
             # Deep copy basic fields and pages from the template
-            new_event.header = selected_template.header
+            new_event.header = 0x0E # selected_template.header
             new_event.strings_count = selected_template.strings_count
             new_event.name = selected_template.name # Or prompt for a name?
             new_event.pages_count = selected_template.pages_count

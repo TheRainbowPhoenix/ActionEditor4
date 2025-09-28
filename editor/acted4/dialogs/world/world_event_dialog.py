@@ -333,7 +333,7 @@ class WorldEventDialog(QDialog):
             return
         page = self._list_data[self._current_page_index]
         # Save all page-specific fields from the UI
-        page.header = 0x14
+        page.header = 0x0E
         page.event_type = self._combo_value(self._event_type)
         page.graphic = self._combo_value(self._graphic)
         page.world_number = self._world_number.value()
