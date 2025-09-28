@@ -16,19 +16,22 @@ from PySide6.QtWidgets import (
     QPushButton,
     QSpinBox,
     QWidget,
+    QLabel,
     QVBoxLayout,
     QHBoxLayout,
     QGroupBox,
 )
+from PySide6.QtCore import Qt
+from PySide6.QtGui import QPixmap
 
 from ..database.base_dialog import SideListTabWidget
 from ...data.files import WorldEventBase, WorldEventPage
 from .ui_WorldEventDialog import Ui_WorldEventDialogWidget
+from ...common.resource_cache import resource_cache
 
 
 def format_page_item(index: int, page: WorldEventPage) -> str:
-    """Format a page item for the list display."""
-    page_index = index + 1  # Display index starting from 1
+    page_index = index + 1
     world_number = page.world_number
     return f"{page_index} World #{world_number}"
 
@@ -48,7 +51,7 @@ class WorldEventDialog(QDialog):
 
         self.setWindowTitle("World Event")
         self._event = event
-        self._project_path = project_path
+        self._project_path = Path(project_path) if project_path else Path("")
         self._current_page_index = 0 # Track current page index in the UI
 
         # Resolve child widgets that we bind to.
@@ -77,6 +80,7 @@ class WorldEventDialog(QDialog):
         self._start_stage: QLineEdit = self.ui.startStageLineEdit
         self._start_stage_browse: QPushButton = self.ui.startStageBrowseButton
         self._button_box: QDialogButtonBox = self.ui.buttonBox
+        self._graphic_preview: QLabel = self.ui.graphicPreview
 
         # Store references to widgets that depend on event type
         self._world_dependent_widgets = [
@@ -97,6 +101,7 @@ class WorldEventDialog(QDialog):
             self._variation_constant
         ]
 
+        self._graphic_preview.setStyleSheet("background-color: black;")
 
         # Hide placement fields as they are typically managed externally
         self.ui.placementLabel.setVisible(False)
@@ -126,11 +131,19 @@ class WorldEventDialog(QDialog):
             self._event_type.addItem(label, value)
 
         self._graphic.clear()
-        # TODO: this is derived from the size of the WorldEvent.bmp file
-        for value, label in enumerate(
-            [f"{i}" for i in range(1, 16)]
-        ):
-            self._graphic.addItem(label, value)
+        spritesheet_path = self._project_path / "bmp" / "WorldEvent.bmp"
+        sprite_width = 32
+        sprite_height = 32
+        num_sprites = resource_cache.get_sprite_count(spritesheet_path, sprite_width, sprite_height)
+        if num_sprites > 0:
+            for i in range(num_sprites):
+                self._graphic.addItem(str(i), i) # Display index as text
+        else:
+            # Fallback if image is not available
+            for value, label in enumerate(
+                [f"{i}" for i in range(0, 16)] # Provide a reasonable default range
+            ):
+                self._graphic.addItem(label, value)
 
         self._on_game_clear.clear()
         for value, label in enumerate(["Do Nothing", "Start New Game+", "Return to Title Screen (※Not Recommended)"]):
@@ -167,6 +180,7 @@ class WorldEventDialog(QDialog):
         self._button_box.accepted.connect(self.accept)
         # self._button_box.rejected.connect(self.reject)
         self._event_type.currentIndexChanged.connect(self._on_event_type_changed)
+        self._graphic.currentIndexChanged.connect(self._on_graphic_changed)
 
     def _combo_value(self, combo: QComboBox) -> int:
         data = combo.currentData()
@@ -204,6 +218,28 @@ class WorldEventDialog(QDialog):
             self._pages_list.setCurrentRow(self._current_page_index)
             # Load the first page's data into the UI
             self._load_page_fields(self._list_data[self._current_page_index])
+
+    def _on_graphic_changed(self, index: int):
+        """Update the graphic preview label when the graphic combo box changes."""
+        spritesheet_path = self._project_path / "bmp" / "WorldEvent.bmp"
+        sprite_width = 32
+        sprite_height = 32
+        sprite_image = resource_cache.get_sprite(spritesheet_path, index, sprite_width, sprite_height)
+        if sprite_image:
+            # Convert QImage to QPixmap for the label
+            sprite_pixmap = QPixmap.fromImage(sprite_image)
+            # Scale the pixmap to fit the preview label (24x24), preserving aspect ratio
+            scaled_pixmap = sprite_pixmap.scaled(
+                self._graphic_preview.width(),
+                self._graphic_preview.height(),
+                Qt.AspectRatioMode.KeepAspectRatio,
+                Qt.TransformationMode.SmoothTransformation
+            )
+            self._graphic_preview.setPixmap(scaled_pixmap)
+        else:
+            # Clear the preview if sprite is invalid
+            self._graphic_preview.clear()
+
 
     # ------------------------------------------------------------------
     # List Management Logic
@@ -352,6 +388,7 @@ class WorldEventDialog(QDialog):
         self._start_stage.setText(page.start_stage)
         self._update_variation_fields()
         self._on_event_type_changed(self._combo_value(self._event_type))
+        self._on_graphic_changed(self._combo_value(self._graphic)) # Trigger preview update
 
 
     # ------------------------------------------------------------------
@@ -378,7 +415,7 @@ class WorldEventDialog(QDialog):
 
     def _on_event_type_changed(self, index: int) -> None:
         """Enable/disable fields based on the selected event type."""
-        is_world_type = (index == 0) # "World" is at index 0
+        is_world_type = (index == 0) # Assuming "World" is at index 0
         self._update_world_type_fields(is_world_type)
 
     def _update_world_type_fields(self, enabled: bool) -> None:

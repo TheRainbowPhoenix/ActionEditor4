@@ -308,7 +308,7 @@
           <item>
            <widget class="QLabel" name="variationHintLabel">
             <property name="text">
-             <string>☆Change common variables before world starts. Example: Use common variable "Difficulty" to separate Normal and Hard modes</string>
+             <string>☆Change common variables before world starts. Example: Use common variable &quot;Difficulty&quot; to separate Normal and Hard modes</string>
             </property>
             <property name="wordWrap">
              <bool>true</bool>
@@ -685,14 +685,14 @@
            <widget class="QLabel" name="graphicPreview">
             <property name="minimumSize">
              <size>
-              <width>24</width>
-              <height>24</height>
+              <width>32</width>
+              <height>32</height>
              </size>
             </property>
             <property name="maximumSize">
              <size>
-              <width>24</width>
-              <height>24</height>
+              <width>32</width>
+              <height>32</height>
              </size>
             </property>
             <property name="frameShape">

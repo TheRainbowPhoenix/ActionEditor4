@@ -15,6 +15,7 @@ from ..data.files import WorldEventBase
 from ..dialogs.world.event_palette import EventListEntry, EventPalette
 from ..dialogs.world.world_map_settings_dialog import WorldMapSettingsDialog
 from ..dialogs.world.world_event_dialog import WorldEventDialog
+from ..common.resource_cache import resource_cache
 
 class EditMode(Enum):
     MAP_CHIP = auto()
@@ -49,6 +50,7 @@ class MapViewport(QFrame):
         self.background_image: Optional[QImage] = None
         self.event_positions: set[tuple[int, int]] = set()
         self.events = []
+        self.event_spritesheet: Optional[QImage] = None
         
         # Mouse tracking for grid highlight
         self.setMouseTracking(True)
@@ -170,21 +172,46 @@ class MapViewport(QFrame):
                     
                     # Check if there's an event at this position and draw yellow corner indicator
                     if (x, y) in self.event_positions:
-                        # Draw small yellow border in top-right corner (3/4 of tile size)
-                        corner_size = int(self.TILE_SIZE * 0.75)  # 3/4 of tile size
-                        corner_offset = self.TILE_SIZE - corner_size
+                        current_event = None
+                        for event in self.events:
+                            if event.placement_x == x and event.placement_y == y:
+                                current_event = event
+                                break
                         
-                        # Draw yellow border around the corner rectangle
+                        # NEW: Define the rectangle for the event graphic (half tile size)
+                        event_rect_size = self.TILE_SIZE // 2 # Half the tile size
+                        event_rect = QRect(
+                            x * self.TILE_SIZE,
+                            y * self.TILE_SIZE,
+                            event_rect_size,
+                            event_rect_size
+                        )
+                        
+                        # NEW: Draw the event graphic if available
+                        if current_event and hasattr(current_event, 'pages') and current_event.pages:
+                            # Use the graphic from the first page for now
+                            graphic_index = current_event.pages[0].graphic
+                            
+                            # NEW: Use the resource cache to get the sprite
+                            spritesheet_path = Path(self._parent.project.path) / "bmp" / "WorldEvent.bmp"
+                            sprite = resource_cache.get_sprite(spritesheet_path, graphic_index, 32, 32)
+                            
+                            if sprite:
+                                # Scale the sprite to fit the event_rect (half tile size)
+                                scaled_sprite = sprite.scaled(
+                                    event_rect.width(),
+                                    event_rect.height(),
+                                    Qt.AspectRatioMode.KeepAspectRatio,
+                                    Qt.TransformationMode.SmoothTransformation
+                                )
+                                # Draw the scaled sprite within the event_rect
+                                painter.drawImage(event_rect, scaled_sprite)
+                        
+                        # Draw yellow border around the event rectangle (half tile size)
                         pen = QPen(QColor(255, 255, 0), 2)  # Yellow border, 2px width
                         painter.setPen(pen)
                         painter.setBrush(Qt.NoBrush)  # No fill
-                        rect = QRect(
-                            x * self.TILE_SIZE + corner_offset,
-                            y * self.TILE_SIZE,
-                            corner_size,
-                            corner_size
-                        )
-                        painter.drawRect(rect)
+                        painter.drawRect(event_rect)
         
         # Draw grid
         pen = QPen(QColor(200, 200, 200))
@@ -197,23 +224,6 @@ class MapViewport(QFrame):
         for y in range(self.map_height + 1):
             painter.drawLine(0, y * self.TILE_SIZE,
                            self.map_width * self.TILE_SIZE, y * self.TILE_SIZE)
-        
-        # Draw event markers on top of the grid
-        if self.event_positions:
-            painter.setPen(QPen(QColor(255, 64, 64)))
-            painter.setBrush(QColor(255, 64, 64, 160))
-            marker_size = max(6, self.TILE_SIZE // 2)
-            offset = (self.TILE_SIZE - marker_size) // 2
-            for x, y in self.event_positions:
-                if 0 <= x < self.map_width and 0 <= y < self.map_height:
-                    rect = QRect(
-                        x * self.TILE_SIZE + offset,
-                        y * self.TILE_SIZE + offset,
-                        marker_size,
-                        marker_size,
-                    )
-                    painter.drawEllipse(rect)
-            painter.setBrush(Qt.NoBrush)
         
         # Draw hover highlight
         if self.hover_pos.x() >= 0:

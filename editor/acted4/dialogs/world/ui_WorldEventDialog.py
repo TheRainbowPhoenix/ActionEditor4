@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 ################################################################################
-## Form generated from reading UI file 'WorldEventDialogWavbuH.ui'
+## Form generated from reading UI file 'WorldEventDialogiJbMtf.ui'
 ##
 ## Created by: Qt User Interface Compiler version 6.9.0
 ##
@@ -436,8 +436,8 @@ class Ui_WorldEventDialogWidget(object):
 
         self.graphicPreview = QLabel(self.pageDataGroup)
         self.graphicPreview.setObjectName(u"graphicPreview")
-        self.graphicPreview.setMinimumSize(QSize(24, 24))
-        self.graphicPreview.setMaximumSize(QSize(24, 24))
+        self.graphicPreview.setMinimumSize(QSize(32, 32))
+        self.graphicPreview.setMaximumSize(QSize(32, 32))
         self.graphicPreview.setFrameShape(QFrame.Shape.Box)
         self.graphicPreview.setFrameShadow(QFrame.Shadow.Sunken)
 
