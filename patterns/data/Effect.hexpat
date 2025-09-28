@@ -12,7 +12,7 @@ struct EffectElement {
     u32 width;
     u32 height;
     u32 is_giant;
-    u32 unk; // always 2 ?
+    u32 strings_count; // always 2 ?
 
     // Resource name dynamic size
     u32 name_length             [[color("00020A")]];

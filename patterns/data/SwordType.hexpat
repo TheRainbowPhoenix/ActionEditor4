@@ -17,7 +17,7 @@ struct SwordPosition {
 struct SwordType {
     u32 header [[color("00143C")]];
     u32 is_name_same_path;
-    u32 unk; // always 3 ? -> "number of strings"
+    u32 strings_count; // always 3 ? -> "number of strings"
 
     // Resource name dynamic size
      u32 name_length             [[color("00020A")]];

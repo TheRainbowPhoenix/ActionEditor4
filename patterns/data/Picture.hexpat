@@ -1,7 +1,7 @@
 struct PictureElement {
     u32 header [[color("00143C")]];
     u32 is_name_same_path;
-    u32 unk2;
+    u32 strings_count;
 
     // Resource name dynamic size
     u32 name_length             [[color("20B2AA")]];

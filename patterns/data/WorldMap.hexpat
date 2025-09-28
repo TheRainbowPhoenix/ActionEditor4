@@ -19,7 +19,7 @@ struct WorldChip {
     StdString unused_string;
 };
 
-struct EventPage {
+struct WorldEventPage {
     u32 start;
     u32 event_type;
     u32 graphic;
@@ -45,7 +45,7 @@ struct EventPage {
     StdString start_stage; // std::string
 };
 
-struct Event {
+struct WorldEventBase {
     u32 header [[color("00143C")]];
     u32 placement_x;
     u32 placement_y;
@@ -56,7 +56,7 @@ struct Event {
     
     // std::vector<Event_Page> 
     u32 pages_count; 
-    EventPage pages[pages_count];
+    WorldEventPage pages[pages_count];
 };
 
 struct WorldMapFile {
@@ -90,11 +90,11 @@ struct WorldMapFile {
     
     // std::vector<Event>
     u32 events_count;
-    Event event_data[events_count];
+    WorldEventBase event_data[events_count];
     
     // std::vector<Event>
     u32 events_pal_count;
-    Event event_template_data[events_pal_count];
+    WorldEventBase event_template_data[events_pal_count];
     
 };
 

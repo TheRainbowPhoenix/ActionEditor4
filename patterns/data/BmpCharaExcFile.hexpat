@@ -3,7 +3,7 @@ struct BmpCharaExcElement {
     u32 is_name_same_path;
     u32 is_giant;
     u32 scale_mode;
-    u32 unk4;
+    u32 strings_count;
 
     // Resource name dynamic size
     u32 name_length             [[color("20B2AA")]];

@@ -2,7 +2,7 @@ struct CharaEffectElement {
     u32 header [[color("00143C")]];
     u32 is_name_same_path;
     u32 volume;
-    u32 unk; // always 2 ?
+    u32 strings_count; // always 2 ?
 
     // Resource name dynamic size
     u32 name_length             [[color("00020A")]];
@@ -22,8 +22,6 @@ struct CharaEffectFile {
     // Header with magic and count
     u32 magic;
     u32 anim_set_count;
-    
-    
     
     CharaEffectElement anim_sets[anim_set_count]; // anim_set_count];
 

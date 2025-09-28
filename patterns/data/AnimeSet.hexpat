@@ -19,7 +19,7 @@ struct Animation {
     u16 sample_list_index [[color("00BFFF")]];
     u8 sample_index [[color("4682B4")]];
     u16 frame_start [[color("FFDAB9")]];
-    u32 unknown [[color("CD5C5C")]];
+    u32 strings_count [[color("CD5C5C")]];
 
     // Pattern name
     u32 animation_name_length [[color("32CD32")]];
@@ -35,7 +35,7 @@ struct AnimeSet {
     u32 invincibility_offset;
     u32 block_offset;
     u32 flying_offset;
-    u32 unknown;
+    u32 strings_count;
 
     // Resource name dynamic size
     u32 name_length             [[color("20B2AA")]];

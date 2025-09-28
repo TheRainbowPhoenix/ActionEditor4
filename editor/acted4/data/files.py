@@ -18,7 +18,7 @@ class Animation:
     sample_list_index: int = 0
     sample_type: int = 0
     frame_start: int = 0
-    unknown: int = 0
+    strings_count: int = 0
     name: str = ""
     frames: List[AnimationFrame] = field(default_factory=list)
 
@@ -270,7 +270,7 @@ class AnimeSet(ActedBinaryFile):
                     anim.sample_list_index = self.read_u16()
                     anim.sample_type = self.read_u8()
                     anim.frame_start = self.read_u16()
-                    anim.unknown = self.read_u32()
+                    anim.strings_count = self.read_u32()
                     
                     name_length = self.read_u32()
                     anim.name = self.read_str(name_length)
@@ -349,7 +349,7 @@ class Anime(ActedBinaryFile):
                 anim.sample_list_index = self.read_u16()
                 anim.sample_type = self.read_u8()
                 anim.frame_start = self.read_u16()
-                anim.unknown = self.read_u32()
+                anim.strings_count = self.read_u32()
                 
                 name_length = self.read_u32()
                 anim.name = self.read_str(name_length)

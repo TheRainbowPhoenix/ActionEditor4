@@ -6,23 +6,19 @@ struct CharaEffectElement {
     u32 param3;
     u32 param4;
     u32 param5;
-    u32 unk; // always 1 ?
+    u32 strings_count; // always 1 ?
 
     // Resource name dynamic size
     u32 name_length             [[color("00020A")]];
     if (name_length > 1) {
         char name[name_length]      [[color("9370DB")]];
     }
-    
-   
 };
 
 struct CharaEffectFile {
     // Header with magic and count
     u32 magic;
     u32 effect_set_count;
-    
-    
     
     CharaEffectElement effect_sets[effect_set_count];
 
