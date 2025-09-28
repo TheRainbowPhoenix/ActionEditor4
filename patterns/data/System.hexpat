@@ -12,6 +12,46 @@ struct StdString {
     }
 };
 
+struct StatusWindow {
+    u32 header;
+    u32 is_visible;
+    u32 show_symbol;
+    u32 max;
+    
+    u32 unk1;
+    u32 color_change_condition;
+    u32 change_operator; // rga color ?
+    
+    u32 strings_count;
+    StdString text;
+    
+};
+
+struct Ranking {
+    u32 first_unk;
+    u32 ranking_on;
+    u32 second_unk;
+    u32 ranking_count;
+    u8 ranking_criteras[ranking_count];
+};
+
+struct MenuText {
+    u32 unk1;
+    u32 enabled;
+    u32 unk2;
+    StdString text;
+};
+
+struct IniConf {
+    u32 unk1;
+    u32 unk2;
+    u32 default;
+    u32 string_count;
+    StdString id_string;
+    StdString default_str;
+    
+};
+
 struct SystemFile {
     // Header with magic and count
     u32 magic;
@@ -144,7 +184,120 @@ struct SystemFile {
     
     // Now intersting stuff !
     u32 strings_count; // 1 - std::vector<std::string>
-    StdString game_title;    
+    StdString game_title;    // 1rst page
+    StdString description;  // button on 4th page
+    
+    // Page 3 
+    u32 targets_count; // 19
+    u8 target_graphic;
+    u8 target_base_anim_set;
+    u8 target_Zcoordinate;
+    u8 target_transparency;
+    u8 target_charatcer_fx;
+    u8 target_direction_fix;
+    u8 target_flight;
+    u8 target_invincibility;
+    u8 target_giant_form;
+    u8 target_sync_autoscroll;
+    u8 target_fow;
+    u8 target_remain_hp;
+    u8 target_remain_sp;
+    u8 target_max_hp;
+    u8 target_max_sp;
+    u8 target_col_hitbox;
+    u8 target_col_power;
+    u8 target_col_shock;
+    u8 target_defense;
+    u8 target_shock_resist;
+    u8 target_inertia;
+    u8 target_action;
+    u8 target_remain_time;
+    u8 target_player_count;
+    u8 target_bgm;
+    
+    u32 targets_reseted_count; // 19
+    u8 target_graphic_reseted;
+    u8 target_base_anim_set_reseted;
+    u8 target_Zcoordinate_reseted;
+    u8 target_transparency_reseted;
+    u8 target_charatcer_fx_reseted;
+    u8 target_direction_fix_reseted;
+    u8 target_flight_reseted;
+    u8 target_invincibility_reseted;
+    u8 target_giant_form_reseted;
+    u8 target_sync_autoscroll_reseted;
+    u8 target_fow_reseted;
+    u8 target_remain_hp_reseted;
+    u8 target_remain_sp_reseted;
+    u8 target_max_hp_reseted;
+    u8 target_max_sp_reseted;
+    u8 target_col_hitbox_reseted;
+    u8 target_col_power_reseted;
+    u8 target_col_shock_reseted;
+    u8 target_defense_reseted;
+    u8 target_shock_resist_reseted;
+    u8 target_inertia_reseted;
+    u8 target_action_reseted;
+    u8 target_remain_time_reseted;
+    u8 target_player_count_reseted;
+    u8 target_bgm_reseted;
+    
+    // page 4
+    u32 status_window_count; // 5
+    StatusWindow satus_windows[status_window_count];
+    
+    // page 2
+    u32 header_initial; // 4
+    u32 story_mode_initial;
+    u32 challenge_mode_initial;
+    u32 free_mode_initial;
+    u32 free_mode_max;
+    
+    
+    u32 header_infinite; // 4
+    u32 story_mode_infinite;
+    u32 challenge_mode_infinite;
+    u32 free_mode_infinite;
+    u32 free_mode_infini_max;
+    
+    u32 rankings_count;
+    Ranking rankings[rankings_count]; // 3 used, 4th is dummy
+    
+    // page 5
+    u32 terms_strings_count;
+    StdString terms[terms_strings_count];
+    
+    // page 3
+    u32 sound_effect_count;
+    StdString sound_effect_paths[sound_effect_count];
+    
+    u32 bgm_count;
+    u32 bgm_values[bgm_count];
+    u32 bgm_loop_play_count;
+    u8 bgm_loop_play[bgm_loop_play_count];
+    
+    // page 4
+    u32 title_menu_texts_count;
+    MenuText title_menu_texts[title_menu_texts_count];
+    
+    u32 worldmap_menu_count;
+    MenuText worldmap_menu_texts[worldmap_menu_count];
+    
+    u32 option_menu_count;
+    MenuText option_menu_texts[option_menu_count];
+    
+    u32 ranking_entry_count;
+    StdString ranking_entry_texts[ranking_entry_count];
+    
+    u32 autoreplay_save_count;
+    StdString autoreplay_save_texts[autoreplay_save_count];
+    
+    u32 replay_order_count;
+    StdString replay_order_texts[replay_order_count];
+    
+    // page 6
+    u32 settings_ini_count;
+    IniConf setting_init[settings_ini_count];
 };
 
 SystemFile system @ 0x0;
