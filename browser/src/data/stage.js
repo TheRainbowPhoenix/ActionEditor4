@@ -1,6 +1,8 @@
 import DataReader from './DataReader.js';
 import DataWriter from './DataWriter.js';
 
+// TODO: most of this file is based off an older pattern file and should be recreated.
+
 function ensureReader(source) {
   if (source instanceof DataReader) {
     return source;
