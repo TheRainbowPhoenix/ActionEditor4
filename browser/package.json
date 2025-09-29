@@ -6,8 +6,11 @@
     "dump-database": "node tools/dump-database.mjs",
     "build-database": "node tools/build-database.mjs",
     "worldmap": "node tools/worldmap.mjs",
+    "system": "node tools/system.mjs",
     "dev:database-ui": "vite --config database-ui/vite.config.js",
-    "build:database-ui": "vite build --config database-ui/vite.config.js"
+    "build:database-ui": "vite build --config database-ui/vite.config.js",
+    "build:worldmap-ui": "vite build --config worldmap-ui/vite.config.js",
+    "build:system-ui": "vite build --config system-ui/vite.config.js"
   },
   "dependencies": {
     "encoding-japanese": "^2.0.0"
