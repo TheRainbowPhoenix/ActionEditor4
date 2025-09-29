@@ -72,6 +72,12 @@ export default class DataWriter {
         this.length += 4;
     }
 
+    writeFloat64(value) {
+        this.ensureCapacity(8);
+        this.view.setFloat64(this.length, Number.isFinite(value) ? value : 0, true);
+        this.length += 8;
+    }
+
     writeBytes(source) {
         const bytes = toUint8Array(source);
         this.ensureCapacity(bytes.byteLength);

@@ -1,0 +1,171 @@
+#!/usr/bin/env node
+import { readFile, writeFile } from 'node:fs/promises';
+import { createRequire } from 'node:module';
+import process from 'node:process';
+
+const require = createRequire(import.meta.url);
+
+try {
+  const encoding = require('encoding-japanese');
+  if (encoding) {
+    globalThis.__ACTED_ENCODING_JAPANESE__ = encoding?.default ?? encoding;
+  }
+} catch (error) {
+  // Optional dependency for Shift-JIS encoding when running in Node.
+}
+
+import { parseStage, serializeStage } from '../src/data/stage.js';
+
+const DEFAULT_OUTPUT_INDENT = 2;
+
+function printUsage() {
+  console.error('Usage: node stage.mjs <dump|build> <input> [output] [--out <file>]');
+  console.error('Examples:');
+  console.error('  node stage.mjs dump c01-1.stg4_461 --out c01-1.json');
+  console.error('  node stage.mjs build c01-1.json c01-1.stg4_461');
+}
+
+function isFlag(value) {
+  return typeof value === 'string' && value.startsWith('--');
+}
+
+async function dumpStage(inputPath, outputPath) {
+  let buffer;
+  try {
+    buffer = await readFile(inputPath);
+  } catch (error) {
+    throw new Error(`Failed to read ${inputPath}: ${error.message}`);
+  }
+
+  let parsed;
+  try {
+    parsed = parseStage(buffer);
+  } catch (error) {
+    throw new Error(`Failed to parse ${inputPath}: ${error.message}`);
+  }
+
+  const json = JSON.stringify(parsed, null, DEFAULT_OUTPUT_INDENT);
+  if (outputPath) {
+    try {
+      await writeFile(outputPath, json, 'utf8');
+    } catch (error) {
+      throw new Error(`Failed to write ${outputPath}: ${error.message}`);
+    }
+    return;
+  }
+
+  process.stdout.write(`${json}\n`);
+}
+
+async function buildStage(inputPath, outputPath) {
+  let payload;
+  try {
+    const jsonContent = await readFile(inputPath, 'utf8');
+    payload = JSON.parse(jsonContent);
+  } catch (error) {
+    throw new Error(`Failed to read ${inputPath}: ${error.message}`);
+  }
+
+  let arrayBuffer;
+  try {
+    arrayBuffer = serializeStage(payload);
+  } catch (error) {
+    throw new Error(`Failed to serialise ${inputPath}: ${error.message}`);
+  }
+
+  const bytes = Buffer.from(new Uint8Array(arrayBuffer));
+  try {
+    await writeFile(outputPath, bytes);
+  } catch (error) {
+    throw new Error(`Failed to write ${outputPath}: ${error.message}`);
+  }
+}
+
+async function main(argv) {
+  const args = argv.slice(2);
+  if (args.length === 0) {
+    printUsage();
+    process.exitCode = 1;
+    return;
+  }
+
+  const [command, ...rest] = args;
+  if (command !== 'dump' && command !== 'build') {
+    console.error(`Unknown command: ${command}`);
+    printUsage();
+    process.exitCode = 1;
+    return;
+  }
+
+  if (command === 'dump') {
+    if (rest.length === 0) {
+      console.error('Missing input file for dump command.');
+      printUsage();
+      process.exitCode = 1;
+      return;
+    }
+
+    let inputPath = null;
+    let outputPath = null;
+    for (let index = 0; index < rest.length; index += 1) {
+      const value = rest[index];
+      if (!inputPath && !isFlag(value)) {
+        inputPath = value;
+        continue;
+      }
+      if ((value === '--out' || value === '-o') && index + 1 < rest.length) {
+        outputPath = rest[index + 1];
+        index += 1;
+        continue;
+      }
+      if (!outputPath && !isFlag(value)) {
+        outputPath = value;
+        continue;
+      }
+      console.error(`Unknown argument: ${value}`);
+      printUsage();
+      process.exitCode = 1;
+      return;
+    }
+
+    if (!inputPath) {
+      console.error('Missing input file for dump command.');
+      printUsage();
+      process.exitCode = 1;
+      return;
+    }
+
+    try {
+      await dumpStage(inputPath, outputPath);
+    } catch (error) {
+      console.error(error.message);
+      process.exitCode = 1;
+    }
+    return;
+  }
+
+  if (rest.length < 2) {
+    console.error('Build command requires an input JSON file and an output path.');
+    printUsage();
+    process.exitCode = 1;
+    return;
+  }
+
+  const inputPath = rest[0];
+  const outputPath = rest[1];
+  if (!inputPath || !outputPath || isFlag(inputPath) || isFlag(outputPath)) {
+    console.error('Invalid arguments for build command.');
+    printUsage();
+    process.exitCode = 1;
+    return;
+  }
+
+  try {
+    await buildStage(inputPath, outputPath);
+  } catch (error) {
+    console.error(error.message);
+    process.exitCode = 1;
+  }
+}
+
+main(process.argv);

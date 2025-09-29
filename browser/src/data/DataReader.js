@@ -88,6 +88,12 @@ export default class DataReader {
         return value;
     }
 
+    readFloat64() {
+        const value = this.view.getFloat64(this.offset, true);
+        this.offset += 8;
+        return value;
+    }
+    
     readBytes(length) {
         if (length < 0 || this.offset + length > this.view.byteLength) {
             throw new RangeError('Attempted to read beyond the buffer length.');
