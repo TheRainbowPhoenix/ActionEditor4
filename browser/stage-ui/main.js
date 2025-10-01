@@ -131,6 +131,14 @@ async function handleFile(file) {
     setStatus('Unsupported file type. Provide a .stg4_* or .json file.', 'error');
 }
 
+function handleFileSelect(e) {
+    const files = e.target.files;
+    if (files.length) {
+        handleFiles(files); // Pass the entire FileList/array, not files[0]
+    }
+}
+
+
 function handleFiles(files) {
     if (!files || files.length === 0) {
         return;
@@ -177,13 +185,6 @@ function handleDrop(e) {
 
     if (files.length) {
         handleFiles(files);
-    }
-}
-
-function handleFileSelect(e) {
-    const files = e.target.files;
-    if (files.length) {
-        handleFiles(files[0]);
     }
 }
 
