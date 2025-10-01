@@ -1,3 +1,15 @@
+// SHIFT_JIS and normalization helpers
+import { decodeShiftJis, encodeShiftJis, normalizeDecodedShiftJis } from '../src/data/shiftJis.js';
+
+
+const SHIFT_JIS_DECODER = (() => {
+    try { return new TextDecoder('shift-jis'); } catch (e) { return new TextDecoder('utf-8'); }
+})();
+
+function normalizeShiftJisString(value) { 
+    return value.replace(/\uFF0D/g, '\u2212'); 
+}
+
 /**
  * DataReader for reading binary data from streams
  */
@@ -24,6 +36,7 @@ class DataReader {
     this.position += 2;
     return value;
   }
+  
   readInt16() {
     const value = this.view.getInt16(this.position, true); // little endian
     this.position += 2;
@@ -59,16 +72,26 @@ class DataReader {
     if (length > 1) {
         const bytes = new Uint8Array(this.view.buffer, this.position, length);
         this.position += length;
-        return new TextDecoder().decode(bytes);
-    }  else {
+        // const text = decodeShiftJis(bytes);
+        const text = SHIFT_JIS_DECODER.decode(bytes).replace(/\0+$/, '');
+        return normalizeShiftJisString(text);
+    } else {
         return "";
     }   
+  }
+
+  readStdString() {
+    const length = this.readUint32();
+    if (length <= 1) return '';
+    return this.readFixedString(length);
   }
 
   readFixedString(length) {
     const bytes = new Uint8Array(this.view.buffer, this.position, length);
     this.position += length;
-    return new TextDecoder().decode(bytes);
+    // return decodeShiftJis(bytes);
+    const text = SHIFT_JIS_DECODER.decode(bytes).replace(/\0+$/, '');
+    return normalizeShiftJisString(text);
   }
 
   readBytes(length) {
@@ -94,6 +117,7 @@ class DataWriter {
     this.chunks = [];
     this.position = 0;
   }
+  
   writeInt8(value) {
     const buffer = new ArrayBuffer(1);
     const view = new DataView(buffer);
@@ -155,6 +179,17 @@ class DataWriter {
     this.writeUint32(bytes.length);
     this.chunks.push(bytes);
     this.position += 4 + bytes.length;
+  }
+
+  writeStdString(value) {
+    if (value && value.length > 0) {
+      const bytes = new TextEncoder().encode(value);
+      this.writeUint32(bytes.length);
+      this.chunks.push(bytes);
+      this.position += 4 + bytes.length;
+    } else {
+      this.writeUint32(0);
+    }
   }
 
   writeFixedString(value, length) {
@@ -250,18 +285,24 @@ class StreamDataReader {
     if (length === null || !this.hasBytes(length)) return null;
     
     const strBytes = this.buffer.slice(this.position, this.position + length);
-    const str = new TextDecoder().decode(strBytes);
+    const text = SHIFT_JIS_DECODER.decode(strBytes).replace(/\0+$/, '');
     this.position += length;
-    return str;
+    return normalizeShiftJisString(text);
+  }
+
+  readStdString() {
+    if (!this.hasBytes(4)) return null;
+    const length = this.readUint32();
+    if (length <= 1) return '';
+    return this.readFixedString(length);
   }
 
   readFixedString(length) {
     const strBytes = this.buffer.slice(this.position, this.position + length);
-    const str = new TextDecoder().decode(strBytes);
+    const text = SHIFT_JIS_DECODER.decode(strBytes).replace(/\0+$/, '');
     this.position += length;
-    return str;
+    return normalizeShiftJisString(text);
   }
-
 
   remaining() {
     return this.buffer.length - this.position;
@@ -271,6 +312,5 @@ class StreamDataReader {
     this.position = 0;
   }
 }
-
 
 export { DataReader, DataWriter, StreamDataReader };

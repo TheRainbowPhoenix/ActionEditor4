@@ -35,14 +35,7 @@ function writeArray(writer, arr, serializer) {
 // Helper functions for parsing
 /** @param {DataReader} reader stream reader */
 function readStdString(reader) {
-  const length = reader.readUint32();
-  if (length > 1) {
-    const bytes = new Uint8Array(reader.view.buffer, reader.position, length);
-    reader.position += length;
-    return new TextDecoder().decode(bytes);
-    }  else {
-        return "";
-    }  
+  return reader.readStdString();
 }
 
 /** @param {DataReader} reader stream reader */
@@ -1965,4 +1958,4 @@ function serializeStage(data) {
   });
 }
 
-export { STG4TransformStream, SampleSTG4StreamReader, parseStage, serializeStage };
+export { parseStage, serializeStage };
