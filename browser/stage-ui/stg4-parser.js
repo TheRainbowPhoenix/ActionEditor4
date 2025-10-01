@@ -468,6 +468,9 @@ function readItem(reader) {
   };
 }
 
+// ---------------------------------------------------------------------------------
+// MARK:ItemEffect
+
 /** @param {DataReader} reader stream reader */
 function readItemEffect(reader) {
     const effect = {
@@ -555,6 +558,298 @@ function readItemEffect(reader) {
   return effect;
 }
 
+
+/** @param {DataReader} reader stream reader */
+function parseFlowChangeDetails(reader) {
+  const data = {
+    bytes1_30: reader.readBytes(30)
+  };
+  data.flows = readArray(reader, readFlow);
+  Object.assign(data, {
+    bytes69_72: reader.readBytes(4),
+    operation: reader.readUint32(),
+    bytes77_80: reader.readBytes(4)
+  });
+  return data;
+}
+
+/** @param {DataReader} reader stream reader */
+function parseStageClearDetails(reader) {
+  return {
+    bytes1_14: reader.readBytes(14),
+    path: readStdString(reader),
+    bytes19_38: reader.readBytes(20),
+    stage_transition: reader.readUint32(),
+    number: reader.readUint32(),
+    change_world_map_position: reader.readUint32(),
+    world_map_position_x: reader.readUint32(),
+    world_map_position_y: reader.readUint32(),
+    change_initial_position: reader.readUint32(),
+    initial_position_x: reader.readUint32(),
+    initial_position_y: reader.readUint32(),
+    initial_position_main_character_direction: reader.readUint32(),
+    execute_autosave: reader.readUint32(),
+    add_clear_text_to_replay: reader.readUint32()
+  }
+}
+
+/** @param {DataReader} reader stream reader */
+function parseGameWaitDetails(reader) {
+  return {
+    execution_time: reader.readUint16(),
+    execution_time_double: reader.readUint16(),
+    parallel_execution: reader.readUint8(),
+    bytes6_38: reader.readBytes(33),
+    game_wait_execution_time: reader.readUint32()
+  };
+}
+
+/** @param {DataReader} reader stream reader */
+function parseMessageDetails(reader) {
+  return {
+    bytes1_14: reader.readBytes(14),
+    message: readStdString(reader),
+    bytes19_38: reader.readBytes(20),
+    display_position_specification_method: reader.readUint32(),
+    coordinate_x: reader.readUint32(),
+    coordinate_y: reader.readUint32(),
+    display_position_offset_x: reader.readUint32(),
+    display_position_offset_y: reader.readUint32(),
+    auto_adjust_to_not_go_off_screen: reader.readUint32(),
+    display_time_specification_method: reader.readUint32(),
+    display_time: reader.readUint32(),
+    pause: reader.readUint32(),
+    display_variables: reader.readUint32(),
+    follow_screen: reader.readUint32(),
+    auto_update: reader.readUint32(),
+    message_id_present: reader.readUint32(),
+    message_id: reader.readUint32(),
+    window_display: reader.readUint32(),
+    message_clear: reader.readUint32(),
+    update_interval: reader.readUint32(),
+    instant_display: reader.readUint32(),
+    coordinate_unit: reader.readUint32(),
+    set_options: reader.readUint32(),
+    assign_return_value_to_flow_variable: reader.readUint32()
+  }
+}
+
+/** @param {DataReader} reader stream reader */
+function parseWarpDetails(reader) {
+  return {
+    bytes1_26: reader.readBytes(26),
+    setting_type: reader.readUint8(),
+    direction: reader.readUint8(),
+    bytes29_33: reader.readBytes(5),
+    target_x_present: reader.readUint8(),
+    target_y_present: reader.readUint8(),
+    target_x_bl: reader.readUint16(),
+    target_y_bl: reader.readUint16(),
+    target_x_dot: reader.readUint16(),
+    target_y_dot: reader.readUint16(),
+    target_type: reader.readUint8(),
+    target_unit: reader.readUint8(),
+    gigantic_character_coordinate_position: reader.readUint8(),
+    bytes47_49: reader.readBytes(3),
+    target_x_flip_if_facing_right: reader.readUint8(),
+    target_y_flip_if_facing_right: reader.readUint8(),
+    bytes52_59: reader.readBytes(8),
+    distance: reader.readUint16(),
+    distance_double: reader.readUint16(),
+    bytes64_101: reader.readBytes(38),
+    assign_return_value_to_flow: reader.readUint32()
+  };
+}
+
+/** @param {DataReader} reader stream reader */
+function parseStatusOperationDetails(reader) {
+  return {
+    bytes1_38: reader.readBytes(38),
+    operation_target_type: reader.readUint8(),
+    bytes40_43: reader.readBytes(4),
+    operation_target_variable_type: reader.readUint8(),
+    bytes45_46: reader.readBytes(2),
+    operation_target_variable_number: reader.readUint16(),
+    bytes49_52: reader.readBytes(4),
+    operation_target_target: reader.readUint8(),
+    bytes54_56: reader.readBytes(3),
+    operation_target_status: reader.readUint8(),
+    byte58: reader.readBytes(1),
+    operation_target_flow_variable_number: reader.readUint8(),
+    bytes60_62: reader.readBytes(3),
+    operator_type: reader.readUint8(),
+    bytes64_66: reader.readBytes(3),
+    calculation_content_type: reader.readUint32(),
+    calculation_content_constant: reader.readUint32(),
+    calculation_content_random_lower_limit: reader.readUint32(),
+    calculation_content_random_upper_limit: reader.readUint32(),
+    calculation_content_variable_type: reader.readUint32(),
+    calculation_content_variable_number: reader.readUint32(),
+    calculation_content_target: reader.readUint32(),
+    calculation_content_status: reader.readUint32(),
+    calculation_content_flow_variable_number: reader.readUint32(),
+    bytes103_138: reader.readBytes(36)
+  };
+}
+
+/** @param {DataReader} reader stream reader */
+function parseStatusOperation2Details(reader) {
+  return {
+    bytes1_38: reader.readBytes(38),
+    target: reader.readUint32(),
+    status: reader.readUint32(),
+    on: reader.readUint32(),
+    bytes51_62: reader.readBytes(12)
+  };
+}
+
+/** @param {DataReader} reader stream reader */
+function parseDisappearanceDetails(reader) {
+  return {
+    bytes1_38: reader.readBytes(38),
+    target: reader.readUint32(),
+    faction: reader.readUint32(),
+    range: reader.readUint32(),
+    assign_return_value_to_flow_variable: reader.readUint32()
+  };
+}
+
+/** @param {DataReader} reader stream reader */
+function parseItemAcquisitionDetails(reader) {
+  return {
+    bytes1_38: reader.readBytes(38),
+    palette_type: reader.readUint32(),
+    palette_data_number: reader.readUint32()
+  };
+}
+
+/** @param {DataReader} reader stream reader */
+function parseGraphicChangeDetails(reader) {
+  return {
+    bytes1_38: reader.readBytes(38),
+    image_type: reader.readUint32(),
+    image_number: reader.readUint32(),
+    offset: reader.readUint32()
+  };
+}
+
+/** @param {DataReader} reader stream reader */
+function parseBasicAnimationSetChangeDetails(reader) {
+  return {
+    bytes1_38: reader.readBytes(38),
+    animation_set: reader.readUint32()
+  };
+}
+
+/** @param {DataReader} reader stream reader */
+function parseAnimationExecutionDetails(reader) {
+  return {
+    execution_time: reader.readUint16(),
+    execution_time_double: reader.readUint16(),
+    parallel_execution: reader.readUint8(),
+    bytes: reader.readBytes(41)
+  };
+}
+
+/** @param {DataReader} reader stream reader */
+function parseEffectExecutionDetails(reader) {
+  return { bytes1_38: reader.readBytes(38), bytes: reader.readBytes(40) };
+}
+
+/** @param {DataReader} reader stream reader */
+function parseCharacterEffectExecutionDetails(reader) {
+  return {
+    bytes1_38: reader.readBytes(38),
+    effect: reader.readUint32(),
+    execution_type: reader.readUint32(),
+    loop_execution: reader.readUint32()
+  };
+}
+
+/** @param {DataReader} reader stream reader */
+function parseScreenEffectExecutionDetails(reader) {
+  return {
+    bytes1_38: reader.readBytes(38),
+    effect: reader.readUint32(),
+    execution_type: reader.readUint32(),
+    loop_execution: reader.readUint32()
+  };
+}
+
+/** @param {DataReader} reader stream reader */
+function parsePictureDisplayDetails(reader) {
+  return {
+    execution_time: reader.readUint16(),
+    execution_time_double: reader.readUint16(),
+    parallel_execution: reader.readUint8(),
+    bytes: reader.readBytes(113)
+  };
+}
+
+/** @param {DataReader} reader stream reader */
+function parseBackgroundChangeDetails(reader) {
+  return {
+    execution_time: reader.readUint16(),
+    execution_time_double: reader.readUint16(),
+    parallel_execution: reader.readUint8(),
+    bytes: reader.readBytes(41)
+  };
+}
+
+/** @param {DataReader} reader stream reader */
+function parseSoundEffectPlaybackDetails(reader) {
+  return {
+    bytes1_7: reader.readBytes(7),
+    play_if_outside_screen: reader.readUint8(),
+    bytes9_38: reader.readBytes(30),
+    sound_effect: reader.readUint32()
+  };
+}
+
+/** @param {DataReader} reader stream reader */
+function parseBGMPlaybackDetails(reader) {
+  return {
+    execution_time: reader.readUint16(),
+    execution_time_double: reader.readUint16(),
+    parallel_execution: reader.readUint8(),
+    bytes: reader.readBytes(41)
+  };
+}
+
+/** @param {DataReader} reader stream reader */
+function parseCodeExecutionDetails(reader) {
+  return {
+    execution_time: reader.readUint16(),
+    execution_time_double: reader.readUint16(),
+    parallel_execution: reader.readUint8(),
+    bytes6_14: reader.readBytes(9),
+    code: readStdString(reader),
+    bytes19_38: reader.readBytes(20)
+  }
+}
+
+/** @param {DataReader} reader stream reader */
+function parseArrangementDetails(reader) {
+  return {
+    bytes1_38: reader.readBytes(38),
+    command: reader.readUint32(),
+    parameter: reader.readUint32(),
+    operator_type: reader.readUint32(),
+    variable_type: reader.readUint32(),
+    variable_number: reader.readUint32()
+  };
+}
+
+/** @param {DataReader} reader stream reader */
+function parseLoopDetails(reader) {
+  return {
+    bytes1_38: reader.readBytes(38),
+    repeat_count: reader.readUint32(),
+    command_count: reader.readUint32()
+  };
+}
+// ----------------------------------------------------------------------------------
+// MARK:COMMANDS
 
 /** @param {DataReader} reader stream reader */
 function readCommand(reader) {
@@ -692,7 +987,376 @@ function readCommand(reader) {
   return command;
 }
 
+/** @param {DataReader} reader stream reader */
+function parseWaitDetails(reader) {
+  return {
+    execution_time: reader.readUint16(),
+    execution_time_double: reader.readUint16(),
+    parallel_execution: reader.readUint8(),
+    bytes: reader.readBytes(33)
+  };
+}
+
+/** @param {DataReader} reader stream reader */
+function parseLinearMovementDetails(reader) {
+  return {
+    execution_time: reader.readUint16(),
+    execution_time_double: reader.readUint16(),
+    parallel_execution: reader.readUint8(),
+    bytes6_8: reader.readBytes(3),
+    animation_and_other_type: reader.readUint16(),
+    bytes11_26: reader.readBytes(16),
+    movement_direction_setting_type: reader.readUint8(),
+    movement_direction_direction: reader.readUint8(),
+    movement_direction_angle: reader.readUint16(),
+    movement_direction_angle_double: reader.readUint16(),
+    movement_direction_angle_reverse_rotation_if_facing_right: reader.readUint8(),
+    movement_direction_target_x_present: reader.readUint8(),
+    movement_direction_target_y_present: reader.readUint8(),
+    movement_direction_target_x: reader.readUint16(),
+    movement_direction_target_y: reader.readUint16(),
+    movement_direction_target_x_dot: reader.readUint16(),
+    movement_direction_target_y_dot: reader.readUint16(),
+    movement_direction_target_type: reader.readUint8(),
+    movement_direction_target_coordinate_unit: reader.readUint8(),
+    byte46: reader.readBytes(1),
+    movement_direction_execute_until_target_coordinate_reached: reader.readUint8(),
+    movement_direction_invalidate_horizontal_movement: reader.readUint8(),
+    movement_direction_invalidate_vertical_movement: reader.readUint8(),
+    movement_direction_target_x_flip_if_facing_right: reader.readUint8(),
+    movement_direction_target_y_flip_if_facing_right: reader.readUint8(),
+    movement_direction_reverse_speed_if_direction_changes: reader.readUint8(),
+    movement_direction_prevent_blur: reader.readUint8(),
+    movement_direction_dont_change_character_direction: reader.readUint8(),
+    time_speed_distance_setting_type: reader.readUint8(),
+    time_speed_distance_speed: reader.readUint16(),
+    time_speed_distance_speed_double: reader.readUint16(),
+    time_speed_distance_distance: reader.readUint16(),
+    time_speed_distance_distance_double: reader.readUint16(),
+    time_speed_distance_distance_unit: reader.readUint8(),
+    bytes65_68: reader.readBytes(4),
+    inertia_present: reader.readUint8(),
+    inertia_max_speed: reader.readUint16(),
+    inertia_speed_correction_on_direction_change: reader.readFloat64(),
+    animation_type: reader.readUint8(),
+    bytes81_101: reader.readBytes(21)
+  };
+}
+
+/** @param {DataReader} reader stream reader */
+function parseGenericMovementDetails(reader) {
+  return {
+    execution_time: reader.readUint16(),
+    execution_time_double: reader.readUint16(),
+    parallel_execution: reader.readUint8(),
+    bytes6_101: reader.readBytes(96)
+  };
+}
+
+function writeGenericMovementDetails(writer, data) {
+  writer.writeUint16((data == null ? void 0 : data.execution_time) ?? 0);
+  writer.writeUint16((data == null ? void 0 : data.execution_time_double) ?? 0);
+  writer.writeUint8((data == null ? void 0 : data.parallel_execution) ?? 0);
+  writer.writeBytes((data == null ? void 0 : data.bytes6_101) ?? new Uint8Array(96));
+}
+
+const parseGroundMovementDetails = parseGenericMovementDetails;
+const writeGroundMovementDetails = writeGenericMovementDetails;
+const parseCircularMovementDetails = parseGenericMovementDetails;
+const writeCircularMovementDetails = writeGenericMovementDetails;
+const parseChargeMovementDetails = parseGenericMovementDetails;
+const writeChargeMovementDetails = writeGenericMovementDetails;
+const parseGuidedMovementDetails = parseGenericMovementDetails;
+const writeGuidedMovementDetails = writeGenericMovementDetails;
+const parseScreenOutsideAvoidanceMovementDetails = parseGenericMovementDetails;
+const writeScreenOutsideAvoidanceMovementDetails = writeGenericMovementDetails;
+const parseMovementInvalidationDetails = parseGenericMovementDetails;
+const writeMovementInvalidationDetails = writeGenericMovementDetails;
+
+/** @param {DataReader} reader stream reader */
+function parseDirectionChangeDetails(reader) {
+  return {
+    execution_time: reader.readUint16(),
+    execution_time_double: reader.readUint16(),
+    parallel_execution: reader.readUint8(),
+    bytes6_42: reader.readBytes(37)
+  };
+}
+
+/** @param {DataReader} reader stream reader */
+function parseJumpDetails(reader) {
+  return {
+    bytes1_5: reader.readBytes(5),
+    sound_effect: reader.readUint16(),
+    play_if_outside_screen: reader.readUint8(),
+    animation: reader.readUint16(),
+    bytes11_38: reader.readBytes(28),
+    jump_type: reader.readUint32(),
+    max_jump_inertial_movement_speed: reader.readUint32(),
+    max_jump_height: reader.readUint32(),
+    min_jump_inertial_movement_speed: reader.readUint32(),
+    min_jump_height: reader.readUint32()
+  };
+}
+
+/** @param {DataReader} reader stream reader */
+function parseShotDetails(reader) {
+  return {
+    execution_time: reader.readUint16(),
+    execution_time_double: reader.readUint16(),
+    parallel_execution: reader.readUint8(),
+    sound_effect: reader.readUint16(),
+    play_if_outside_screen: reader.readUint8(),
+    animation: reader.readUint16(),
+    bytes11_30: reader.readBytes(20),
+    number_of_shots_fired: reader.readUint8(),
+    formation: reader.readUint8(),
+    firing_parameter1: reader.readUint16(),
+    firing_parameter2: reader.readUint16(),
+    firing_parameter3: reader.readUint16(),
+    target: reader.readUint8(),
+    direction: reader.readUint8(),
+    set_angle_to_target: reader.readUint8(),
+    firing_target: reader.readUint8(),
+    angle_offset: reader.readUint16(),
+    angle_offset_double: reader.readUint16(),
+    angle_offset_reverse_rotation_if_facing_right: reader.readUint8(),
+    angle_dispersion: reader.readUint16(),
+    change_firing_position_according_to_angle: reader.readUint8(),
+    number_of_doubles: reader.readUint8(),
+    firing_position_offset_x: reader.readUint16(),
+    firing_position_offset_x_double: reader.readUint16(),
+    firing_position_offset_y: reader.readUint16(),
+    firing_position_offset_y_double: reader.readUint16(),
+    firing_position_offset_x_flip_if_facing_right: reader.readUint8(),
+    firing_position_offset_y_flip_if_facing_right: reader.readUint8(),
+    graphic: reader.readUint16(),
+    z_coordinate: reader.readUint8(),
+    transparency: reader.readUint8(),
+    faction_same_as_user: reader.readUint8(),
+    faction: reader.readUint16(),
+    gigantic: reader.readUint16(),
+    movement_type: reader.readUint8(),
+    movement_type_parameter1: reader.readUint16(),
+    movement_type_parameter2: reader.readUint16(),
+    movement_type_parameter3: reader.readUint16(),
+    movement_target: reader.readUint8(),
+    synchronize_with_auto_scroll: reader.readUint8(),
+    speed: reader.readUint16(),
+    speed_double: reader.readUint16(),
+    acceleration_enabled: reader.readUint8(),
+    acceleration: reader.readUint16(),
+    acceleration_double: reader.readUint16(),
+    flight_distance: reader.readUint16(),
+    flight_distance_valid: reader.readUint8(),
+    flight_distance_double: reader.readUint16(),
+    flight_distance_does_not_disappear_at_end: reader.readUint8(),
+    disappearance_time_valid: reader.readUint8(),
+    disappearance_time: reader.readUint16(),
+    disappearance_time_double: reader.readUint16(),
+    penetrate_blocks: reader.readUint8(),
+    penetrate_actors: reader.readUint8(),
+    penetrate_block_actors: reader.readUint8(),
+    disappear_on_hitting_shot: reader.readUint8(),
+    value_for_disappearing_on_hitting_shot: reader.readUint8(),
+    power: reader.readUint32(),
+    bytes109_110: reader.readBytes(2),
+    impact: reader.readUint8(),
+    effect: reader.readUint16(),
+    acquired_item_palette_type: reader.readUint8(),
+    acquired_item_palette_number: reader.readUint16(),
+    bytes117_125: reader.readBytes(9),
+    attack: reader.readUint8(),
+    attack_id: reader.readUint8(),
+    bytes128_143: reader.readBytes(16)
+  };
+}
+
+/** @param {DataReader} reader stream reader */
+function parseSwordDetails(reader) {
+  return {
+    execution_time: reader.readUint32(),
+    parallel_execution: reader.readUint8(),
+    sound_effect: reader.readUint16(),
+    play_if_outside_screen: reader.readUint8(),
+    animation: reader.readUint16(),
+    bytes11_63: reader.readBytes(53),
+    z_coordinate: reader.readUint8(),
+    transparency: reader.readUint8(),
+    faction_same_as_user: reader.readUint8(),
+    faction: reader.readUint16(),
+    gigantic: reader.readUint16(),
+    sword_type: reader.readUint32(),
+    bytes75_104: reader.readBytes(30),
+    power: reader.readUint32(),
+    bytes109_110: reader.readBytes(2),
+    impact: reader.readUint8(),
+    effect: reader.readUint16(),
+    acquired_item_palette_type: reader.readUint8(),
+    acquired_item_palette_number: reader.readUint16(),
+    bytes117_125: reader.readBytes(9),
+    attack: reader.readUint8(),
+    attack_id: reader.readUint8(),
+    bytes128_143: reader.readBytes(16)
+  };
+}
+
+/** @param {DataReader} reader stream reader */
+function parseBlockSummonDetails(reader) {
+  return {
+    execution_time: reader.readUint16(),
+    execution_time_double: reader.readUint16(),
+    parallel_execution: reader.readUint8(),
+    sound_effect: reader.readUint16(),
+    play_sound_effect_if_outside_screen: reader.readUint8(),
+    animation: reader.readUint8(),
+    bytes10_30: reader.readBytes(21),
+    count: reader.readUint8(),
+    formation: reader.readUint8(),
+    interval: reader.readUint16(),
+    number_of_columns: reader.readUint16(),
+    column_interval: reader.readUint16(),
+    target: reader.readUint8(),
+    direction: reader.readUint8(),
+    byte41: reader.readBytes(1),
+    target2: reader.readUint8(),
+    bytes43_51: reader.readBytes(9),
+    summon_position_offset_x: reader.readUint32(),
+    summon_position_offset_y: reader.readUint32(),
+    summon_position_offset_x_flip: reader.readUint8(),
+    summon_position_offset_y_flip: reader.readUint8(),
+    bytes62_66: reader.readBytes(5),
+    faction: reader.readUint8(),
+    bytes68_88: reader.readBytes(21),
+    existence_time: reader.readUint16(),
+    existence_time_present: reader.readUint8(),
+    bytes92_119: reader.readBytes(28),
+    palette_type: reader.readUint8(),
+    palette_data_number: reader.readUint16(),
+    faction_specification_method: reader.readUint8(),
+    set_acquired_score_to_0: reader.readUint8(),
+    direction_flip: reader.readUint8(),
+    attack: reader.readUint8(),
+    attack_flow: reader.readUint8(),
+    bytes128_143: reader.readBytes(16),
+    return_value_to_flow_variable: reader.readUint8(),
+    bytes145_147: reader.readBytes(3)
+  };
+}
+
+/** @param {DataReader} reader stream reader */
+function parseCharacterSummonDetails(reader) {
+  return {
+    execution_time: reader.readUint16(),
+    execution_time_double: reader.readUint16(),
+    parallel_execution: reader.readUint8(),
+    sound_effect: reader.readUint16(),
+    play_sound_effect_if_outside_screen: reader.readUint8(),
+    animation: reader.readUint8(),
+    bytes10_30: reader.readBytes(21),
+    count: reader.readUint8(),
+    formation: reader.readUint8(),
+    interval: reader.readUint16(),
+    number_of_columns: reader.readUint16(),
+    column_interval: reader.readUint16(),
+    target: reader.readUint8(),
+    direction: reader.readUint8(),
+    byte41: reader.readBytes(1),
+    target2: reader.readUint8(),
+    bytes43_51: reader.readBytes(9),
+    summon_position_offset_x: reader.readUint32(),
+    summon_position_offset_y: reader.readUint32(),
+    summon_position_offset_x_flip: reader.readUint8(),
+    summon_position_offset_y_flip: reader.readUint8(),
+    bytes62_66: reader.readBytes(5),
+    faction: reader.readUint8(),
+    bytes68_88: reader.readBytes(21),
+    existence_time: reader.readUint16(),
+    existence_time_present: reader.readUint8(),
+    bytes92_119: reader.readBytes(28),
+    palette_type: reader.readUint8(),
+    palette_data_number: reader.readUint16(),
+    faction_specification_method: reader.readUint8(),
+    set_acquired_score_to_0: reader.readUint8(),
+    direction_flip: reader.readUint8(),
+    attack: reader.readUint8(),
+    attack_flow: reader.readUint8(),
+    bytes128_143: reader.readBytes(16),
+    return_value_to_flow_variable: reader.readUint8(),
+    bytes145_147: reader.readBytes(3)
+  };
+}
+
+/** @param {DataReader} reader stream reader */
+function parseItemSummonDetails(reader) {
+  return {
+    execution_time: reader.readUint16(),
+    execution_time_double: reader.readUint16(),
+    parallel_execution: reader.readUint8(),
+    sound_effect: reader.readUint16(),
+    play_sound_effect_if_outside_screen: reader.readUint8(),
+    animation: reader.readUint8(),
+    bytes10_30: reader.readBytes(21),
+    count: reader.readUint8(),
+    formation: reader.readUint8(),
+    interval: reader.readUint16(),
+    number_of_columns: reader.readUint16(),
+    column_interval: reader.readUint16(),
+    target: reader.readUint8(),
+    direction: reader.readUint8(),
+    byte41: reader.readUint8(),
+    target2: reader.readUint8(),
+    bytes43_51: reader.readBytes(9),
+    summon_position_offset_x: reader.readUint32(),
+    summon_position_offset_y: reader.readUint32(),
+    summon_position_offset_x_flip: reader.readUint8(),
+    summon_position_offset_y_flip: reader.readUint8(),
+    bytes62_66: reader.readBytes(5),
+    faction: reader.readUint8(),
+    bytes68_88: reader.readBytes(21),
+    existence_time: reader.readUint16(),
+    existence_time_present: reader.readUint8(),
+    bytes92_119: reader.readBytes(28),
+    palette_type: reader.readUint8(),
+    palette_data_number: reader.readUint16(),
+    faction_specification_method: reader.readUint8(),
+    set_acquired_score_to_0: reader.readUint8(),
+    direction_flip: reader.readUint8(),
+    attack: reader.readUint8(),
+    attack_flow: reader.readUint8(),
+    bytes128_143: reader.readBytes(16)
+  };
+}
+
+/** @param {DataReader} reader stream reader */
+function parseFlowOperationDetails(reader) {
+  const data = {
+    bytes1_34: reader.readBytes(34),
+    condition_present: reader.readUint8(),
+    judgment_type: reader.readUint8(),
+    bytes37_40: reader.readBytes(4)
+  };
+  data.conditions = readArray(reader, parseBasicCondition);
+  data.bytes45_52 = reader.readBytes(8);
+  data.operation = reader.readUint32();
+  data.target_flow = reader.readUint32();
+  data.id = reader.readUint32();
+  data.target_character = reader.readUint32();
+  data.assign_return_value_to_flow_variable = reader.readUint32();
+  return data;
+}
+
+/** @param {DataReader} reader stream reader */
+function parseTargetSettingDetails(reader) {
+  return { bytes1_38: reader.readBytes(38), bytes39_106: reader.readBytes(68) };
+}
+
+// --------------------------------------------------------
+// MARK:STAGE
+
 // Parse StageCharacter structure
+
+/** @param {DataReader} reader stream reader */
 function readStageCharacter(reader) {
   return {
     position: reader.readUint32(),
@@ -701,6 +1365,8 @@ function readStageCharacter(reader) {
 }
 
 // Parse StageItem structure
+
+/** @param {DataReader} reader stream reader */
 function readStageItem(reader) {
   return {
     position: reader.readUint32(),
@@ -709,6 +1375,8 @@ function readStageItem(reader) {
 }
 
 // Parse Background structure
+
+/** @param {DataReader} reader stream reader */
 function readBackground(reader) {
   return {
     start: reader.readUint32(),
@@ -723,7 +1391,7 @@ function readBackground(reader) {
     horizontal_auto_scroll_speed: reader.readFloat64(),
     vertical_auto_scroll_speed: reader.readFloat64(),
     bytes61_80: reader.readBytes(20),
-    image_path: parseStdString(reader)
+    image_path: readStdString(reader)
   };
 }
 
@@ -732,7 +1400,7 @@ function readStageVar(reader) {
   return {
     some_count: reader.readUint32(),
     some_count_too: reader.readUint32(),
-    variable_name: parseStdString(reader)
+    variable_name: readStdString(reader)
   };
 }
 
@@ -745,143 +1413,145 @@ function parseStagePaletteFile(reader) {
     throw new Error(`Invalid STG4 magic: ${magic}, expected 1020`);
   }
   
-
-    let some_count = reader.readUint32(); // 99 - std::vector<int>
+  return {
+    some_count: reader.readUint32(), // 99 - std::vector<int>
     
-    let item_width = reader.readUint32();
+    item_width: reader.readUint32(),
     
-    let chunk_width = reader.readUint32(); // 32
-    let chunk_pow = reader.readUint32(); // 5
+    chunk_width: reader.readUint32(), // 32
+    chunk_pow: reader.readUint32(), // 5
    
-    let height = reader.readUint32();
+    height: reader.readUint32(),
     
-    let enable_horizontal_scroll_minimum = reader.readUint32();
-    let enable_horizontal_scroll_maximum = reader.readUint32();
-    let enable_vertical_scroll_minimum = reader.readUint32(); // top left
-    let enable_vertical_scroll_maximum = reader.readUint32(); // bottom
+    enable_horizontal_scroll_minimum: reader.readUint32(),
+    enable_horizontal_scroll_maximum: reader.readUint32(),
+    enable_vertical_scroll_minimum: reader.readUint32(), // top left
+    enable_vertical_scroll_maximum: reader.readUint32(), // bottom
     
-    let horizontal_scroll_minimum_value = reader.readUint32();
-    let horizontal_scroll_maximum_value = reader.readUint32();
-    let vertical_scroll_minimum_value = reader.readUint32();
-    let vertical_scroll_maximum_value = reader.readUint32();
+    horizontal_scroll_minimum_value: reader.readUint32(),
+    horizontal_scroll_maximum_value: reader.readUint32(),
+    vertical_scroll_minimum_value: reader.readUint32(),
+    vertical_scroll_maximum_value: reader.readUint32(),
     
     // Page 2
-    let frame_rate = reader.readUint32();
+    frame_rate: reader.readUint32(),
     
-    let enable_time_limit = reader.readUint32();
-    let time_limit_duration = reader.readUint32();  // seconds
-    let warning_sound_start_time = reader.readUint32();
+    enable_time_limit: reader.readUint32(),
+    time_limit_duration: reader.readUint32(),  // seconds
+    warning_sound_start_time: reader.readUint32(),
     
-    let enable_side_scroll = reader.readUint32();
-    let enable_vertical_scroll = reader.readUint32();
-    let autoscroll_speed = reader.readUint32();
-    let vertical_scroll_speed = reader.readUint32();
+    enable_side_scroll: reader.readUint32(),
+    enable_vertical_scroll: reader.readUint32(),
+    autoscroll_speed: reader.readUint32(),
+    vertical_scroll_speed: reader.readUint32(),
     
-    let gravity = reader.readFloat64();
+    gravity: reader.readFloat64(),
     
-    let hit_detection_level = reader.readUint32();
-    let character_shot_collision_detection_accuracy = reader.readUint32();
+    hit_detection_level: reader.readUint32(),
+    character_shot_collision_detection_accuracy: reader.readUint32(),
     
-    let bgm_number = reader.readUint32();
-    let bgm_loop_playback = reader.readUint32();
-    let dont_restart_bgm_if_no_change = reader.readUint32();
+    bgm_number: reader.readUint32(),
+    bgm_loop_playback: reader.readUint32(),
+    dont_restart_bgm_if_no_change: reader.readUint32(),
     
-    let enable_z_coordinate = reader.readUint32();
+    enable_z_coordinate: reader.readUint32(),
     
-    let inherit_status_from_stock = reader.readUint32();
-    let store_status_to_stock = reader.readUint32();
-    let show_status_window = reader.readUint32();
+    inherit_status_from_stock: reader.readUint32(),
+    store_status_to_stock: reader.readUint32(),
+    show_status_window: reader.readUint32(),
     
-    let switch_scene_immediately_on_clear = reader.readUint32();
-    let allow_replay_save = reader.readUint32();
+    switch_scene_immediately_on_clear: reader.readUint32(),
+    allow_replay_save: reader.readUint32(),
     
     // show text images
-    let show_stage = reader.readUint32();
-    let show_ready = reader.readUint32();
-    let show_clear = reader.readUint32();
-    let show_gameover = reader.readUint32();
+    show_stage: reader.readUint32(),
+    show_ready: reader.readUint32(),
+    show_clear: reader.readUint32(),
+    show_gameover: reader.readUint32(),
     
-    let player_collide = readPlayerCollision(reader);
+    player_collide: readPlayerCollision(reader),
     
-    let enemy_collide = readEnemyCollision(reader);
+    enemy_collide: readEnemyCollision(reader),
     
-    let item_collision_width = reader.readUint32();
-    let item_collision_height = reader.readUint32();   
+    item_collision_width: reader.readUint32(),
+    item_collision_height: reader.readUint32(),   
 
-    let player_hitbox = readActorHitbox(reader);
-    let enemy_hitbox = readActorHitbox(reader);
+    player_hitbox: readActorHitbox(reader),
+    enemy_hitbox: readActorHitbox(reader),
     
     // Okay this is original, but this limit the number of "ctrl-z"
-    let undo_max_times = reader.readUint32();
+    undo_max_times: reader.readUint32(),
 
-    let x_coordinate_upper_limit = reader.readUint32();
-    let y_coordinate_upper_limit = reader.readUint32();
+    x_coordinate_upper_limit: reader.readUint32(),
+    y_coordinate_upper_limit: reader.readUint32(),
 
-    let unk75 = reader.readUint32();
-    let unk76 = reader.readUint32();
-    let unk77 = reader.readUint32();
-    let unk78 = reader.readUint32();
-    let unk79 = reader.readUint32();
+    unk75: reader.readUint32(),
+    unk76: reader.readUint32(),
+    unk77: reader.readUint32(),
+    unk78: reader.readUint32(),
+    unk79: reader.readUint32(),
 
-    let unk80 = reader.readUint32();
-    let unk81 = reader.readUint32();
-    let unk82 = reader.readUint32();
-    let unk83 = reader.readUint32();
-    let unk84 = reader.readUint32();
-    let unk85 = reader.readUint32();
-    let unk86 = reader.readUint32();
+    unk80: reader.readUint32(),
+    unk81: reader.readUint32(),
+    unk82: reader.readUint32(),
+    unk83: reader.readUint32(),
+    unk84: reader.readUint32(),
+    unk85: reader.readUint32(),
+    unk86: reader.readUint32(),
     
-    let disable_damage_outside_screen = reader.readUint32();
+    disable_damage_outside_screen: reader.readUint32(),
 
-    let player_invincibility_from_same_enemy_duration = reader.readUint32();
-    let player_invincibility_duration = reader.readUint32();
+    player_invincibility_from_same_enemy_duration: reader.readUint32(),
+    player_invincibility_duration: reader.readUint32(),
 
-    let enemy_invincibility_from_same_player_duration = reader.readUint32();
-    let enemy_invincibility_duration = reader.readUint32();
+    enemy_invincibility_from_same_player_duration: reader.readUint32(),
+    enemy_invincibility_duration: reader.readUint32(),
     
-    let stage_names = reader.readUint32(); // 1 -  std::vector<std::string>
-    let stage_name = readStdString(reader);
+    stage_names: reader.readUint32(), // 1 -  std::vector<std::string>
+    stage_name: readStdString(reader),
     
-    let ranking_size = reader.readUint32(); // 5  - std::vector<int>
+    ranking_size: reader.readUint32(), // 5  - std::vector<int>
     // Ranking
-    let ranking_score = reader.readUint32();
-    let ranking_remaining_time = reader.readUint32();
-    let ranking_clear_time = reader.readUint32();
-    let ranking_remaining_hp = reader.readUint32();
-    let ranking_remaining_sp = reader.readUint32();
+    ranking_score: reader.readUint32(),
+    ranking_remaining_time: reader.readUint32(),
+    ranking_clear_time: reader.readUint32(),
+    ranking_remaining_hp: reader.readUint32(),
+    ranking_remaining_sp: reader.readUint32(),
 
-    // let DeathFade  = fade animation on death
-    let nonblock_enemy_death = readDeathFade(reader);
-    let block_enemy_death = readDeathFade(reader);
-    let item_death = readDeathFade(reader);
-    let player_death = readDeathFade(reader);
-    let enemy_death = readDeathFade(reader);
+    // DeathFade : fade animation on death
+    nonblock_enemy_death: readDeathFade(reader),
+    block_enemy_death: readDeathFade(reader),
+    item_death: readDeathFade(reader),
+    player_death: readDeathFade(reader),
+    enemy_death: readDeathFade(reader),
 
     // Stage Palette - add the header  FC 03 00 00 and it's a  plt4 file !
-    let palette = readStagePalette(reader);
+    palette: readStagePalette(reader),
 
     // std::vector<StageBlock>
-    let blocks = readArray(reader, readStageBlock);
+    blocks: readArray(reader, readStageBlock),
 
     // std::vector<StageCharacter>
-    let characters = readArray(reader, readStageCharacter);
+    characters: readArray(reader, readStageCharacter),
 
     // std::vector<Item>
-    let items = readArray(reader, readStageItem);
+    items: readArray(reader, readStageItem),
 
     // std::vector<Background>
-    let backgrounds = readArray(reader, readBackground);
+    backgrounds: readArray(reader, readBackground),
 
     //currently fixed 1000
-    let stage_vars = readArray(reader, readStageVar);
+    stage_vars: readArray(reader, readStageVar),
     
-    let end = (() => {
+    end: (() => {
       let e = reader.readUint32() // value should be 123456789
       if (e !== 123456789) {
         console.warn(`Unexpected end marker: expected 123456789, got ${file.end}`);
       }
       return e;
-    })();
+    })()
+  
+  }
   
 }
 
@@ -910,30 +1580,28 @@ class STG4Unpacker {
 
     // this.dataReader.addData(uint8Array);
     // this.parseData();
+
+    if (uint8Array.length != 4096) {
+      this.parseFile();
+    }
+
+    // TODO: this is 4096 bytes chunk streaming, code should be adapted
+    // this.parseFile();
+    // this.checkForChunks();
   }
 
   /**
    * Parse the entire STG4 file when all data is available
    */
   parseFile() {
-    if (this.fileBuffer.length === 0) return;
+    if (this.fileBuffer.length === 0) return null;
     
     try {
       const reader = new DataReader(this.fileBuffer.buffer);
-      const parsedFile = parseStagePaletteFile(reader);
-      
-      if (this.onChunk) {
-        this.onChunk(parsedFile);
-      }
-      
-      if (this.onClose) {
-        this.onClose();
-      }
+      return parseStagePaletteFile(reader); // Return the parsed result directly
     } catch (error) {
       console.error('Error parsing STG4 file:', error);
-      if (this.onChunk) {
-        this.onChunk({ error: error.message });
-      }
+      return { error: error.message };
     }
   }
 }
@@ -945,26 +1613,37 @@ class STG4TransformStream {
   constructor() {
     const unpacker = new STG4Unpacker();
 
-    this.readable = new ReadableStream({
-      start(controller) {
-        unpacker.onChunk = chunk => controller.enqueue(chunk);
-        unpacker.onClose = () => controller.close();
+    let bufferedData = [];
+    let totalLength = 0;
+
+    this.stream = new TransformStream({
+      transform(chunk, controller) {
+        // Buffer the incoming chunks
+        bufferedData.push(chunk);
+        totalLength += chunk.length;
       },
-      pull(controller) {
-        // When all data is received, parse the file
-        unpacker.parseFile();
+      
+      flush(controller) {
+        // This is called when the stream is closed
+        // Combine all buffered data
+        const combinedBuffer = new Uint8Array(totalLength);
+        let offset = 0;
+        for (const chunk of bufferedData) {
+          combinedBuffer.set(chunk, offset);
+          offset += chunk.length;
+        }
+        
+        // Now process the complete file
+        unpacker.addBinaryData(combinedBuffer);
+        const result = unpacker.parseFile(); // This will be called only when fully read
+        
+        // Enqueue the parsed result
+        controller.enqueue(result);
       }
     });
 
-    this.writable = new WritableStream({
-      write(chunk, controller) {
-        unpacker.addBinaryData(chunk);
-      },
-      close(controller) {
-        // File is complete, trigger parsing
-        unpacker.parseFile();
-      }
-    });
+    this.readable = this.stream.readable;
+    this.writable = this.stream.writable;
   }
 }
 
@@ -1001,13 +1680,17 @@ class SampleSTG4StreamReader {
  */
 async function parseStage(stream) {
   const transformStream = new STG4TransformStream();
-  const readableStream = stream.pipeThrough(transformStream);
+  const parsedStream = stream.pipeThrough(transformStream);
   
-  const reader = new SampleSTG4StreamReader();
-  const chunks = await reader.read(readableStream);
+  const reader = parsedStream.getReader();
+  const { value: parsedFile, done } = await reader.read();
   
-  // Return the parsed file structure
-  return chunks[0] || {};
+  if (done) {
+    console.log("DONE!");
+    return parsedFile; // This should be your parsed JSON object
+  }
+  
+  return parsedFile;
 }
 
 /**
@@ -1025,6 +1708,7 @@ function serializeStage(data) {
     }
   });
 
+  /*
   const readableStream = new ReadableStream({
     start(controller) {
       // Write header
@@ -1272,6 +1956,7 @@ function serializeStage(data) {
       controller.close();
     }
   });
+  */
 
   return new TransformStream({
     start(controller) {
