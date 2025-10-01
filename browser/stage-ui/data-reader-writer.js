@@ -7,6 +7,12 @@ class DataReader {
     this.position = 0;
   }
 
+  readInt8() {
+    const value = this.view.getInt8(this.position);
+    this.position += 1;
+    return value;
+  }
+
   readUint8() {
     const value = this.view.getUint8(this.position);
     this.position += 1;
@@ -87,6 +93,13 @@ class DataWriter {
   constructor() {
     this.chunks = [];
     this.position = 0;
+  }
+  writeInt8(value) {
+    const buffer = new ArrayBuffer(1);
+    const view = new DataView(buffer);
+    view.setInt8(0, value);
+    this.chunks.push(new Uint8Array(buffer));
+    this.position += 1;
   }
 
   writeUint8(value) {

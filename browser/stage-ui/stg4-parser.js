@@ -14,7 +14,7 @@ function readArray(reader, parser) {
   const count = reader.readUint32();
   if (count > CONFIG.MAX_ARRAY_SIZE) {
     throw new Error(
-      `Array size ${count} exceeds maximum of ${CONFIG.MAX_ARRAY_SIZE} at offset ${reader.offset - 4}`
+      `Array size ${count} exceeds maximum of ${CONFIG.MAX_ARRAY_SIZE} at offset ${reader.position - 4}`
     );
   }
   const arr = [];
@@ -367,7 +367,7 @@ function readFlow(reader) {
   const header = reader.readUint32();
   if (header !== 10) {
     throw new Error(
-      `Invalid Flow header: expected 10, got ${header} at offset ${reader.offset - 4}`
+      `Invalid Flow header: expected 10, got ${header} at offset ${reader.position - 4}`
     );
   }
   return {
@@ -480,7 +480,7 @@ function readItemEffect(reader) {
   };
   if (effect.header !== 8) {
     throw new Error(
-      `Invalid item effect header: expected 8, got ${effect.header} at offset ${reader.offset - 6}`
+      `Invalid item effect header: expected 8, got ${effect.header} at offset ${reader.position - 6}`
     );
   }
   switch (effect.type) {
@@ -552,7 +552,7 @@ function readItemEffect(reader) {
       break;
     default:
       throw new Error(
-        `Unknown item effect type: ${effect.type} at offset ${reader.offset - 1}`
+        `Unknown item effect type: ${effect.type} at offset ${reader.position - 1}`
       );
   }
   return effect;
@@ -860,7 +860,7 @@ function readCommand(reader) {
     };
   if (command.header !== 8) {
     throw new Error(
-      `Invalid command header: expected 8, got ${command.header} at offset ${reader.offset - 6}`
+      `Invalid command header: expected 8, got ${command.header} at offset ${reader.position - 6}`
     );
   }
   switch (command.type) {
@@ -981,7 +981,7 @@ function readCommand(reader) {
       break;
     default:
       throw new Error(
-        `Unknown command type: ${command.type} at offset ${reader.offset - 1}`
+        `Unknown command type: ${command.type} at offset ${reader.position - 1}`
       );
   }
   return command;
@@ -1336,7 +1336,7 @@ function parseFlowOperationDetails(reader) {
     judgment_type: reader.readUint8(),
     bytes37_40: reader.readBytes(4)
   };
-  data.conditions = readArray(reader, parseBasicCondition);
+  data.conditions = readArray(reader, readBasicCondition);
   data.bytes45_52 = reader.readBytes(8);
   data.operation = reader.readUint32();
   data.target_flow = reader.readUint32();

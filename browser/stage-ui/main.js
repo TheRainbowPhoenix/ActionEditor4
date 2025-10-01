@@ -59,7 +59,7 @@ async function handleStageFile(file) {
         const json = JSON.stringify(parsed, null, 2);
 
         resetPreview();
-        output.value = json;
+        output.value = json.substring(0,255) + "...";
         output.style.display = 'block';
         previewPlaceholder.style.display = 'none';
         const blob = new Blob([json], { type: 'application/json' });
