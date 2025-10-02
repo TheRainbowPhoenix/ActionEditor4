@@ -32,10 +32,15 @@ function writeArray(writer, arr, serializer) {
   }
 }
 
-// Helper functions for parsing
+// Helper functions for parsing and writing
 /** @param {DataReader} reader stream reader */
 function readStdString(reader) {
   return reader.readStdString();
+}
+
+/** @param {DataWriter} writer stream writer */
+function writeStdString(writer, str) {
+  writer.writeStdString(str || '');
 }
 
 /** @param {DataReader} reader stream reader */
@@ -48,6 +53,15 @@ function readStdStringVector(reader) {
   return strings;
 }
 
+/** @param {DataWriter} writer stream writer */
+function writeStdStringVector(writer, arr) {
+  const items = arr || [];
+  writer.writeUint32(items.length);
+  for (const item of items) {
+    writeStdString(writer, item);
+  }
+}
+
 /** @param {DataReader} reader stream reader */
 function readIntVector(reader) {
   const count = reader.readUint32();
@@ -56,6 +70,15 @@ function readIntVector(reader) {
     ints.push(reader.readUint32());
   }
   return ints;
+}
+
+/** @param {DataWriter} writer stream writer */
+function writeIntVector(writer, arr) {
+  const items = arr || [];
+  writer.writeUint32(items.length);
+  for (const item of items) {
+    writer.writeUint32(item);
+  }
 }
 
 // Parse PlayerCollision structure
@@ -89,6 +112,34 @@ function readPlayerCollision(reader) {
   };
 }
 
+/** @param {DataWriter} writer @param {object} data */
+function writePlayerCollision(writer, data) {
+  writer.writeUint32(data.walking_block_width ?? 0);
+  writer.writeUint32(data.walking_block_height ?? 0);
+  writer.writeUint32(data.flying_block_width ?? 0);
+  writer.writeUint32(data.flying_block_height ?? 0);
+  writer.writeUint32(data.walking_character_width ?? 0);
+  writer.writeUint32(data.walking_character_height ?? 0);
+  writer.writeUint32(data.flying_character_width ?? 0);
+  writer.writeUint32(data.flying_character_height ?? 0);
+  writer.writeUint32(data.shot_width ?? 0);
+  writer.writeUint32(data.shot_height ?? 0);
+  writer.writeUint32(data.item_width ?? 0);
+  writer.writeUint32(data.item_height ?? 0);
+  writer.writeUint32(data.walking_block_position ?? 0);
+  writer.writeUint32(data.flying_block_position ?? 0);
+  writer.writeUint32(data.walking_character_position ?? 0);
+  writer.writeUint32(data.flying_character_position ?? 0);
+  writer.writeUint32(data.block_display ?? 0);
+  writer.writeUint32(data.character_display ?? 0);
+  writer.writeUint32(data.shot_display ?? 0);
+  writer.writeUint32(data.item_display ?? 0);
+  writer.writeUint32(data.block_display_color ?? 0);
+  writer.writeUint32(data.character_display_color ?? 0);
+  writer.writeUint32(data.shot_display_color ?? 0);
+  writer.writeUint32(data.item_display_color ?? 0);
+}
+
 // Parse EnemyCollision structure
 function readEnemyCollision(reader) {
   return {
@@ -109,6 +160,24 @@ function readEnemyCollision(reader) {
   };
 }
 
+/** @param {DataWriter} writer @param {object} data */
+function writeEnemyCollision(writer, data) {
+  writer.writeUint32(data.walking_block_width ?? 0);
+  writer.writeUint32(data.walking_block_height ?? 0);
+  writer.writeUint32(data.flying_block_width ?? 0);
+  writer.writeUint32(data.flying_block_height ?? 0);
+  writer.writeUint32(data.walking_character_width ?? 0);
+  writer.writeUint32(data.walking_character_height ?? 0);
+  writer.writeUint32(data.flying_character_width ?? 0);
+  writer.writeUint32(data.flying_character_height ?? 0);
+  writer.writeUint32(data.shot_width ?? 0);
+  writer.writeUint32(data.shot_height ?? 0);
+  writer.writeUint32(data.walking_block_position ?? 0);
+  writer.writeUint32(data.flying_block_position ?? 0);
+  writer.writeUint32(data.walking_character_position ?? 0);
+  writer.writeUint32(data.flying_character_position ?? 0);
+}
+
 // Parse ActorHitbox structure
 function readActorHitbox(reader) {
   return {
@@ -117,6 +186,14 @@ function readActorHitbox(reader) {
     character_width: reader.readUint32(),
     character_height: reader.readUint32()
   };
+}
+
+/** @param {DataWriter} writer @param {object} data */
+function writeActorHitbox(writer, data) {
+  writer.writeUint32(data.shot_width ?? 0);
+  writer.writeUint32(data.shot_height ?? 0);
+  writer.writeUint32(data.character_width ?? 0);
+  writer.writeUint32(data.character_height ?? 0);
 }
 
 // Parse DeathFade structure
@@ -135,14 +212,22 @@ function readDeathFade(reader) {
   };
 }
 
+/** @param {DataWriter} writer @param {object} data */
+function writeDeathFade(writer, data) {
+  writer.writeUint32(data.list_size ?? 0);
+  writer.writeUint32(data.auto_disappear_left ?? 0);
+  writer.writeUint32(data.auto_disappear_right ?? 0);
+  writer.writeUint32(data.auto_disappear_top ?? 0);
+  writer.writeUint32(data.auto_disappear_bottom ?? 0);
+  writer.writeUint32(data.disappear_left_range ?? 0);
+  writer.writeUint32(data.disappear_right_range ?? 0);
+  writer.writeUint32(data.disappear_top_range ?? 0);
+  writer.writeUint32(data.disappear_bottom_range ?? 0);
+  writer.writeUint32(data.block_end ?? 0);
+}
+
 // Parse StagePalette structure
 function readStagePalette(reader) {
-    let blocks = readArray(reader, readBlock);
-    let characters = readArray(reader, readCharacter);
-    let items = readArray(reader, readItem);
-    return {
-        blocks, characters, items    
-    }
   return {
     blocks: readArray(reader, readBlock),
     characters: readArray(reader, readCharacter),
@@ -150,12 +235,26 @@ function readStagePalette(reader) {
   };
 }
 
+/** @param {DataWriter} writer @param {object} data */
+function writeStagePalette(writer, data) {
+  writeArray(writer, data.blocks, writeBlock);
+  writeArray(writer, data.characters, writeCharacter);
+  writeArray(writer, data.items, writeItem);
+}
+
+
 // Parse StageBlock structure
 function readStageBlock(reader) {
   return {
     position: reader.readUint32(),
     block: readBlock(reader)
   };
+}
+
+/** @param {DataWriter} writer @param {object} data */
+function writeStageBlock(writer, data) {
+  writer.writeUint32(data.position ?? 0);
+  writeBlock(writer, data.block);
 }
 
 /** @param {DataReader} reader stream reader */
@@ -203,6 +302,47 @@ function readBlock(reader) {
   };
 }
 
+/** @param {DataWriter} writer @param {object} data */
+function writeBlock(writer, data) {
+  writer.writeUint32(data.header ?? 0);
+  writer.writeUint8(data.inherit_palette ?? 0);
+  writer.writeUint16(data.inherit_palette_data ?? 0);
+  writer.writeUint8(data.any_of_appearance_conditions_true ?? 0);
+  writer.writeUint8(data.appearance_condition_once_met_always_true ?? 0);
+  writer.writeUint16(data.image_number ?? 0);
+  writer.writeUint16(data.image_type ?? 0);
+  writer.writeUint8(data.unknown1 ?? 0);
+  writer.writeUint8(data.in_front_of_character ?? 0);
+  writer.writeUint8(data.transparency ?? 0);
+  writer.writeUint8(data.mark_display ?? 0);
+  writer.writeUint8(data.mark_number ?? 0);
+  writer.writeUint8(data.unknown2 ?? 0);
+  writer.writeUint8(data.block_type ?? 0);
+  writer.writeUint8(data.invalid_faction ?? 0);
+  writer.writeUint8(data.action ?? 0);
+  writer.writeUint32(data.action_parameter ?? 0);
+  writer.writeUint8(data.acquired_item_palette ?? 0);
+  writer.writeUint16(data.acquired_item_palette_data_number ?? 0);
+  writer.writeUint8(data.block_summon_invalid ?? 0);
+  writer.writeUint32(1); // strings_count, must be 1
+  writer.writeStdString(data.name ?? "");
+  writer.writeInt16(data.position_x ?? 0);
+  writer.writeInt16(data.position_y ?? 0);
+  writer.writeUint32(data.inherited_data_count ?? 0);
+  writer.writeUint8(data.inherit_block_name ?? 0);
+  writer.writeUint8(data.inherit_appearance_condition ?? 0);
+  writer.writeUint8(data.inherit_image ?? 0);
+  writer.writeUint8(data.inherit_in_front_of_character ?? 0);
+  writer.writeUint8(data.inherit_transparency ?? 0);
+  writer.writeUint8(data.inherit_mark ?? 0);
+  writer.writeUint8(data.inherit_block_type ?? 0);
+  writer.writeUint8(data.inherit_invalid_faction ?? 0);
+  writer.writeUint8(data.inherit_action ?? 0);
+  writer.writeUint8(data.inherit_acquired_item ?? 0);
+  writer.writeUint8(data.inherit_block_summon ?? 0);
+  writeArray(writer, data.display_conditions, writeBasicCondition);
+}
+
 /** @param {DataReader} reader stream reader */
 function readBasicCondition(reader) {
 return {
@@ -237,10 +377,42 @@ return {
   };
 }
 
+/** @param {DataWriter} writer @param {object} data */
+function writeBasicCondition(writer, data) {
+    writer.writeUint32(data.header ?? 0);
+    writer.writeUint8(data.type ?? 0);
+    writer.writeUint32(data.right_side_constant ?? 0);
+    writer.writeUint32(data.right_side_random_lower_limit ?? 0);
+    writer.writeUint32(data.right_side_random_upper_limit ?? 0);
+    writer.writeUint8(data.left_side_status_target ?? 0);
+    writer.writeUint8(data.left_side_status_number ?? 0);
+    writer.writeUint8(data.left_side_type ?? 0);
+    writer.writeUint8(data.left_side_common_variable_or_stage_variable ?? 0);
+    writer.writeUint16(data.left_side_variable_number ?? 0);
+    writer.writeUint8(data.left_side_flow_variable_number ?? 0);
+    writer.writeUint8(data.right_side_type ?? 0);
+    writer.writeUint8(data.right_side_status_target ?? 0);
+    writer.writeUint8(data.right_side_status_number ?? 0);
+    writer.writeUint8(data.right_side_common_variable_or_stage_variable ?? 0);
+    writer.writeUint16(data.right_side_variable_number ?? 0);
+    writer.writeUint8(data.right_side_flow_variable_number ?? 0);
+    writer.writeUint8(data.how_to_compare ?? 0);
+    writer.writeUint8(data.specify_in_percent ?? 0);
+    writer.writeUint8(data.left_side_coordinate_type ?? 0);
+    writer.writeUint8(data.right_side_coordinate_type ?? 0);
+    writer.writeUint8(data.left_side_gigantic_character_coordinate_position ?? 0);
+    writer.writeUint8(data.right_side_gigantic_character_coordinate_position ?? 0);
+    writer.writeUint8(data.unk1 ?? 0);
+    writer.writeUint8(data.unk2 ?? 0);
+    writer.writeUint8(data.unk3 ?? 0);
+    writer.writeUint8(data.unk4 ?? 0);
+    writer.writeUint8(data.unk5 ?? 0);
+}
+
 
 /** @param {DataReader} reader stream reader */
 function readCharacter(reader) {
-  return {
+  let data = {
     header: reader.readUint32(),
     inherit_palette: reader.readUint8(),
     inherit_palette_data_number: reader.readUint16(),
@@ -294,21 +466,18 @@ function readCharacter(reader) {
     group_number: reader.readUint16(),
     action_condition_range: reader.readUint8(),
     action_condition_judgment_type: reader.readUint8(),
-    character_name: (() => {
-      const strings_count = reader.readUint32();
-      if (strings_count > 0) {
-        const name = readStdString(reader);
-        for (let i = 1; i < strings_count; i++) {
-          reader.readStdString();
-        }
-        return name;
-      } else {
-        for (let i = 1; i < strings_count; i++) {
-          reader.readStdString();
-        }
-        return "";
-      }
-    })(),
+    strings_count: reader.readUint32()
+  }
+
+  if (data.strings_count > 0) {
+    const name = readStdString(reader);
+    for (let i = 1; i < data.strings_count; i++) {
+      reader.readStdString();
+    }
+    data.character_name = name;
+  }
+  
+  Object.assign(data, {  
     position_x: reader.readUint16(),
     position_y: reader.readUint16(),
     some_count: reader.readInt32(),
@@ -352,7 +521,119 @@ function readCharacter(reader) {
     inherit_action: reader.readUint8(),
     conditions: readArray(reader, readBasicCondition),
     flows: readArray(reader, readFlow)
-  };
+  })
+
+  return data;
+}
+
+/** @param {DataWriter} writer @param {object} data */
+function writeCharacter(writer, data) {
+    writer.writeUint32(data.header ?? 0);
+    writer.writeUint8(data.inherit_palette ?? 0);
+    writer.writeUint16(data.inherit_palette_data_number ?? 0);
+    writer.writeUint8(data.any_of_appearance_conditions_true ?? 0);
+    writer.writeUint8(data.appearance_condition_once_met_always_true ?? 0);
+    writer.writeUint8(data.facing_right ?? 0);
+    writer.writeUint8(data.number_of_doubles ?? 0);
+    writer.writeUint16(data.appearance_position_offset_x_bl ?? 0);
+    writer.writeUint16(data.appearance_position_offset_x_dot ?? 0);
+    writer.writeUint16(data.appearance_position_offset_y_bl ?? 0);
+    writer.writeUint16(data.appearance_position_offset_y_dot ?? 0);
+    writer.writeUint8(data.appearance_position_offset_x_flip_if_facing_right ?? 0);
+    writer.writeUint8(data.appearance_position_offset_y_flip_if_facing_right ?? 0);
+    writer.writeUint16(data.image_number ?? 0);
+    writer.writeUint8(data.image_type ?? 0);
+    writer.writeUint16(data.image_offset ?? 0);
+    writer.writeUint16(data.animation_set ?? 0);
+    writer.writeUint8(data.z_coordinate ?? 0);
+    writer.writeUint8(data.transparency ?? 0);
+    writer.writeUint16(data.initial_character_effect ?? 0);
+    writer.writeUint8(data.initial_character_effect_execution_type ?? 0);
+    writer.writeUint8(data.initial_character_effect_loop_execution ?? 0);
+    writer.writeUint16(data.character_effect_on_death ?? 0);
+    writer.writeUint8(data.character_effect_on_death_execution_type ?? 0);
+    writer.writeUint8(data.mark_display ?? 0);
+    writer.writeUint16(data.mark_number ?? 0);
+    writer.writeUint16(data.operation ?? 0);
+    writer.writeUint8(data.faction ?? 0);
+    writer.writeUint8(data.character_id ?? 0);
+    writer.writeUint8(data.flying ?? 0);
+    writer.writeUint8(data.direction_fixed ?? 0);
+    writer.writeUint8(data.invincible ?? 0);
+    writer.writeUint8(data.invincible_effect ?? 0);
+    writer.writeUint8(data.block ?? 0);
+    writer.writeUint8(data.gigantic ?? 0);
+    writer.writeUint8(data.synchronize_with_auto_scroll ?? 0);
+    writer.writeUint8(data.line_of_sight ?? 0);
+    writer.writeUint8(data.line_of_sight_range ?? 0);
+    writer.writeUint32(data.hp ?? 0);
+    writer.writeUint32(data.sp ?? 0);
+    writer.writeUint16(data.stopping_ease_during_inertial_movement ?? 0);
+    writer.writeUint8(data.body_hit_detection_range ?? 0);
+    writer.writeUint32(data.body_hit_power ?? 0);
+    writer.writeUint8(data.body_hit_impact ?? 0);
+    writer.writeUint16(data.body_hit_effect ?? 0);
+    writer.writeUint32(data.defense ?? 0);
+    writer.writeUint8(data.impact_resistance ?? 0);
+    writer.writeUint32(data.score ?? 0);
+    writer.writeUint8(data.holds_item_at_same_position ?? 0);
+    writer.writeUint8(data.has_group ?? 0);
+    writer.writeUint16(data.group_number ?? 0);
+    writer.writeUint8(data.action_condition_range ?? 0);
+    writer.writeUint8(data.action_condition_judgment_type ?? 0);
+    
+    // TODO: use std::vec structure ? 
+
+    if (data.strings_count > 0) {
+        writer.writeUint32(1); // TODO: support multiples with data.strings_count);
+        writer.writeStdString(data.character_name);
+    } else {
+        writer.writeUint32(0);
+    }
+    
+    writer.writeUint16(data.position_x ?? 0);
+    writer.writeUint16(data.position_y ?? 0);
+    writer.writeInt32(data.some_count ?? 0);
+    writer.writeUint32(data.inherited_data_count ?? 0);
+    writer.writeUint8(data.inherit_character_name ?? 0);
+    writer.writeUint8(data.inherit_operation ?? 0);
+    writer.writeUint8(data.inherit_faction ?? 0);
+    writer.writeUint8(data.inherit_character_id ?? 0);
+    writer.writeUint8(data.inherit_appearance_condition ?? 0);
+    writer.writeUint8(data.inherit_facing_right ?? 0);
+    writer.writeUint8(data.inherit_number_of_doubles ?? 0);
+    writer.writeUint8(data.inherit_initial_position_offset_x ?? 0);
+    writer.writeUint8(data.inherit_initial_position_offset_y ?? 0);
+    writer.writeUint8(data.inherit_image ?? 0);
+    writer.writeUint8(data.inherit_animation_set ?? 0);
+    writer.writeUint8(data.inherit_z_coordinate ?? 0);
+    writer.writeUint8(data.inherit_transparency ?? 0);
+    writer.writeUint8(data.inherit_initial_character_effect ?? 0);
+    writer.writeUint8(data.inherit_character_effect_on_death ?? 0);
+    writer.writeUint8(data.inherit_mark ?? 0);
+    writer.writeUint8(data.inherit_direction_fixed ?? 0);
+    writer.writeUint8(data.inherit_flying ?? 0);
+    writer.writeUint8(data.inherit_invincible ?? 0);
+    writer.writeUint8(data.inherit_block ?? 0);
+    writer.writeUint8(data.inherit_gigantic ?? 0);
+    writer.writeUint8(data.inherit_synchronize_with_auto_scroll ?? 0);
+    writer.writeUint8(data.inherit_line_of_sight ?? 0);
+    writer.writeUint8(data.inherit_hp ?? 0);
+    writer.writeUint8(data.inherit_sp ?? 0);
+    writer.writeUint8(data.inherit_body_hit_detection_range ?? 0);
+    writer.writeUint8(data.inherit_body_hit_power ?? 0);
+    writer.writeUint8(data.inherit_body_hit_impact ?? 0);
+    writer.writeUint8(data.inherit_body_hit_effect ?? 0);
+    writer.writeUint8(data.inherit_defense ?? 0);
+    writer.writeUint8(data.inherit_impact_resistance ?? 0);
+    writer.writeUint8(data.inherit_stopping_ease_during_inertial_movement ?? 0);
+    writer.writeUint8(data.inherit_action_condition ?? 0);
+    writer.writeUint8(data.inherit_group ?? 0);
+    writer.writeUint8(data.inherit_score ?? 0);
+    writer.writeUint8(data.inherit_holds_item_at_same_position ?? 0);
+    writer.writeUint8(data.inherit_action ?? 0);
+    writeArray(writer, data.conditions, writeBasicCondition);
+    writeArray(writer, data.flows, writeFlow);
 }
 
 /** @param {DataReader} reader stream reader */
@@ -375,12 +656,36 @@ function readFlow(reader) {
     target_number_of_character_involved_in_timing: reader.readUint8(),
     ease_of_input_with_multiple_key_conditions: reader.readUint8(),
     allow_continuous_execution_by_holding_key: reader.readUint8(),
-    memo_length: reader.readUint32(),
+    memo_count: reader.readUint32(),
     memo: readStdString(reader),
     conditions: readArray(reader, readBasicCondition),
     key_conditions: readArray(reader, readKeyCondition),
     commands: readArray(reader, readCommand)
   };
+}
+
+/** @param {DataWriter} writer @param {object} data */
+function writeFlow(writer, data) {
+    writer.writeUint32(data.header ?? 10);
+    writer.writeUint8(data.id ?? 0);
+    writer.writeUint8(data.group ?? 0);
+    writer.writeUint8(data.test_play_only ?? 0);
+    writer.writeUint8(data.basic_condition_judgment_type ?? 0);
+    writer.writeUint8(data.basic_condition_once_met_always_met ?? 0);
+    writer.writeUint8(data.timing ?? 0);
+    writer.writeUint8(data.target_character_involved_in_timing ?? 0);
+    writer.writeUint8(data.target_number_of_character_involved_in_timing ?? 0);
+    writer.writeUint8(data.ease_of_input_with_multiple_key_conditions ?? 0);
+    writer.writeUint8(data.allow_continuous_execution_by_holding_key ?? 0);
+    
+    // TODO: memo_count should be std::vec of std::string
+    writer.writeUint32(data.memo_count); // 1
+    const memo = data.memo || "";
+    writer.writeStdString(memo);
+
+    writeArray(writer, data.conditions, writeBasicCondition);
+    writeArray(writer, data.key_conditions, writeKeyCondition);
+    writeArray(writer, data.commands, writeCommand);
 }
 
 /** @param {DataReader} reader stream reader */
@@ -416,6 +721,37 @@ function readKeyCondition(reader) {
   };
 }
 
+/** @param {DataWriter} writer @param {object} data */
+function writeKeyCondition(writer, data) {
+    writer.writeUint32(data.header ?? 0);
+    writer.writeUint8(data.right_and_left_to_front_and_back ?? 0);
+    writer.writeUint16(data.minimum_input_time ?? 0);
+    writer.writeUint16(data.maximum_input_time ?? 0);
+    writer.writeUint8(data.input_time_1_to_infinity ?? 0);
+    writer.writeUint8(data.judgment_type ?? 0);
+    writer.writeUint32(data.unknown ?? 0);
+    writer.writeUint32(data.number_of_key_data ?? 0);
+    writer.writeUint8(data.direction_key_neutral ?? 0);
+    writer.writeUint8(data.left_key ?? 0);
+    writer.writeUint8(data.right_key ?? 0);
+    writer.writeUint8(data.up_key ?? 0);
+    writer.writeUint8(data.down_key ?? 0);
+    writer.writeUint8(data.up_left_key ?? 0);
+    writer.writeUint8(data.down_left_key ?? 0);
+    writer.writeUint8(data.up_right_key ?? 0);
+    writer.writeUint8(data.down_right_key ?? 0);
+    writer.writeUint8(data.any_direction_key ?? 0);
+    writer.writeUint8(data.action_key_neutral ?? 0);
+    writer.writeUint8(data.z_key ?? 0);
+    writer.writeUint8(data.x_key ?? 0);
+    writer.writeUint8(data.c_key ?? 0);
+    writer.writeUint8(data.v_key ?? 0);
+    writer.writeUint8(data.a_key ?? 0);
+    writer.writeUint8(data.s_key ?? 0);
+    writer.writeUint8(data.d_key ?? 0);
+    writer.writeUint8(data.f_key ?? 0);
+}
+
 
 /** @param {DataReader} reader stream reader */
 function readItem(reader) {
@@ -439,7 +775,7 @@ function readItem(reader) {
     gigantic: reader.readUint8(),
     sound_effect: reader.readUint16(),
     item_name_length: reader.readUint32(), // always 1
-    item_name: reader.readString(),
+    item_name: reader.readStdString(), // Assuming readString is an alias for readStdString
     position_x: reader.readUint16(),
     position_y: reader.readUint16(),
     number_of_inherited_data: reader.readUint32(),
@@ -460,6 +796,49 @@ function readItem(reader) {
     item_effects: readArray(reader, readItemEffect)
   };
 }
+
+/** @param {DataWriter} writer @param {object} data */
+function writeItem(writer, data) {
+    writer.writeUint32(data.header ?? 0);
+    writer.writeUint8(data.inherit_palette ?? 0);
+    writer.writeUint16(data.inherit_palette_data_number ?? 0);
+    writer.writeUint8(data.any_of_appearance_conditions_true ?? 0);
+    writer.writeUint8(data.appearance_condition_once_met_always_true ?? 0);
+    writer.writeUint16(data.appearance_position_offset_x_dot ?? 0);
+    writer.writeUint16(data.appearance_position_offset_y_dot ?? 0);
+    writer.writeUint16(data.image_number ?? 0);
+    writer.writeUint8(data.image_type ?? 0);
+    writer.writeUint16(data.frame ?? 0);
+    writer.writeUint8(data.z_coordinate ?? 0);
+    writer.writeUint8(data.transparency ?? 0);
+    writer.writeUint8(data.mark_display ?? 0);
+    writer.writeUint16(data.mark_number ?? 0);
+    writer.writeUint8(data.display_above_head_on_acquisition ?? 0);
+    writer.writeUint8(data.acquisition_type ?? 0);
+    writer.writeUint8(data.gigantic ?? 0);
+    writer.writeUint16(data.sound_effect ?? 0);
+    writer.writeUint32(1); // item_name_length, always 1
+    writer.writeStdString(data.item_name ?? "");
+    writer.writeUint16(data.position_x ?? 0);
+    writer.writeUint16(data.position_y ?? 0);
+    writer.writeUint32(data.number_of_inherited_data ?? 0);
+    writer.writeUint8(data.inherit_item_name ?? 0);
+    writer.writeUint8(data.inherit_appearance_condition ?? 0);
+    writer.writeUint8(data.inherit_initial_position_offset_x ?? 0);
+    writer.writeUint8(data.inherit_initial_position_offset_y ?? 0);
+    writer.writeUint8(data.inherit_image ?? 0);
+    writer.writeUint8(data.inherit_z_coordinate ?? 0);
+    writer.writeUint8(data.inherit_transparency ?? 0);
+    writer.writeUint8(data.inherit_mark ?? 0);
+    writer.writeUint8(data.inherit_gigantic ?? 0);
+    writer.writeUint8(data.inherit_acquisition_type ?? 0);
+    writer.writeUint8(data.inherit_display_above_head_on_acquisition ?? 0);
+    writer.writeUint8(data.inherit_sound_effect ?? 0);
+    writer.writeUint8(data.inherit_effect ?? 0);
+    writeArray(writer, data.conditions, writeBasicCondition);
+    writeArray(writer, data.item_effects, writeItemEffect);
+}
+
 
 // ---------------------------------------------------------------------------------
 // MARK:ItemEffect
@@ -525,6 +904,9 @@ function readItemEffect(reader) {
     case 17:
       effect.details = parsePictureDisplayDetails(reader);
       break;
+    case 18:
+      effect.details = parseScreenColorChangeDetails(reader);
+      break;
     case 19:
       effect.details = parseBackgroundChangeDetails(reader);
       break;
@@ -551,6 +933,88 @@ function readItemEffect(reader) {
   return effect;
 }
 
+/** @param {DataWriter} writer @param {object} effect */
+function writeItemEffect(writer, effect) {
+    writer.writeUint32(effect.header ?? 8);
+    writer.writeInt8(effect.unk1 ?? 0);
+    writer.writeUint8(effect.type ?? 0);
+
+    const details = effect.details || {};
+    switch (effect.type) {
+        case 1:
+            writeFlowChangeDetails(writer, details);
+            break;
+        case 2:
+            writeStageClearDetails(writer, details);
+            break;
+        case 3:
+            writeGameWaitDetails(writer, details);
+            break;
+        case 4:
+            writeMessageDetails(writer, details);
+            break;
+        case 5:
+            writeWarpDetails(writer, details);
+            break;
+        case 7:
+            writeStatusOperationDetails(writer, details);
+            break;
+        case 8:
+            writeStatusOperation2Details(writer, details);
+            break;
+        case 9:
+            writeDisappearanceDetails(writer, details);
+            break;
+        case 10:
+            writeItemAcquisitionDetails(writer, details);
+            break;
+        case 11:
+            writeGraphicChangeDetails(writer, details);
+            break;
+        case 12:
+            writeBasicAnimationSetChangeDetails(writer, details);
+            break;
+        case 13:
+            writeAnimationExecutionDetails(writer, details);
+            break;
+        case 14:
+            writeEffectExecutionDetails(writer, details);
+            break;
+        case 15:
+            writeCharacterEffectExecutionDetails(writer, details);
+            break;
+        case 16:
+            writeScreenEffectExecutionDetails(writer, details);
+            break;
+        case 17:
+            writePictureDisplayDetails(writer, details);
+            break;
+        case 18:
+            writeScreenColorChangeDetails(writer, details);
+            break;
+        case 19:
+            writeBackgroundChangeDetails(writer, details);
+            break;
+        case 20:
+            writeSoundEffectPlaybackDetails(writer, details);
+            break;
+        case 21:
+            writeBGMPlaybackDetails(writer, details);
+            break;
+        case 22:
+            writeCodeExecutionDetails(writer, details);
+            break;
+        case 23:
+            writeArrangementDetails(writer, details);
+            break;
+        case 24:
+            writeLoopDetails(writer, details);
+            break;
+        default:
+            throw new Error(`Unknown item effect type to write: ${effect.type}`);
+    }
+}
+
 
 /** @param {DataReader} reader stream reader */
 function parseFlowChangeDetails(reader) {
@@ -564,6 +1028,15 @@ function parseFlowChangeDetails(reader) {
     bytes77_80: reader.readBytes(4)
   });
   return data;
+}
+
+/** @param {DataWriter} writer @param {object} data */
+function writeFlowChangeDetails(writer, data) {
+    writer.writeBytes(data.bytes1_30 ?? new Uint8Array(30));
+    writeArray(writer, data.flows, writeFlow);
+    writer.writeBytes(data.bytes69_72 ?? new Uint8Array(4));
+    writer.writeUint32(data.operation ?? 0);
+    writer.writeBytes(data.bytes77_80 ?? new Uint8Array(4));
 }
 
 /** @param {DataReader} reader stream reader */
@@ -586,6 +1059,24 @@ function parseStageClearDetails(reader) {
   }
 }
 
+/** @param {DataWriter} writer @param {object} data */
+function writeStageClearDetails(writer, data) {
+    writer.writeBytes(data.bytes1_14 ?? new Uint8Array(14));
+    writer.writeStdString(data.path ?? "");
+    writer.writeBytes(data.bytes19_38 ?? new Uint8Array(20));
+    writer.writeUint32(data.stage_transition ?? 0);
+    writer.writeUint32(data.number ?? 0);
+    writer.writeUint32(data.change_world_map_position ?? 0);
+    writer.writeUint32(data.world_map_position_x ?? 0);
+    writer.writeUint32(data.world_map_position_y ?? 0);
+    writer.writeUint32(data.change_initial_position ?? 0);
+    writer.writeUint32(data.initial_position_x ?? 0);
+    writer.writeUint32(data.initial_position_y ?? 0);
+    writer.writeUint32(data.initial_position_main_character_direction ?? 0);
+    writer.writeUint32(data.execute_autosave ?? 0);
+    writer.writeUint32(data.add_clear_text_to_replay ?? 0);
+}
+
 /** @param {DataReader} reader stream reader */
 function parseGameWaitDetails(reader) {
   return {
@@ -595,6 +1086,15 @@ function parseGameWaitDetails(reader) {
     bytes6_38: reader.readBytes(33),
     game_wait_execution_time: reader.readUint32()
   };
+}
+
+/** @param {DataWriter} writer @param {object} data */
+function writeGameWaitDetails(writer, data) {
+    writer.writeUint16(data.execution_time ?? 0);
+    writer.writeUint16(data.execution_time_double ?? 0);
+    writer.writeUint8(data.parallel_execution ?? 0);
+    writer.writeBytes(data.bytes6_38 ?? new Uint8Array(33));
+    writer.writeUint32(data.game_wait_execution_time ?? 0);
 }
 
 /** @param {DataReader} reader stream reader */
@@ -627,6 +1127,34 @@ function parseMessageDetails(reader) {
   }
 }
 
+/** @param {DataWriter} writer @param {object} data */
+function writeMessageDetails(writer, data) {
+    writer.writeBytes(data.bytes1_14 ?? new Uint8Array(14));
+    writer.writeStdString(data.message ?? "");
+    writer.writeBytes(data.bytes19_38 ?? new Uint8Array(20));
+    writer.writeUint32(data.display_position_specification_method ?? 0);
+    writer.writeUint32(data.coordinate_x ?? 0);
+    writer.writeUint32(data.coordinate_y ?? 0);
+    writer.writeUint32(data.display_position_offset_x ?? 0);
+    writer.writeUint32(data.display_position_offset_y ?? 0);
+    writer.writeUint32(data.auto_adjust_to_not_go_off_screen ?? 0);
+    writer.writeUint32(data.display_time_specification_method ?? 0);
+    writer.writeUint32(data.display_time ?? 0);
+    writer.writeUint32(data.pause ?? 0);
+    writer.writeUint32(data.display_variables ?? 0);
+    writer.writeUint32(data.follow_screen ?? 0);
+    writer.writeUint32(data.auto_update ?? 0);
+    writer.writeUint32(data.message_id_present ?? 0);
+    writer.writeUint32(data.message_id ?? 0);
+    writer.writeUint32(data.window_display ?? 0);
+    writer.writeUint32(data.message_clear ?? 0);
+    writer.writeUint32(data.update_interval ?? 0);
+    writer.writeUint32(data.instant_display ?? 0);
+    writer.writeUint32(data.coordinate_unit ?? 0);
+    writer.writeUint32(data.set_options ?? 0);
+    writer.writeUint32(data.assign_return_value_to_flow_variable ?? 0);
+}
+
 /** @param {DataReader} reader stream reader */
 function parseWarpDetails(reader) {
   return {
@@ -652,6 +1180,31 @@ function parseWarpDetails(reader) {
     bytes64_101: reader.readBytes(38),
     assign_return_value_to_flow: reader.readUint32()
   };
+}
+
+/** @param {DataWriter} writer @param {object} data */
+function writeWarpDetails(writer, data) {
+    writer.writeBytes(data.bytes1_26 ?? new Uint8Array(26));
+    writer.writeUint8(data.setting_type ?? 0);
+    writer.writeUint8(data.direction ?? 0);
+    writer.writeBytes(data.bytes29_33 ?? new Uint8Array(5));
+    writer.writeUint8(data.target_x_present ?? 0);
+    writer.writeUint8(data.target_y_present ?? 0);
+    writer.writeUint16(data.target_x_bl ?? 0);
+    writer.writeUint16(data.target_y_bl ?? 0);
+    writer.writeUint16(data.target_x_dot ?? 0);
+    writer.writeUint16(data.target_y_dot ?? 0);
+    writer.writeUint8(data.target_type ?? 0);
+    writer.writeUint8(data.target_unit ?? 0);
+    writer.writeUint8(data.gigantic_character_coordinate_position ?? 0);
+    writer.writeBytes(data.bytes47_49 ?? new Uint8Array(3));
+    writer.writeUint8(data.target_x_flip_if_facing_right ?? 0);
+    writer.writeUint8(data.target_y_flip_if_facing_right ?? 0);
+    writer.writeBytes(data.bytes52_59 ?? new Uint8Array(8));
+    writer.writeUint16(data.distance ?? 0);
+    writer.writeUint16(data.distance_double ?? 0);
+    writer.writeBytes(data.bytes64_101 ?? new Uint8Array(38));
+    writer.writeUint32(data.assign_return_value_to_flow ?? 0);
 }
 
 /** @param {DataReader} reader stream reader */
@@ -685,6 +1238,35 @@ function parseStatusOperationDetails(reader) {
   };
 }
 
+/** @param {DataWriter} writer @param {object} data */
+function writeStatusOperationDetails(writer, data) {
+    writer.writeBytes(data.bytes1_38 ?? new Uint8Array(38));
+    writer.writeUint8(data.operation_target_type ?? 0);
+    writer.writeBytes(data.bytes40_43 ?? new Uint8Array(4));
+    writer.writeUint8(data.operation_target_variable_type ?? 0);
+    writer.writeBytes(data.bytes45_46 ?? new Uint8Array(2));
+    writer.writeUint16(data.operation_target_variable_number ?? 0);
+    writer.writeBytes(data.bytes49_52 ?? new Uint8Array(4));
+    writer.writeUint8(data.operation_target_target ?? 0);
+    writer.writeBytes(data.bytes54_56 ?? new Uint8Array(3));
+    writer.writeUint8(data.operation_target_status ?? 0);
+    writer.writeBytes(data.byte58 ?? new Uint8Array(1));
+    writer.writeUint8(data.operation_target_flow_variable_number ?? 0);
+    writer.writeBytes(data.bytes60_62 ?? new Uint8Array(3));
+    writer.writeUint8(data.operator_type ?? 0);
+    writer.writeBytes(data.bytes64_66 ?? new Uint8Array(3));
+    writer.writeUint32(data.calculation_content_type ?? 0);
+    writer.writeUint32(data.calculation_content_constant ?? 0);
+    writer.writeUint32(data.calculation_content_random_lower_limit ?? 0);
+    writer.writeUint32(data.calculation_content_random_upper_limit ?? 0);
+    writer.writeUint32(data.calculation_content_variable_type ?? 0);
+    writer.writeUint32(data.calculation_content_variable_number ?? 0);
+    writer.writeUint32(data.calculation_content_target ?? 0);
+    writer.writeUint32(data.calculation_content_status ?? 0);
+    writer.writeUint32(data.calculation_content_flow_variable_number ?? 0);
+    writer.writeBytes(data.bytes103_138 ?? new Uint8Array(36));
+}
+
 /** @param {DataReader} reader stream reader */
 function parseStatusOperation2Details(reader) {
   return {
@@ -694,6 +1276,15 @@ function parseStatusOperation2Details(reader) {
     on: reader.readUint32(),
     bytes51_62: reader.readBytes(12)
   };
+}
+
+/** @param {DataWriter} writer @param {object} data */
+function writeStatusOperation2Details(writer, data) {
+    writer.writeBytes(data.bytes1_38 ?? new Uint8Array(38));
+    writer.writeUint32(data.target ?? 0);
+    writer.writeUint32(data.status ?? 0);
+    writer.writeUint32(data.on ?? 0);
+    writer.writeBytes(data.bytes51_62 ?? new Uint8Array(12));
 }
 
 /** @param {DataReader} reader stream reader */
@@ -707,6 +1298,15 @@ function parseDisappearanceDetails(reader) {
   };
 }
 
+/** @param {DataWriter} writer @param {object} data */
+function writeDisappearanceDetails(writer, data) {
+    writer.writeBytes(data.bytes1_38 ?? new Uint8Array(38));
+    writer.writeUint32(data.target ?? 0);
+    writer.writeUint32(data.faction ?? 0);
+    writer.writeUint32(data.range ?? 0);
+    writer.writeUint32(data.assign_return_value_to_flow_variable ?? 0);
+}
+
 /** @param {DataReader} reader stream reader */
 function parseItemAcquisitionDetails(reader) {
   return {
@@ -714,6 +1314,13 @@ function parseItemAcquisitionDetails(reader) {
     palette_type: reader.readUint32(),
     palette_data_number: reader.readUint32()
   };
+}
+
+/** @param {DataWriter} writer @param {object} data */
+function writeItemAcquisitionDetails(writer, data) {
+    writer.writeBytes(data.bytes1_38 ?? new Uint8Array(38));
+    writer.writeUint32(data.palette_type ?? 0);
+    writer.writeUint32(data.palette_data_number ?? 0);
 }
 
 /** @param {DataReader} reader stream reader */
@@ -726,12 +1333,26 @@ function parseGraphicChangeDetails(reader) {
   };
 }
 
+/** @param {DataWriter} writer @param {object} data */
+function writeGraphicChangeDetails(writer, data) {
+    writer.writeBytes(data.bytes1_38 ?? new Uint8Array(38));
+    writer.writeUint32(data.image_type ?? 0);
+    writer.writeUint32(data.image_number ?? 0);
+    writer.writeUint32(data.offset ?? 0);
+}
+
 /** @param {DataReader} reader stream reader */
 function parseBasicAnimationSetChangeDetails(reader) {
   return {
     bytes1_38: reader.readBytes(38),
     animation_set: reader.readUint32()
   };
+}
+
+/** @param {DataWriter} writer @param {object} data */
+function writeBasicAnimationSetChangeDetails(writer, data) {
+    writer.writeBytes(data.bytes1_38 ?? new Uint8Array(38));
+    writer.writeUint32(data.animation_set ?? 0);
 }
 
 /** @param {DataReader} reader stream reader */
@@ -744,9 +1365,23 @@ function parseAnimationExecutionDetails(reader) {
   };
 }
 
+/** @param {DataWriter} writer @param {object} data */
+function writeAnimationExecutionDetails(writer, data) {
+    writer.writeUint16(data.execution_time ?? 0);
+    writer.writeUint16(data.execution_time_double ?? 0);
+    writer.writeUint8(data.parallel_execution ?? 0);
+    writer.writeBytes(data.bytes ?? new Uint8Array(41));
+}
+
 /** @param {DataReader} reader stream reader */
 function parseEffectExecutionDetails(reader) {
   return { bytes1_38: reader.readBytes(38), bytes: reader.readBytes(40) };
+}
+
+/** @param {DataWriter} writer @param {object} data */
+function writeEffectExecutionDetails(writer, data) {
+    writer.writeBytes(data.bytes1_38 ?? new Uint8Array(38));
+    writer.writeBytes(data.bytes ?? new Uint8Array(40));
 }
 
 /** @param {DataReader} reader stream reader */
@@ -759,6 +1394,14 @@ function parseCharacterEffectExecutionDetails(reader) {
   };
 }
 
+/** @param {DataWriter} writer @param {object} data */
+function writeCharacterEffectExecutionDetails(writer, data) {
+    writer.writeBytes(data.bytes1_38 ?? new Uint8Array(38));
+    writer.writeUint32(data.effect ?? 0);
+    writer.writeUint32(data.execution_type ?? 0);
+    writer.writeUint32(data.loop_execution ?? 0);
+}
+
 /** @param {DataReader} reader stream reader */
 function parseScreenEffectExecutionDetails(reader) {
   return {
@@ -767,6 +1410,14 @@ function parseScreenEffectExecutionDetails(reader) {
     execution_type: reader.readUint32(),
     loop_execution: reader.readUint32()
   };
+}
+
+/** @param {DataWriter} writer @param {object} data */
+function writeScreenEffectExecutionDetails(writer, data) {
+    writer.writeBytes(data.bytes1_38 ?? new Uint8Array(38));
+    writer.writeUint32(data.effect ?? 0);
+    writer.writeUint32(data.execution_type ?? 0);
+    writer.writeUint32(data.loop_execution ?? 0);
 }
 
 /** @param {DataReader} reader stream reader */
@@ -779,6 +1430,43 @@ function parsePictureDisplayDetails(reader) {
   };
 }
 
+/** @param {DataWriter} writer @param {object} data */
+function writePictureDisplayDetails(writer, data) {
+    writer.writeUint16(data.execution_time ?? 0);
+    writer.writeUint16(data.execution_time_double ?? 0);
+    writer.writeUint8(data.parallel_execution ?? 0);
+    writer.writeBytes(data.bytes ?? new Uint8Array(113));
+}
+
+
+/** @param {DataReader} reader stream reader */
+function parseScreenColorChangeDetails(reader) {
+  return {
+    bytes1_38: reader.readBytes(38),
+    r: reader.readUint32(),
+    g: reader.readUint32(),
+    b: reader.readUint32(),
+    percent: reader.readUint32(),
+    restore_to_original_color: reader.readUint32(),
+    time_required_for_change: reader.readUint32(),
+    instant_display: reader.readUint32(),
+    instant_display_count: reader.readUint32()
+  };
+}
+
+/** @param {DataWriter} writer @param {object} data */
+function writeScreenColorChangeDetails(writer, data) {
+    writer.writeBytes(data.bytes1_38 ?? new Uint8Array(38));
+    writer.writeUint32(data.r ?? 0);
+    writer.writeUint32(data.g ?? 0);
+    writer.writeUint32(data.b ?? 0);
+    writer.writeUint32(data.percent ?? 0);
+    writer.writeUint32(data.restore_to_original_color ?? 0);
+    writer.writeUint32(data.time_required_for_change ?? 0);
+    writer.writeUint32(data.instant_display ?? 0);
+    writer.writeUint32(data.instant_display_count ?? 0);
+}
+
 /** @param {DataReader} reader stream reader */
 function parseBackgroundChangeDetails(reader) {
   return {
@@ -787,6 +1475,14 @@ function parseBackgroundChangeDetails(reader) {
     parallel_execution: reader.readUint8(),
     bytes: reader.readBytes(41)
   };
+}
+
+/** @param {DataWriter} writer @param {object} data */
+function writeBackgroundChangeDetails(writer, data) {
+    writer.writeUint16(data.execution_time ?? 0);
+    writer.writeUint16(data.execution_time_double ?? 0);
+    writer.writeUint8(data.parallel_execution ?? 0);
+    writer.writeBytes(data.bytes ?? new Uint8Array(41));
 }
 
 /** @param {DataReader} reader stream reader */
@@ -799,6 +1495,14 @@ function parseSoundEffectPlaybackDetails(reader) {
   };
 }
 
+/** @param {DataWriter} writer @param {object} data */
+function writeSoundEffectPlaybackDetails(writer, data) {
+    writer.writeBytes(data.bytes1_7 ?? new Uint8Array(7));
+    writer.writeUint8(data.play_if_outside_screen ?? 0);
+    writer.writeBytes(data.bytes9_38 ?? new Uint8Array(30));
+    writer.writeUint32(data.sound_effect ?? 0);
+}
+
 /** @param {DataReader} reader stream reader */
 function parseBGMPlaybackDetails(reader) {
   return {
@@ -807,6 +1511,14 @@ function parseBGMPlaybackDetails(reader) {
     parallel_execution: reader.readUint8(),
     bytes: reader.readBytes(41)
   };
+}
+
+/** @param {DataWriter} writer @param {object} data */
+function writeBGMPlaybackDetails(writer, data) {
+    writer.writeUint16(data.execution_time ?? 0);
+    writer.writeUint16(data.execution_time_double ?? 0);
+    writer.writeUint8(data.parallel_execution ?? 0);
+    writer.writeBytes(data.bytes ?? new Uint8Array(41));
 }
 
 /** @param {DataReader} reader stream reader */
@@ -821,6 +1533,16 @@ function parseCodeExecutionDetails(reader) {
   }
 }
 
+/** @param {DataWriter} writer @param {object} data */
+function writeCodeExecutionDetails(writer, data) {
+    writer.writeUint16(data.execution_time ?? 0);
+    writer.writeUint16(data.execution_time_double ?? 0);
+    writer.writeUint8(data.parallel_execution ?? 0);
+    writer.writeBytes(data.bytes6_14 ?? new Uint8Array(9));
+    writer.writeStdString(data.code ?? "");
+    writer.writeBytes(data.bytes19_38 ?? new Uint8Array(20));
+}
+
 /** @param {DataReader} reader stream reader */
 function parseArrangementDetails(reader) {
   return {
@@ -833,6 +1555,16 @@ function parseArrangementDetails(reader) {
   };
 }
 
+/** @param {DataWriter} writer @param {object} data */
+function writeArrangementDetails(writer, data) {
+    writer.writeBytes(data.bytes1_38 ?? new Uint8Array(38));
+    writer.writeUint32(data.command ?? 0);
+    writer.writeUint32(data.parameter ?? 0);
+    writer.writeUint32(data.operator_type ?? 0);
+    writer.writeUint32(data.variable_type ?? 0);
+    writer.writeUint32(data.variable_number ?? 0);
+}
+
 /** @param {DataReader} reader stream reader */
 function parseLoopDetails(reader) {
   return {
@@ -840,6 +1572,13 @@ function parseLoopDetails(reader) {
     repeat_count: reader.readUint32(),
     command_count: reader.readUint32()
   };
+}
+
+/** @param {DataWriter} writer @param {object} data */
+function writeLoopDetails(writer, data) {
+    writer.writeBytes(data.bytes1_38 ?? new Uint8Array(38));
+    writer.writeUint32(data.repeat_count ?? 0);
+    writer.writeUint32(data.command_count ?? 0);
 }
 // ----------------------------------------------------------------------------------
 // MARK:COMMANDS
@@ -953,7 +1692,9 @@ function readCommand(reader) {
     case 32:
       command.details = parsePictureDisplayDetails(reader);
       break;
-    // TODO: command 33
+    case 33:
+      command.details = parseScreenColorChangeDetails(reader);
+      break;
     case 34:
       command.details = parseBackgroundChangeDetails(reader);
       break;
@@ -980,6 +1721,137 @@ function readCommand(reader) {
   return command;
 }
 
+/** @param {DataWriter} writer @param {object} command */
+function writeCommand(writer, command) {
+    writer.writeUint32(command.header ?? 8);
+    writer.writeUint8(command.unk1 ?? 0);
+    writer.writeUint8(command.type ?? 0);
+
+    const details = command.details || {};
+    switch(command.type) {
+        case 1:
+            writeWaitDetails(writer, details);
+            break;
+        case 2:
+            writeLinearMovementDetails(writer, details);
+            break;
+        case 3:
+            writeGroundMovementDetails(writer, details);
+            break;
+        case 4:
+            writeCircularMovementDetails(writer, details);
+            break;
+        case 5:
+            writeChargeMovementDetails(writer, details);
+            break;
+        case 6:
+            writeGuidedMovementDetails(writer, details);
+            break;
+        case 7:
+            writeScreenOutsideAvoidanceMovementDetails(writer, details);
+            break;
+        case 8:
+            writeMovementInvalidationDetails(writer, details);
+            break;
+        case 9:
+            writeDirectionChangeDetails(writer, details);
+            break;
+        case 10:
+            writeJumpDetails(writer, details);
+            break;
+        case 11:
+            writeShotDetails(writer, details);
+            break;
+        case 12:
+            writeSwordDetails(writer, details);
+            break;
+        case 13:
+            writeBlockSummonDetails(writer, details);
+            break;
+        case 14:
+            writeCharacterSummonDetails(writer, details);
+            break;
+        case 15:
+            writeItemSummonDetails(writer, details);
+            break;
+        case 16:
+            writeFlowOperationDetails(writer, details);
+            break;
+        case 17:
+            writeStageClearDetails(writer, details);
+            break;
+        case 18:
+            writeGameWaitDetails(writer, details);
+            break;
+        case 19:
+            writeMessageDetails(writer, details);
+            break;
+        case 20:
+            writeWarpDetails(writer, details);
+            break;
+        case 21:
+            writeTargetSettingDetails(writer, details);
+            break;
+        case 22:
+            writeStatusOperationDetails(writer, details);
+            break;
+        case 23:
+            writeStatusOperation2Details(writer, details);
+            break;
+        case 24:
+            writeDisappearanceDetails(writer, details);
+            break;
+        case 25:
+            writeItemAcquisitionDetails(writer, details);
+            break;
+        case 26:
+            writeGraphicChangeDetails(writer, details);
+            break;
+        case 27:
+            writeBasicAnimationSetChangeDetails(writer, details);
+            break;
+        case 28:
+            writeAnimationExecutionDetails(writer, details);
+            break;
+        case 29:
+            writeEffectExecutionDetails(writer, details);
+            break;
+        case 30:
+            writeCharacterEffectExecutionDetails(writer, details);
+            break;
+        case 31:
+            writeScreenEffectExecutionDetails(writer, details);
+            break;
+        case 32:
+            writePictureDisplayDetails(writer, details);
+            break;
+        case 33:
+            writeScreenColorChangeDetails(writer, details);
+            break;
+        // command 33
+        case 34:
+            writeBackgroundChangeDetails(writer, details);
+            break;
+        case 35:
+            writeSoundEffectPlaybackDetails(writer, details);
+            break;
+        case 36:
+            writeBGMPlaybackDetails(writer, details);
+            break;
+        case 37:
+            writeCodeExecutionDetails(writer, details);
+            break;
+        case 38:
+            writeArrangementDetails(writer, details);
+            break;
+        case 39:
+            writeLoopDetails(writer, details);
+            break;
+        default:
+            throw new Error(`Unknown command type to write: ${command.type}`);
+    }
+}
+
 /** @param {DataReader} reader stream reader */
 function parseWaitDetails(reader) {
   return {
@@ -988,6 +1860,14 @@ function parseWaitDetails(reader) {
     parallel_execution: reader.readUint8(),
     bytes: reader.readBytes(33)
   };
+}
+
+/** @param {DataWriter} writer @param {object} data */
+function writeWaitDetails(writer, data) {
+    writer.writeUint16(data.execution_time ?? 0);
+    writer.writeUint16(data.execution_time_double ?? 0);
+    writer.writeUint8(data.parallel_execution ?? 0);
+    writer.writeBytes(data.bytes ?? new Uint8Array(33));
 }
 
 /** @param {DataReader} reader stream reader */
@@ -1036,6 +1916,51 @@ function parseLinearMovementDetails(reader) {
   };
 }
 
+/** @param {DataWriter} writer @param {object} data */
+function writeLinearMovementDetails(writer, data) {
+    writer.writeUint16(data.execution_time ?? 0);
+    writer.writeUint16(data.execution_time_double ?? 0);
+    writer.writeUint8(data.parallel_execution ?? 0);
+    writer.writeBytes(data.bytes6_8 ?? new Uint8Array(3));
+    writer.writeUint16(data.animation_and_other_type ?? 0);
+    writer.writeBytes(data.bytes11_26 ?? new Uint8Array(16));
+    writer.writeUint8(data.movement_direction_setting_type ?? 0);
+    writer.writeUint8(data.movement_direction_direction ?? 0);
+    writer.writeUint16(data.movement_direction_angle ?? 0);
+    writer.writeUint16(data.movement_direction_angle_double ?? 0);
+    writer.writeUint8(data.movement_direction_angle_reverse_rotation_if_facing_right ?? 0);
+    writer.writeUint8(data.movement_direction_target_x_present ?? 0);
+    writer.writeUint8(data.movement_direction_target_y_present ?? 0);
+    writer.writeUint16(data.movement_direction_target_x ?? 0);
+    writer.writeUint16(data.movement_direction_target_y ?? 0);
+    writer.writeUint16(data.movement_direction_target_x_dot ?? 0);
+    writer.writeUint16(data.movement_direction_target_y_dot ?? 0);
+    writer.writeUint8(data.movement_direction_target_type ?? 0);
+    writer.writeUint8(data.movement_direction_target_coordinate_unit ?? 0);
+    writer.writeBytes(data.byte46 ?? new Uint8Array(1));
+    writer.writeUint8(data.movement_direction_execute_until_target_coordinate_reached ?? 0);
+    writer.writeUint8(data.movement_direction_invalidate_horizontal_movement ?? 0);
+    writer.writeUint8(data.movement_direction_invalidate_vertical_movement ?? 0);
+    writer.writeUint8(data.movement_direction_target_x_flip_if_facing_right ?? 0);
+    writer.writeUint8(data.movement_direction_target_y_flip_if_facing_right ?? 0);
+    writer.writeUint8(data.movement_direction_reverse_speed_if_direction_changes ?? 0);
+    writer.writeUint8(data.movement_direction_prevent_blur ?? 0);
+    writer.writeUint8(data.movement_direction_dont_change_character_direction ?? 0);
+    writer.writeUint8(data.time_speed_distance_setting_type ?? 0);
+    writer.writeUint16(data.time_speed_distance_speed ?? 0);
+    writer.writeUint16(data.time_speed_distance_speed_double ?? 0);
+    writer.writeUint16(data.time_speed_distance_distance ?? 0);
+    writer.writeUint16(data.time_speed_distance_distance_double ?? 0);
+    writer.writeUint8(data.time_speed_distance_distance_unit ?? 0);
+    writer.writeBytes(data.bytes65_68 ?? new Uint8Array(4));
+    writer.writeUint8(data.inertia_present ?? 0);
+    writer.writeUint16(data.inertia_max_speed ?? 0);
+    writer.writeFloat64(data.inertia_speed_correction_on_direction_change ?? 0.0);
+    writer.writeUint8(data.animation_type ?? 0);
+    writer.writeBytes(data.bytes81_101 ?? new Uint8Array(21));
+}
+
+
 /** @param {DataReader} reader stream reader */
 function parseGenericMovementDetails(reader) {
   return {
@@ -1076,6 +2001,14 @@ function parseDirectionChangeDetails(reader) {
   };
 }
 
+/** @param {DataWriter} writer @param {object} data */
+function writeDirectionChangeDetails(writer, data) {
+    writer.writeUint16(data.execution_time ?? 0);
+    writer.writeUint16(data.execution_time_double ?? 0);
+    writer.writeUint8(data.parallel_execution ?? 0);
+    writer.writeBytes(data.bytes6_42 ?? new Uint8Array(37));
+}
+
 /** @param {DataReader} reader stream reader */
 function parseJumpDetails(reader) {
   return {
@@ -1090,6 +2023,20 @@ function parseJumpDetails(reader) {
     min_jump_inertial_movement_speed: reader.readUint32(),
     min_jump_height: reader.readUint32()
   };
+}
+
+/** @param {DataWriter} writer @param {object} data */
+function writeJumpDetails(writer, data) {
+    writer.writeBytes(data.bytes1_5 ?? new Uint8Array(5));
+    writer.writeUint16(data.sound_effect ?? 0);
+    writer.writeUint8(data.play_if_outside_screen ?? 0);
+    writer.writeUint16(data.animation ?? 0);
+    writer.writeBytes(data.bytes11_38 ?? new Uint8Array(28));
+    writer.writeUint32(data.jump_type ?? 0);
+    writer.writeUint32(data.max_jump_inertial_movement_speed ?? 0);
+    writer.writeUint32(data.max_jump_height ?? 0);
+    writer.writeUint32(data.min_jump_inertial_movement_speed ?? 0);
+    writer.writeUint32(data.min_jump_height ?? 0);
 }
 
 /** @param {DataReader} reader stream reader */
@@ -1165,6 +2112,77 @@ function parseShotDetails(reader) {
   };
 }
 
+/** @param {DataWriter} writer @param {object} data */
+function writeShotDetails(writer, data) {
+    writer.writeUint16(data.execution_time ?? 0);
+    writer.writeUint16(data.execution_time_double ?? 0);
+    writer.writeUint8(data.parallel_execution ?? 0);
+    writer.writeUint16(data.sound_effect ?? 0);
+    writer.writeUint8(data.play_if_outside_screen ?? 0);
+    writer.writeUint16(data.animation ?? 0);
+    writer.writeBytes(data.bytes11_30 ?? new Uint8Array(20));
+    writer.writeUint8(data.number_of_shots_fired ?? 0);
+    writer.writeUint8(data.formation ?? 0);
+    writer.writeUint16(data.firing_parameter1 ?? 0);
+    writer.writeUint16(data.firing_parameter2 ?? 0);
+    writer.writeUint16(data.firing_parameter3 ?? 0);
+    writer.writeUint8(data.target ?? 0);
+    writer.writeUint8(data.direction ?? 0);
+    writer.writeUint8(data.set_angle_to_target ?? 0);
+    writer.writeUint8(data.firing_target ?? 0);
+    writer.writeUint16(data.angle_offset ?? 0);
+    writer.writeUint16(data.angle_offset_double ?? 0);
+    writer.writeUint8(data.angle_offset_reverse_rotation_if_facing_right ?? 0);
+    writer.writeUint16(data.angle_dispersion ?? 0);
+    writer.writeUint8(data.change_firing_position_according_to_angle ?? 0);
+    writer.writeUint8(data.number_of_doubles ?? 0);
+    writer.writeUint16(data.firing_position_offset_x ?? 0);
+    writer.writeUint16(data.firing_position_offset_x_double ?? 0);
+    writer.writeUint16(data.firing_position_offset_y ?? 0);
+    writer.writeUint16(data.firing_position_offset_y_double ?? 0);
+    writer.writeUint8(data.firing_position_offset_x_flip_if_facing_right ?? 0);
+    writer.writeUint8(data.firing_position_offset_y_flip_if_facing_right ?? 0);
+    writer.writeUint16(data.graphic ?? 0);
+    writer.writeUint8(data.z_coordinate ?? 0);
+    writer.writeUint8(data.transparency ?? 0);
+    writer.writeUint8(data.faction_same_as_user ?? 0);
+    writer.writeUint16(data.faction ?? 0);
+    writer.writeUint16(data.gigantic ?? 0);
+    writer.writeUint8(data.movement_type ?? 0);
+    writer.writeUint16(data.movement_type_parameter1 ?? 0);
+    writer.writeUint16(data.movement_type_parameter2 ?? 0);
+    writer.writeUint16(data.movement_type_parameter3 ?? 0);
+    writer.writeUint8(data.movement_target ?? 0);
+    writer.writeUint8(data.synchronize_with_auto_scroll ?? 0);
+    writer.writeUint16(data.speed ?? 0);
+    writer.writeUint16(data.speed_double ?? 0);
+    writer.writeUint8(data.acceleration_enabled ?? 0);
+    writer.writeUint16(data.acceleration ?? 0);
+    writer.writeUint16(data.acceleration_double ?? 0);
+    writer.writeUint16(data.flight_distance ?? 0);
+    writer.writeUint8(data.flight_distance_valid ?? 0);
+    writer.writeUint16(data.flight_distance_double ?? 0);
+    writer.writeUint8(data.flight_distance_does_not_disappear_at_end ?? 0);
+    writer.writeUint8(data.disappearance_time_valid ?? 0);
+    writer.writeUint16(data.disappearance_time ?? 0);
+    writer.writeUint16(data.disappearance_time_double ?? 0);
+    writer.writeUint8(data.penetrate_blocks ?? 0);
+    writer.writeUint8(data.penetrate_actors ?? 0);
+    writer.writeUint8(data.penetrate_block_actors ?? 0);
+    writer.writeUint8(data.disappear_on_hitting_shot ?? 0);
+    writer.writeUint8(data.value_for_disappearing_on_hitting_shot ?? 0);
+    writer.writeUint32(data.power ?? 0);
+    writer.writeBytes(data.bytes109_110 ?? new Uint8Array(2));
+    writer.writeUint8(data.impact ?? 0);
+    writer.writeUint16(data.effect ?? 0);
+    writer.writeUint8(data.acquired_item_palette_type ?? 0);
+    writer.writeUint16(data.acquired_item_palette_number ?? 0);
+    writer.writeBytes(data.bytes117_125 ?? new Uint8Array(9));
+    writer.writeUint8(data.attack ?? 0);
+    writer.writeUint8(data.attack_id ?? 0);
+    writer.writeBytes(data.bytes128_143 ?? new Uint8Array(16));
+}
+
 /** @param {DataReader} reader stream reader */
 function parseSwordDetails(reader) {
   return {
@@ -1192,6 +2210,33 @@ function parseSwordDetails(reader) {
     attack_id: reader.readUint8(),
     bytes128_143: reader.readBytes(16)
   };
+}
+
+/** @param {DataWriter} writer @param {object} data */
+function writeSwordDetails(writer, data) {
+    writer.writeUint32(data.execution_time ?? 0);
+    writer.writeUint8(data.parallel_execution ?? 0);
+    writer.writeUint16(data.sound_effect ?? 0);
+    writer.writeUint8(data.play_if_outside_screen ?? 0);
+    writer.writeUint16(data.animation ?? 0);
+    writer.writeBytes(data.bytes11_63 ?? new Uint8Array(53));
+    writer.writeUint8(data.z_coordinate ?? 0);
+    writer.writeUint8(data.transparency ?? 0);
+    writer.writeUint8(data.faction_same_as_user ?? 0);
+    writer.writeUint16(data.faction ?? 0);
+    writer.writeUint16(data.gigantic ?? 0);
+    writer.writeUint32(data.sword_type ?? 0);
+    writer.writeBytes(data.bytes75_104 ?? new Uint8Array(30));
+    writer.writeUint32(data.power ?? 0);
+    writer.writeBytes(data.bytes109_110 ?? new Uint8Array(2));
+    writer.writeUint8(data.impact ?? 0);
+    writer.writeUint16(data.effect ?? 0);
+    writer.writeUint8(data.acquired_item_palette_type ?? 0);
+    writer.writeUint16(data.acquired_item_palette_number ?? 0);
+    writer.writeBytes(data.bytes117_125 ?? new Uint8Array(9));
+    writer.writeUint8(data.attack ?? 0);
+    writer.writeUint8(data.attack_id ?? 0);
+    writer.writeBytes(data.bytes128_143 ?? new Uint8Array(16));
 }
 
 /** @param {DataReader} reader stream reader */
@@ -1237,6 +2282,47 @@ function parseBlockSummonDetails(reader) {
   };
 }
 
+/** @param {DataWriter} writer @param {object} data */
+function writeBlockSummonDetails(writer, data) {
+    writer.writeUint16(data.execution_time ?? 0);
+    writer.writeUint16(data.execution_time_double ?? 0);
+    writer.writeUint8(data.parallel_execution ?? 0);
+    writer.writeUint16(data.sound_effect ?? 0);
+    writer.writeUint8(data.play_sound_effect_if_outside_screen ?? 0);
+    writer.writeUint8(data.animation ?? 0);
+    writer.writeBytes(data.bytes10_30 ?? new Uint8Array(21));
+    writer.writeUint8(data.count ?? 0);
+    writer.writeUint8(data.formation ?? 0);
+    writer.writeUint16(data.interval ?? 0);
+    writer.writeUint16(data.number_of_columns ?? 0);
+    writer.writeUint16(data.column_interval ?? 0);
+    writer.writeUint8(data.target ?? 0);
+    writer.writeUint8(data.direction ?? 0);
+    writer.writeBytes(data.byte41 ?? new Uint8Array(1));
+    writer.writeUint8(data.target2 ?? 0);
+    writer.writeBytes(data.bytes43_51 ?? new Uint8Array(9));
+    writer.writeUint32(data.summon_position_offset_x ?? 0);
+    writer.writeUint32(data.summon_position_offset_y ?? 0);
+    writer.writeUint8(data.summon_position_offset_x_flip ?? 0);
+    writer.writeUint8(data.summon_position_offset_y_flip ?? 0);
+    writer.writeBytes(data.bytes62_66 ?? new Uint8Array(5));
+    writer.writeUint8(data.faction ?? 0);
+    writer.writeBytes(data.bytes68_88 ?? new Uint8Array(21));
+    writer.writeUint16(data.existence_time ?? 0);
+    writer.writeUint8(data.existence_time_present ?? 0);
+    writer.writeBytes(data.bytes92_119 ?? new Uint8Array(28));
+    writer.writeUint8(data.palette_type ?? 0);
+    writer.writeUint16(data.palette_data_number ?? 0);
+    writer.writeUint8(data.faction_specification_method ?? 0);
+    writer.writeUint8(data.set_acquired_score_to_0 ?? 0);
+    writer.writeUint8(data.direction_flip ?? 0);
+    writer.writeUint8(data.attack ?? 0);
+    writer.writeUint8(data.attack_flow ?? 0);
+    writer.writeBytes(data.bytes128_143 ?? new Uint8Array(16));
+    writer.writeUint8(data.return_value_to_flow_variable ?? 0);
+    writer.writeBytes(data.bytes145_147 ?? new Uint8Array(3));
+}
+
 /** @param {DataReader} reader stream reader */
 function parseCharacterSummonDetails(reader) {
   return {
@@ -1280,6 +2366,47 @@ function parseCharacterSummonDetails(reader) {
   };
 }
 
+/** @param {DataWriter} writer @param {object} data */
+function writeCharacterSummonDetails(writer, data) {
+    writer.writeUint16(data.execution_time ?? 0);
+    writer.writeUint16(data.execution_time_double ?? 0);
+    writer.writeUint8(data.parallel_execution ?? 0);
+    writer.writeUint16(data.sound_effect ?? 0);
+    writer.writeUint8(data.play_sound_effect_if_outside_screen ?? 0);
+    writer.writeUint8(data.animation ?? 0);
+    writer.writeBytes(data.bytes10_30 ?? new Uint8Array(21));
+    writer.writeUint8(data.count ?? 0);
+    writer.writeUint8(data.formation ?? 0);
+    writer.writeUint16(data.interval ?? 0);
+    writer.writeUint16(data.number_of_columns ?? 0);
+    writer.writeUint16(data.column_interval ?? 0);
+    writer.writeUint8(data.target ?? 0);
+    writer.writeUint8(data.direction ?? 0);
+    writer.writeBytes(data.byte41 ?? new Uint8Array(1));
+    writer.writeUint8(data.target2 ?? 0);
+    writer.writeBytes(data.bytes43_51 ?? new Uint8Array(9));
+    writer.writeUint32(data.summon_position_offset_x ?? 0);
+    writer.writeUint32(data.summon_position_offset_y ?? 0);
+    writer.writeUint8(data.summon_position_offset_x_flip ?? 0);
+    writer.writeUint8(data.summon_position_offset_y_flip ?? 0);
+    writer.writeBytes(data.bytes62_66 ?? new Uint8Array(5));
+    writer.writeUint8(data.faction ?? 0);
+    writer.writeBytes(data.bytes68_88 ?? new Uint8Array(21));
+    writer.writeUint16(data.existence_time ?? 0);
+    writer.writeUint8(data.existence_time_present ?? 0);
+    writer.writeBytes(data.bytes92_119 ?? new Uint8Array(28));
+    writer.writeUint8(data.palette_type ?? 0);
+    writer.writeUint16(data.palette_data_number ?? 0);
+    writer.writeUint8(data.faction_specification_method ?? 0);
+    writer.writeUint8(data.set_acquired_score_to_0 ?? 0);
+    writer.writeUint8(data.direction_flip ?? 0);
+    writer.writeUint8(data.attack ?? 0);
+    writer.writeUint8(data.attack_flow ?? 0);
+    writer.writeBytes(data.bytes128_143 ?? new Uint8Array(16));
+    writer.writeUint8(data.return_value_to_flow_variable ?? 0);
+    writer.writeBytes(data.bytes145_147 ?? new Uint8Array(3));
+}
+
 /** @param {DataReader} reader stream reader */
 function parseItemSummonDetails(reader) {
   return {
@@ -1321,6 +2448,45 @@ function parseItemSummonDetails(reader) {
   };
 }
 
+/** @param {DataWriter} writer @param {object} data */
+function writeItemSummonDetails(writer, data) {
+    writer.writeUint16(data.execution_time ?? 0);
+    writer.writeUint16(data.execution_time_double ?? 0);
+    writer.writeUint8(data.parallel_execution ?? 0);
+    writer.writeUint16(data.sound_effect ?? 0);
+    writer.writeUint8(data.play_sound_effect_if_outside_screen ?? 0);
+    writer.writeUint8(data.animation ?? 0);
+    writer.writeBytes(data.bytes10_30 ?? new Uint8Array(21));
+    writer.writeUint8(data.count ?? 0);
+    writer.writeUint8(data.formation ?? 0);
+    writer.writeUint16(data.interval ?? 0);
+    writer.writeUint16(data.number_of_columns ?? 0);
+    writer.writeUint16(data.column_interval ?? 0);
+    writer.writeUint8(data.target ?? 0);
+    writer.writeUint8(data.direction ?? 0);
+    writer.writeUint8(data.byte41 ?? 0);
+    writer.writeUint8(data.target2 ?? 0);
+    writer.writeBytes(data.bytes43_51 ?? new Uint8Array(9));
+    writer.writeUint32(data.summon_position_offset_x ?? 0);
+    writer.writeUint32(data.summon_position_offset_y ?? 0);
+    writer.writeUint8(data.summon_position_offset_x_flip ?? 0);
+    writer.writeUint8(data.summon_position_offset_y_flip ?? 0);
+    writer.writeBytes(data.bytes62_66 ?? new Uint8Array(5));
+    writer.writeUint8(data.faction ?? 0);
+    writer.writeBytes(data.bytes68_88 ?? new Uint8Array(21));
+    writer.writeUint16(data.existence_time ?? 0);
+    writer.writeUint8(data.existence_time_present ?? 0);
+    writer.writeBytes(data.bytes92_119 ?? new Uint8Array(28));
+    writer.writeUint8(data.palette_type ?? 0);
+    writer.writeUint16(data.palette_data_number ?? 0);
+    writer.writeUint8(data.faction_specification_method ?? 0);
+    writer.writeUint8(data.set_acquired_score_to_0 ?? 0);
+    writer.writeUint8(data.direction_flip ?? 0);
+    writer.writeUint8(data.attack ?? 0);
+    writer.writeUint8(data.attack_flow ?? 0);
+    writer.writeBytes(data.bytes128_143 ?? new Uint8Array(16));
+}
+
 /** @param {DataReader} reader stream reader */
 function parseFlowOperationDetails(reader) {
   const data = {
@@ -1339,9 +2505,30 @@ function parseFlowOperationDetails(reader) {
   return data;
 }
 
+/** @param {DataWriter} writer @param {object} data */
+function writeFlowOperationDetails(writer, data) {
+    writer.writeBytes(data.bytes1_34 ?? new Uint8Array(34));
+    writer.writeUint8(data.condition_present ?? 0);
+    writer.writeUint8(data.judgment_type ?? 0);
+    writer.writeBytes(data.bytes37_40 ?? new Uint8Array(4));
+    writeArray(writer, data.conditions, writeBasicCondition);
+    writer.writeBytes(data.bytes45_52 ?? new Uint8Array(8));
+    writer.writeUint32(data.operation ?? 0);
+    writer.writeUint32(data.target_flow ?? 0);
+    writer.writeUint32(data.id ?? 0);
+    writer.writeUint32(data.target_character ?? 0);
+    writer.writeUint32(data.assign_return_value_to_flow_variable ?? 0);
+}
+
 /** @param {DataReader} reader stream reader */
 function parseTargetSettingDetails(reader) {
   return { bytes1_38: reader.readBytes(38), bytes39_106: reader.readBytes(68) };
+}
+
+/** @param {DataWriter} writer @param {object} data */
+function writeTargetSettingDetails(writer, data) {
+    writer.writeBytes(data.bytes1_38 ?? new Uint8Array(38));
+    writer.writeBytes(data.bytes39_106 ?? new Uint8Array(68));
 }
 
 // --------------------------------------------------------
@@ -1357,6 +2544,12 @@ function readStageCharacter(reader) {
   };
 }
 
+/** @param {DataWriter} writer @param {object} data */
+function writeStageCharacter(writer, data) {
+    writer.writeUint32(data.position ?? 0);
+    writeCharacter(writer, data.character);
+}
+
 // Parse StageItem structure
 
 /** @param {DataReader} reader stream reader */
@@ -1365,6 +2558,12 @@ function readStageItem(reader) {
     position: reader.readUint32(),
     item: readItem(reader)
   };
+}
+
+/** @param {DataWriter} writer @param {object} data */
+function writeStageItem(writer, data) {
+    writer.writeUint32(data.position ?? 0);
+    writeItem(writer, data.item);
 }
 
 // Parse Background structure
@@ -1388,13 +2587,37 @@ function readBackground(reader) {
   };
 }
 
+/** @param {DataWriter} writer @param {object} data */
+function writeBackground(writer, data) {
+    writer.writeUint32(data.start ?? 0);
+    writer.writeUint32(data.display_from_start ?? 0);
+    writer.writeUint32(data.specified_by_color ?? 0);
+    writer.writeUint32(data.color_number ?? 0);
+    writer.writeUint32(data.display_in_front_of_character ?? 0);
+    writer.writeFloat64(data.horizontal_scroll_speed ?? 0.0);
+    writer.writeFloat64(data.vertical_scroll_speed ?? 0.0);
+    writer.writeUint32(data.horizontal_auto_scroll ?? 0);
+    writer.writeUint32(data.vertical_auto_scroll ?? 0);
+    writer.writeFloat64(data.horizontal_auto_scroll_speed ?? 0.0);
+    writer.writeFloat64(data.vertical_auto_scroll_speed ?? 0.0);
+    writer.writeBytes(data.bytes61_80 ?? new Uint8Array(20));
+    writer.writeStdString(data.image_path ?? "");
+}
+
 // Parse StageVar structure
 function readStageVar(reader) {
   return {
-    some_count: reader.readUint32(),
-    some_count_too: reader.readUint32(),
-    variable_name: readStdString(reader)
+    unk: reader.readUint32(),
+    count: reader.readUint32(),
+    var_name: readStdString(reader)
   };
+}
+
+/** @param {DataWriter} writer @param {object} data */
+function writeStageVar(writer, data) {
+    writer.writeUint32(data.unk ?? 0);
+    writer.writeUint32(data.count ?? 1);
+    writer.writeStdString(data.var_name ?? "");
 }
 
 // Parse the complete StagePaletteFile
@@ -1539,13 +2762,122 @@ function parseStagePaletteFile(reader) {
     end: (() => {
       let e = reader.readUint32() // value should be 123456789
       if (e !== 123456789) {
-        console.warn(`Unexpected end marker: expected 123456789, got ${file.end}`);
+        console.warn(`Unexpected end marker: expected 123456789, got ${e}`);
       }
       return e;
     })()
   
   }
   
+}
+
+/**
+ * @param {DataWriter} writer
+ * @param {object} data
+ */
+function writeStagePaletteFile(writer, data) {
+    writer.writeUint32(1020); // magic
+    
+    writer.writeUint32(data.some_count ?? 99);
+    writer.writeUint32(data.item_width ?? 0);
+    writer.writeUint32(data.chunk_width ?? 32);
+    writer.writeUint32(data.chunk_pow ?? 5);
+    writer.writeUint32(data.height ?? 0);
+    writer.writeUint32(data.enable_horizontal_scroll_minimum ?? 0);
+    writer.writeUint32(data.enable_horizontal_scroll_maximum ?? 0);
+    writer.writeUint32(data.enable_vertical_scroll_minimum ?? 0);
+    writer.writeUint32(data.enable_vertical_scroll_maximum ?? 0);
+    writer.writeUint32(data.horizontal_scroll_minimum_value ?? 0);
+    writer.writeUint32(data.horizontal_scroll_maximum_value ?? 0);
+    writer.writeUint32(data.vertical_scroll_minimum_value ?? 0);
+    writer.writeUint32(data.vertical_scroll_maximum_value ?? 0);
+
+    // Page 2
+    writer.writeUint32(data.frame_rate ?? 60);
+    writer.writeUint32(data.enable_time_limit ?? 0);
+    writer.writeUint32(data.time_limit_duration ?? 0);
+    writer.writeUint32(data.warning_sound_start_time ?? 0);
+    writer.writeUint32(data.enable_side_scroll ?? 0);
+    writer.writeUint32(data.enable_vertical_scroll ?? 0);
+    writer.writeUint32(data.autoscroll_speed ?? 0);
+    writer.writeUint32(data.vertical_scroll_speed ?? 0);
+
+    writer.writeFloat64(data.gravity ?? 0.0);
+
+    writer.writeUint32(data.hit_detection_level ?? 0);
+    writer.writeUint32(data.character_shot_collision_detection_accuracy ?? 0);
+    writer.writeUint32(data.bgm_number ?? 0);
+    writer.writeUint32(data.bgm_loop_playback ?? 0);
+    writer.writeUint32(data.dont_restart_bgm_if_no_change ?? 0);
+    writer.writeUint32(data.enable_z_coordinate ?? 0);
+    writer.writeUint32(data.inherit_status_from_stock ?? 0);
+    writer.writeUint32(data.store_status_to_stock ?? 0);
+    writer.writeUint32(data.show_status_window ?? 0);
+    writer.writeUint32(data.switch_scene_immediately_on_clear ?? 0);
+    writer.writeUint32(data.allow_replay_save ?? 0);
+
+    writer.writeUint32(data.show_stage ?? 1);
+    writer.writeUint32(data.show_ready ?? 1);
+    writer.writeUint32(data.show_clear ?? 1);
+    writer.writeUint32(data.show_gameover ?? 1);
+
+    writePlayerCollision(writer, data.player_collide || {});
+    writeEnemyCollision(writer, data.enemy_collide || {});
+
+    writer.writeUint32(data.item_collision_width ?? 0);
+    writer.writeUint32(data.item_collision_height ?? 0);
+
+    writeActorHitbox(writer, data.player_hitbox || {});
+    writeActorHitbox(writer, data.enemy_hitbox || {});
+
+    writer.writeUint32(data.undo_max_times ?? 0);
+    writer.writeUint32(data.x_coordinate_upper_limit ?? 0);
+    writer.writeUint32(data.y_coordinate_upper_limit ?? 0);
+
+    writer.writeUint32(data.unk75 ?? 0);
+    writer.writeUint32(data.unk76 ?? 0);
+    writer.writeUint32(data.unk77 ?? 0);
+    writer.writeUint32(data.unk78 ?? 0);
+    writer.writeUint32(data.unk79 ?? 0);
+    writer.writeUint32(data.unk80 ?? 0);
+    writer.writeUint32(data.unk81 ?? 0);
+    writer.writeUint32(data.unk82 ?? 0);
+    writer.writeUint32(data.unk83 ?? 0);
+    writer.writeUint32(data.unk84 ?? 0);
+    writer.writeUint32(data.unk85 ?? 0);
+    writer.writeUint32(data.unk86 ?? 0);
+
+    writer.writeUint32(data.disable_damage_outside_screen ?? 0);
+    writer.writeUint32(data.player_invincibility_from_same_enemy_duration ?? 0);
+    writer.writeUint32(data.player_invincibility_duration ?? 0);
+    writer.writeUint32(data.enemy_invincibility_from_same_player_duration ?? 0);
+    writer.writeUint32(data.enemy_invincibility_duration ?? 0);
+
+    writer.writeUint32(1); // stage_names count, always 1
+    writer.writeStdString(data.stage_name ?? "");
+
+    writer.writeUint32(data.ranking_size ?? 5);
+    writer.writeUint32(data.ranking_score ?? 0);
+    writer.writeUint32(data.ranking_remaining_time ?? 0);
+    writer.writeUint32(data.ranking_clear_time ?? 0);
+    writer.writeUint32(data.ranking_remaining_hp ?? 0);
+    writer.writeUint32(data.ranking_remaining_sp ?? 0);
+
+    writeDeathFade(writer, data.nonblock_enemy_death || {});
+    writeDeathFade(writer, data.block_enemy_death || {});
+    writeDeathFade(writer, data.item_death || {});
+    writeDeathFade(writer, data.player_death || {});
+    writeDeathFade(writer, data.enemy_death || {});
+
+    writeStagePalette(writer, data.palette || {});
+
+    writeArray(writer, data.blocks, writeStageBlock);
+    writeArray(writer, data.characters, writeStageCharacter);
+    writeArray(writer, data.items, writeStageItem);
+    writeArray(writer, data.backgrounds, writeBackground);
+    writeArray(writer, data.stage_vars, writeStageVar);
+
+    writer.writeUint32(123456789); // end marker
 }
 
 /**
@@ -1589,13 +2921,13 @@ class STG4Unpacker {
   parseFile() {
     if (this.fileBuffer.length === 0) return null;
     
-    try {
-      const reader = new DataReader(this.fileBuffer.buffer);
-      return parseStagePaletteFile(reader); // Return the parsed result directly
-    } catch (error) {
-      console.error('Error parsing STG4 file:', error);
-      return { error: error.message };
-    }
+    // try {
+    const reader = new DataReader(this.fileBuffer.buffer);
+    return parseStagePaletteFile(reader); // Return the parsed result directly
+    // } catch (error) {
+    //   console.error('Error parsing STG4 file:', error);
+    //   return { error: error.message };
+    // }
   }
 }
 
@@ -1687,273 +3019,23 @@ async function parseStage(stream) {
 }
 
 /**
- * Serialize STG4 to a stream
+ * Serialize STG4 object to a ReadableStream of bytes.
+ * @param {object} data The STG4 data object.
+ * @returns {ReadableStream<Uint8Array>} A readable stream of the binary data.
  */
 function serializeStage(data) {
-  const writableStream = new WritableStream({
-    write(chunk, controller) {
-      // Write chunk to output stream
-      // This is a simplified implementation
-      console.log('Writing chunk:', chunk);
-    },
-    close() {
-      console.log('Serialization complete');
-    }
-  });
-
-  /*
-  const readableStream = new ReadableStream({
+  return new ReadableStream({
     start(controller) {
-      // Write header
-      const writer = new DataWriter();
-      
-      // Write all the fields in the correct order
-      writer.writeUint32(data.magic || 1020);
-      writer.writeUint32(data.some_count || 99);
-      
-      writer.writeUint32(data.item_width || 0);
-      
-      writer.writeUint32(data.chunk_width || 32);
-      writer.writeUint32(data.chunk_pow || 5);
-      
-      writer.writeUint32(data.height || 0);
-      
-      writer.writeUint32(data.enable_horizontal_scroll_minimum || 0);
-      writer.writeUint32(data.enable_horizontal_scroll_maximum || 0);
-      writer.writeUint32(data.enable_vertical_scroll_minimum || 0);
-      writer.writeUint32(data.enable_vertical_scroll_maximum || 0);
-      
-      writer.writeUint32(data.horizontal_scroll_minimum_value || 0);
-      writer.writeUint32(data.horizontal_scroll_maximum_value || 0);
-      writer.writeUint32(data.vertical_scroll_minimum_value || 0);
-      writer.writeUint32(data.vertical_scroll_maximum_value || 0);
-      
-      // Page 2
-      writer.writeUint32(data.frame_rate || 60);
-      
-      writer.writeUint32(data.enable_time_limit || 0);
-      writer.writeUint32(data.time_limit_duration || 0);
-      writer.writeUint32(data.warning_sound_start_time || 0);
-      
-      writer.writeUint32(data.enable_side_scroll || 0);
-      writer.writeUint32(data.enable_vertical_scroll || 0);
-      writer.writeUint32(data.autoscroll_speed || 0);
-      writer.writeUint32(data.vertical_scroll_speed || 0);
-      
-      writer.writeFloat32(data.gravity || 0.0);
-      
-      writer.writeUint32(data.hit_detection_level || 0);
-      writer.writeUint32(data.character_shot_collision_detection_accuracy || 0);
-      
-      writer.writeUint32(data.bgm_number || 0);
-      writer.writeUint32(data.bgm_loop_playback || 0);
-      writer.writeUint32(data.dont_restart_bgm_if_no_change || 0);
-      
-      writer.writeUint32(data.enable_z_coordinate || 0);
-      
-      writer.writeUint32(data.inherit_status_from_stock || 0);
-      writer.writeUint32(data.store_status_to_stock || 0);
-      writer.writeUint32(data.show_status_window || 0);
-      
-      writer.writeUint32(data.switch_scene_immediately_on_clear || 0);
-      writer.writeUint32(data.allow_replay_save || 0);
-      
-      // show text images
-      writer.writeUint32(data.show_stage || 1);
-      writer.writeUint32(data.show_ready || 1);
-      writer.writeUint32(data.show_clear || 1);
-      writer.writeUint32(data.show_gameover || 1);
-      
-      // Write PlayerCollision
-      const playerCollide = data.player_collide || {};
-      writer.writeUint32(playerCollide.width || 0);
-      writer.writeUint32(playerCollide.height || 0);
-      writer.writeUint32(playerCollide.attack_width || 0);
-      writer.writeUint32(playerCollide.attack_height || 0);
-      writer.writeUint32(playerCollide.attack_offset_x || 0);
-      writer.writeUint32(playerCollide.attack_offset_y || 0);
-      
-      // Write EnemyCollision
-      const enemyCollide = data.enemy_collide || {};
-      writer.writeUint32(enemyCollide.width || 0);
-      writer.writeUint32(enemyCollide.height || 0);
-      writer.writeUint32(enemyCollide.attack_width || 0);
-      writer.writeUint32(enemyCollide.attack_height || 0);
-      writer.writeUint32(enemyCollide.attack_offset_x || 0);
-      writer.writeUint32(enemyCollide.attack_offset_y || 0);
-      
-      writer.writeUint32(data.item_collision_width || 0);
-      writer.writeUint32(data.item_collision_height || 0);
-      
-      // Write PlayerHitbox
-      const playerHitbox = data.player_hitbox || {};
-      writer.writeUint32(playerHitbox.width || 0);
-      writer.writeUint32(playerHitbox.height || 0);
-      writer.writeUint32(playerHitbox.offset_x || 0);
-      writer.writeUint32(playerHitbox.offset_y || 0);
-      
-      // Write EnemyHitbox
-      const enemyHitbox = data.enemy_hitbox || {};
-      writer.writeUint32(enemyHitbox.width || 0);
-      writer.writeUint32(enemyHitbox.height || 0);
-      writer.writeUint32(enemyHitbox.offset_x || 0);
-      writer.writeUint32(enemyHitbox.offset_y || 0);
-      
-      writer.writeUint32(data.undo_max_times || 0);
-      
-      writer.writeUint32(data.x_coordinate_upper_limit || 0);
-      writer.writeUint32(data.y_coordinate_upper_limit || 0);
-      
-      writer.writeUint32(data.unk75 || 0);
-      writer.writeUint32(data.unk76 || 0);
-      writer.writeUint32(data.unk77 || 0);
-      writer.writeUint32(data.unk78 || 0);
-      writer.writeUint32(data.unk79 || 0);
-      
-      writer.writeUint32(data.unk80 || 0);
-      writer.writeUint32(data.unk81 || 0);
-      writer.writeUint32(data.unk82 || 0);
-      writer.writeUint32(data.unk83 || 0);
-      writer.writeUint32(data.unk84 || 0);
-      writer.writeUint32(data.unk85 || 0);
-      writer.writeUint32(data.unk86 || 0);
-      
-      writer.writeUint32(data.disable_damage_outside_screen || 0);
-      
-      writer.writeUint32(data.player_invincibility_from_same_enemy_duration || 0);
-      writer.writeUint32(data.player_invincibility_duration || 0);
-      
-      writer.writeUint32(data.enemy_invincibility_from_same_player_duration || 0);
-      writer.writeUint32(data.enemy_invincibility_duration || 0);
-      
-      // Write stage names vector
-      const stageNames = data.stage_names || [];
-      writer.writeUint32(stageNames.length);
-      for (const name of stageNames) {
-        writer.writeString(name);
+      try {
+        const writer = new DataWriter();
+        writeStagePaletteFile(writer, data);
+        const buffer = writer.toBuffer();
+        controller.enqueue(new Uint8Array(buffer));
+        controller.close();
+      } catch (e) {
+        console.error("Error during STG4 serialization:", e);
+        controller.error(e);
       }
-      
-      // Write stage name
-      writer.writeString(data.stage_name || "");
-      
-      writer.writeUint32(data.ranking_size || 5);
-      
-      // Ranking
-      writer.writeUint32(data.ranking_score || 0);
-      writer.writeUint32(data.ranking_remaining_time || 0);
-      writer.writeUint32(data.ranking_clear_time || 0);
-      writer.writeUint32(data.ranking_remaining_hp || 0);
-      writer.writeUint32(data.ranking_remaining_sp || 0);
-      
-      // Write DeathFade structures
-      const nonblockEnemyDeath = data.nonblock_enemy_death || {};
-      writer.writeUint32(nonblockEnemyDeath.fade_type || 0);
-      writer.writeUint32(nonblockEnemyDeath.fade_time || 0);
-      writer.writeUint32(nonblockEnemyDeath.fade_alpha || 0);
-      
-      const blockEnemyDeath = data.block_enemy_death || {};
-      writer.writeUint32(blockEnemyDeath.fade_type || 0);
-      writer.writeUint32(blockEnemyDeath.fade_time || 0);
-      writer.writeUint32(blockEnemyDeath.fade_alpha || 0);
-      
-      const itemDeath = data.item_death || {};
-      writer.writeUint32(itemDeath.fade_type || 0);
-      writer.writeUint32(itemDeath.fade_time || 0);
-      writer.writeUint32(itemDeath.fade_alpha || 0);
-      
-      const playerDeath = data.player_death || {};
-      writer.writeUint32(playerDeath.fade_type || 0);
-      writer.writeUint32(playerDeath.fade_time || 0);
-      writer.writeUint32(playerDeath.fade_alpha || 0);
-      
-      const enemyDeath = data.enemy_death || {};
-      writer.writeUint32(enemyDeath.fade_type || 0);
-      writer.writeUint32(enemyDeath.fade_time || 0);
-      writer.writeUint32(enemyDeath.fade_alpha || 0);
-      
-      // Write palette
-      const palette = data.palette || { colors: [] };
-      writer.writeUint32(palette.magic || 0x000003FC); // FC 03 00 00
-      writer.writeUint32(palette.colorCount || palette.colors.length);
-      for (const color of palette.colors || []) {
-        writer.writeUint8(color.r || 0);
-        writer.writeUint8(color.g || 0);
-        writer.writeUint8(color.b || 0);
-        writer.writeUint8(color.a || 255);
-      }
-      
-      // Write blocks
-      const blocks = data.blocks || [];
-      writer.writeUint32(blocks.length);
-      for (const block of blocks) {
-        writer.writeUint32(block.id || 0);
-        writer.writeUint32(block.x || 0);
-        writer.writeUint32(block.y || 0);
-        writer.writeUint32(block.width || 0);
-        writer.writeUint32(block.height || 0);
-        writer.writeUint32(block.block_type || 0);
-        writer.writeUint32(block.collision_type || 0);
-        writer.writeString(block.properties || "");
-      }
-      
-      // Write characters
-      const characters = data.characters || [];
-      writer.writeUint32(characters.length);
-      for (const character of characters) {
-        writer.writeUint32(character.id || 0);
-        writer.writeFloat32(character.x || 0);
-        writer.writeFloat32(character.y || 0);
-        writer.writeFloat32(character.z || 0);
-        writer.writeUint32(character.character_type || 0);
-        writer.writeUint32(character.direction || 0);
-        writer.writeUint32(character.initial_state || 0);
-        writer.writeString(character.properties || "");
-      }
-      
-      // Write items
-      const items = data.items || [];
-      writer.writeUint32(items.length);
-      for (const item of items) {
-        writer.writeUint32(item.id || 0);
-        writer.writeFloat32(item.x || 0);
-        writer.writeFloat32(item.y || 0);
-        writer.writeFloat32(item.z || 0);
-        writer.writeUint32(item.item_type || 0);
-        writer.writeString(item.properties || "");
-      }
-      
-      // Write backgrounds
-      const backgrounds = data.backgrounds || [];
-      writer.writeUint32(backgrounds.length);
-      for (const background of backgrounds) {
-        writer.writeUint32(background.id || 0);
-        writer.writeFloat32(background.x || 0);
-        writer.writeFloat32(background.y || 0);
-        writer.writeFloat32(background.z || 0);
-        writer.writeUint32(background.background_type || 0);
-        writer.writeString(background.properties || "");
-      }
-      
-      // Write stage variables
-      const stageVars = data.stage_vars || [];
-      writer.writeUint32(stageVars.length);
-      for (const varData of stageVars) {
-        writer.writeUint32(varData.index || 0);
-        writer.writeInt32(varData.value || 0);
-      }
-      
-      // Write end marker
-      writer.writeUint32(data.end || 123456789);
-      
-      controller.enqueue(new Uint8Array(writer.toBuffer()));
-      controller.close();
-    }
-  });
-  */
-
-  return new TransformStream({
-    start(controller) {
-      // This is where we'd pipe the readable stream through any transforms
     }
   });
 }

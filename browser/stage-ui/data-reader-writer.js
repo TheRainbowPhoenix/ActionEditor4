@@ -141,6 +141,15 @@ class DataWriter {
     this.chunks.push(new Uint8Array(buffer));
     this.position += 2;
   }
+  
+  // ADDED: Missing method needed by the parser
+  writeInt16(value) {
+    const buffer = new ArrayBuffer(2);
+    const view = new DataView(buffer);
+    view.setInt16(0, value, true); // little endian
+    this.chunks.push(new Uint8Array(buffer));
+    this.position += 2;
+  }
 
   writeUint32(value) {
     const buffer = new ArrayBuffer(4);
@@ -174,30 +183,16 @@ class DataWriter {
     this.position += 8;
   }
 
-  writeString(value) {
-    const bytes = new TextEncoder().encode(value);
-    this.writeUint32(bytes.length);
-    this.chunks.push(bytes);
-    this.position += 4 + bytes.length;
-  }
-
   writeStdString(value) {
-    if (value && value.length > 0) {
-      const bytes = new TextEncoder().encode(value);
-      this.writeUint32(bytes.length);
-      this.chunks.push(bytes);
-      this.position += 4 + bytes.length;
-    } else {
-      this.writeUint32(0);
-    }
-  }
+    const bytes = encodeShiftJis(value || '');
+    this.writeUint32(bytes.length + 1);
+    this.position += 4
 
-  writeFixedString(value, length) {
-    const bytes = new TextEncoder().encode(value);
-    const padded = new Uint8Array(length);
-    padded.set(bytes);
-    this.chunks.push(padded);
-    this.position += length;
+    if (bytes.length > 0) {
+      this.chunks.push(bytes);
+      this.writeUint8(0);
+      this.position += bytes.length + 1
+    }
   }
 
   writeBytes(bytes) {

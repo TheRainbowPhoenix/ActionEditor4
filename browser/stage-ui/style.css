@@ -11,7 +11,8 @@
   --status-success: #31a24c;
   --status-error: #fa383e;
   --drop-zone-border: #ccd0d5;
-  --drop-zone-hover: #ebf3ff;
+  --drop-zone-hover-bg: #e7f3ff;
+  --drop-zone-hover-border: #1877f2;
 }
 
 body {
@@ -37,11 +38,25 @@ header {
   align-items: flex-start;
   padding-bottom: 1rem;
   border-bottom: 1px solid var(--border-color);
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.title-bar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.title-bar svg {
+  width: 48px;
+  height: 48px;
 }
 
 header h1 {
   margin: 0 0 0.5rem 0;
   font-size: 2rem;
+  color: var(--text-color);
 }
 
 header p {
@@ -67,43 +82,47 @@ header p {
 }
 
 .panel h2 {
-  margin: 0 0 0.5rem 0;
-}
-
-.panel p {
   margin: 0;
-  color: var(--secondary-text-color);
+  font-size: 1.5rem;
+  border-bottom: 1px solid var(--secondary-color);
+  padding-bottom: 1rem;
 }
 
 .drop-zone {
   border: 2px dashed var(--drop-zone-border);
   border-radius: 8px;
-  padding: 2rem;
+  padding: 2.5rem 1.5rem;
   text-align: center;
-  position: relative;
-  transition: background-color 0.2s;
+  transition: background-color 0.2s, border-color 0.2s;
+  background-color: #fafbfc;
 }
 
-.drop-zone.dragging {
-  background-color: var(--drop-zone-hover);
-  border-color: var(--primary-color);
+.drop-zone.drag-over {
+  background-color: var(--drop-zone-hover-bg);
+  border-color: var(--drop-zone-hover-border);
 }
 
-.drop-zone-content p {
-  margin: 0 0 1rem 0;
+.drop-zone i {
+  font-size: 2.5rem;
+  display: block;
+  margin-bottom: 1rem;
+  color: var(--primary-color);
+}
+
+.drop-zone h3 {
+  margin: 0 0 0.5rem 0;
+}
+
+.drop-zone p {
+  color: var(--secondary-text-color);
+  margin: 0.5rem 0 1rem 0;
 }
 
 .file-picker {
-  display: none; /* We use the drop zone and secondary button */
+  display: none;
 }
 
-.actions {
-  display: flex;
-  gap: 0.75rem;
-  flex-wrap: wrap;
-}
-
-button, .download-link {
+button, .button {
   font-size: 0.95rem;
   font-weight: 600;
   padding: 0.75rem 1.25rem;
@@ -113,14 +132,12 @@ button, .download-link {
   text-decoration: none;
   display: inline-block;
   text-align: center;
-  transition: background-color 0.2s, color 0.2s;
-}
-
-button {
+  transition: background-color 0.2s, opacity 0.2s;
   background-color: var(--primary-color);
   color: white;
 }
-button:hover {
+
+button:hover, .button:hover {
   background-color: var(--primary-hover-color);
 }
 
@@ -131,8 +148,10 @@ button:hover {
 .secondary:hover {
   background-color: var(--secondary-hover-color);
 }
-.disabled {
-  opacity: 0.5;
+
+.disabled, button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
   pointer-events: none;
 }
 
@@ -143,16 +162,24 @@ button:hover {
   min-height: 1.5em;
   font-size: 0.9rem;
   overflow-wrap: break-word;
+  transition: background-color 0.3s, color 0.3s;
 }
 
-.status[data-state="success"] { background-color: var(--status-success); color: white; }
-.status[data-state="error"] { background-color: var(--status-error); color: white; }
+.status.success { background-color: var(--status-success); color: white; }
+.status.error { background-color: var(--status-error); color: white; }
+.status.info { background-color: var(--secondary-color); color: var(--text-color); }
 
-textarea {
+
+.result-area {
+  flex-grow: 1; /* Makes sure this area expands */
+  min-height: 150px;
+  display: flex;
+}
+
+.result-area textarea {
   width: 100%;
+  height: 100%;
   box-sizing: border-box;
-  flex-grow: 1;
-  min-height: 200px;
   padding: 0.75rem;
   border: 1px solid var(--border-color);
   border-radius: 6px;
@@ -161,17 +188,26 @@ textarea {
   resize: vertical;
 }
 
-.footer {
+.output-info {
+    width: 100%;
+    text-align: center;
+    align-self: center;
+    color: var(--secondary-text-color);
+}
+
+footer {
   text-align: center;
   font-size: 0.8rem;
   color: #90949c;
   padding-top: 1rem;
+  border-top: 1px solid var(--border-color);
 }
 
 .language-select {
     padding: 0.5rem;
     border-radius: 4px;
     border: 1px solid var(--border-color);
+    background-color: var(--panel-background);
 }
 
 @media (max-width: 900px) {
