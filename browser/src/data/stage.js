@@ -1,4 +1,8 @@
-import { DataReader, DataWriter, StreamDataReader } from './data-reader-writer.js';
+import { DataReader, DataWriter } from './static-data.js';
+
+// import DataReader from "./DataReader.js";
+// import DataWriter from "./DataWriter.js";
+import { StreamDataReader } from "./Stream.js";
 
 const CONFIG = {
   /**
@@ -412,7 +416,7 @@ function writeBasicCondition(writer, data) {
 
 /** @param {DataReader} reader stream reader */
 function readCharacter(reader) {
-  return {
+  let data = {
     header: reader.readUint32(),
     inherit_palette: reader.readUint8(),
     inherit_palette_data_number: reader.readUint16(),
@@ -466,21 +470,18 @@ function readCharacter(reader) {
     group_number: reader.readUint16(),
     action_condition_range: reader.readUint8(),
     action_condition_judgment_type: reader.readUint8(),
-    character_name: (() => {
-      const strings_count = reader.readUint32();
-      if (strings_count > 0) {
-        const name = readStdString(reader);
-        for (let i = 1; i < strings_count; i++) {
-          reader.readStdString();
-        }
-        return name;
-      } else {
-        for (let i = 1; i < strings_count; i++) {
-          reader.readStdString();
-        }
-        return "";
-      }
-    })(),
+    strings_count: reader.readUint32()
+  }
+
+  if (data.strings_count > 0) {
+    const name = readStdString(reader);
+    for (let i = 1; i < data.strings_count; i++) {
+      reader.readStdString();
+    }
+    data.character_name = name;
+  }
+  
+  Object.assign(data, {  
     position_x: reader.readUint16(),
     position_y: reader.readUint16(),
     some_count: reader.readInt32(),
@@ -524,7 +525,9 @@ function readCharacter(reader) {
     inherit_action: reader.readUint8(),
     conditions: readArray(reader, readBasicCondition),
     flows: readArray(reader, readFlow)
-  };
+  })
+
+  return data;
 }
 
 /** @param {DataWriter} writer @param {object} data */
@@ -583,8 +586,10 @@ function writeCharacter(writer, data) {
     writer.writeUint8(data.action_condition_range ?? 0);
     writer.writeUint8(data.action_condition_judgment_type ?? 0);
     
-    if (data.character_name && data.character_name.length > 0) {
-        writer.writeUint32(1);
+    // TODO: use std::vec structure ? 
+
+    if (data.strings_count > 0) {
+        writer.writeUint32(1); // TODO: support multiples with data.strings_count);
         writer.writeStdString(data.character_name);
     } else {
         writer.writeUint32(0);
@@ -655,7 +660,7 @@ function readFlow(reader) {
     target_number_of_character_involved_in_timing: reader.readUint8(),
     ease_of_input_with_multiple_key_conditions: reader.readUint8(),
     allow_continuous_execution_by_holding_key: reader.readUint8(),
-    memo_length: reader.readUint32(),
+    memo_count: reader.readUint32(),
     memo: readStdString(reader),
     conditions: readArray(reader, readBasicCondition),
     key_conditions: readArray(reader, readKeyCondition),
@@ -677,9 +682,9 @@ function writeFlow(writer, data) {
     writer.writeUint8(data.ease_of_input_with_multiple_key_conditions ?? 0);
     writer.writeUint8(data.allow_continuous_execution_by_holding_key ?? 0);
     
-    // memo_length is implicit in writeStdString
+    // TODO: memo_count should be std::vec of std::string
+    writer.writeUint32(data.memo_count); // 1
     const memo = data.memo || "";
-    writer.writeUint32(memo.length);
     writer.writeStdString(memo);
 
     writeArray(writer, data.conditions, writeBasicCondition);
@@ -903,6 +908,9 @@ function readItemEffect(reader) {
     case 17:
       effect.details = parsePictureDisplayDetails(reader);
       break;
+    case 18:
+      effect.details = parseScreenColorChangeDetails(reader);
+      break;
     case 19:
       effect.details = parseBackgroundChangeDetails(reader);
       break;
@@ -984,6 +992,9 @@ function writeItemEffect(writer, effect) {
             break;
         case 17:
             writePictureDisplayDetails(writer, details);
+            break;
+        case 18:
+            writeScreenColorChangeDetails(writer, details);
             break;
         case 19:
             writeBackgroundChangeDetails(writer, details);
@@ -1431,6 +1442,35 @@ function writePictureDisplayDetails(writer, data) {
     writer.writeBytes(data.bytes ?? new Uint8Array(113));
 }
 
+
+/** @param {DataReader} reader stream reader */
+function parseScreenColorChangeDetails(reader) {
+  return {
+    bytes1_38: reader.readBytes(38),
+    r: reader.readUint32(),
+    g: reader.readUint32(),
+    b: reader.readUint32(),
+    percent: reader.readUint32(),
+    restore_to_original_color: reader.readUint32(),
+    time_required_for_change: reader.readUint32(),
+    instant_display: reader.readUint32(),
+    instant_display_count: reader.readUint32()
+  };
+}
+
+/** @param {DataWriter} writer @param {object} data */
+function writeScreenColorChangeDetails(writer, data) {
+    writer.writeBytes(data.bytes1_38 ?? new Uint8Array(38));
+    writer.writeUint32(data.r ?? 0);
+    writer.writeUint32(data.g ?? 0);
+    writer.writeUint32(data.b ?? 0);
+    writer.writeUint32(data.percent ?? 0);
+    writer.writeUint32(data.restore_to_original_color ?? 0);
+    writer.writeUint32(data.time_required_for_change ?? 0);
+    writer.writeUint32(data.instant_display ?? 0);
+    writer.writeUint32(data.instant_display_count ?? 0);
+}
+
 /** @param {DataReader} reader stream reader */
 function parseBackgroundChangeDetails(reader) {
   return {
@@ -1656,7 +1696,9 @@ function readCommand(reader) {
     case 32:
       command.details = parsePictureDisplayDetails(reader);
       break;
-    // TODO: command 33
+    case 33:
+      command.details = parseScreenColorChangeDetails(reader);
+      break;
     case 34:
       command.details = parseBackgroundChangeDetails(reader);
       break;
@@ -1786,6 +1828,9 @@ function writeCommand(writer, command) {
             break;
         case 32:
             writePictureDisplayDetails(writer, details);
+            break;
+        case 33:
+            writeScreenColorChangeDetails(writer, details);
             break;
         // command 33
         case 34:
@@ -2566,17 +2611,17 @@ function writeBackground(writer, data) {
 // Parse StageVar structure
 function readStageVar(reader) {
   return {
-    some_count: reader.readUint32(),
-    some_count_too: reader.readUint32(),
-    variable_name: readStdString(reader)
+    unk: reader.readUint32(),
+    count: reader.readUint32(),
+    var_name: readStdString(reader)
   };
 }
 
 /** @param {DataWriter} writer @param {object} data */
 function writeStageVar(writer, data) {
-    writer.writeUint32(data.some_count ?? 0);
-    writer.writeUint32(data.some_count_too ?? 0);
-    writer.writeStdString(data.variable_name ?? "");
+    writer.writeUint32(data.unk ?? 0);
+    writer.writeUint32(data.count ?? 1);
+    writer.writeStdString(data.var_name ?? "");
 }
 
 // Parse the complete StagePaletteFile
@@ -2880,13 +2925,13 @@ class STG4Unpacker {
   parseFile() {
     if (this.fileBuffer.length === 0) return null;
     
-    try {
-      const reader = new DataReader(this.fileBuffer.buffer);
-      return parseStagePaletteFile(reader); // Return the parsed result directly
-    } catch (error) {
-      console.error('Error parsing STG4 file:', error);
-      return { error: error.message };
-    }
+    // try {
+    const reader = new DataReader(this.fileBuffer.buffer);
+    return parseStagePaletteFile(reader); // Return the parsed result directly
+    // } catch (error) {
+    //   console.error('Error parsing STG4 file:', error);
+    //   return { error: error.message };
+    // }
   }
 }
 

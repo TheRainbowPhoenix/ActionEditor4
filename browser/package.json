@@ -11,6 +11,7 @@
     "build:database-ui": "vite build --config database-ui/vite.config.js",
     "build:worldmap-ui": "vite build --config worldmap-ui/vite.config.js",
     "build:system-ui": "vite build --config system-ui/vite.config.js",
+    "stage": "node tools/stage.mjs",
     "dev:stage-ui": "vite --config stage-ui/vite.config.js",
     "build:stage-ui": "vite build --config stage-ui/vite.config.js"
   },

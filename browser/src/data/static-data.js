@@ -1,0 +1,216 @@
+// SHIFT_JIS and normalization helpers
+import { decodeShiftJis, encodeShiftJis, normalizeDecodedShiftJis } from './shiftJis.js';
+
+
+const SHIFT_JIS_DECODER = (() => {
+    try { return new TextDecoder('shift-jis'); } catch (e) { return new TextDecoder('utf-8'); }
+})();
+
+function normalizeShiftJisString(value) { 
+    return value.replace(/\uFF0D/g, '\u2212'); 
+}
+
+/**
+ * DataReader for reading binary data from streams
+ */
+class DataReader {
+  constructor(buffer) {
+    this.view = new DataView(buffer);
+    this.position = 0;
+  }
+
+  readInt8() {
+    const value = this.view.getInt8(this.position);
+    this.position += 1;
+    return value;
+  }
+
+  readUint8() {
+    const value = this.view.getUint8(this.position);
+    this.position += 1;
+    return value;
+  }
+
+  readUint16() {
+    const value = this.view.getUint16(this.position, true); // little endian
+    this.position += 2;
+    return value;
+  }
+  
+  readInt16() {
+    const value = this.view.getInt16(this.position, true); // little endian
+    this.position += 2;
+    return value;
+  }
+
+  readUint32() {
+    const value = this.view.getUint32(this.position, true); // little endian
+    this.position += 4;
+    return value;
+  }
+
+  readInt32() {
+    const value = this.view.getInt32(this.position, true); // little endian
+    this.position += 4;
+    return value;
+  }
+
+  readFloat32() {
+    const value = this.view.getFloat32(this.position, true); // little endian
+    this.position += 4;
+    return value;
+  }
+
+  readFloat64() {
+    const value = this.view.getFloat64(this.position, true); // little endian
+    this.position += 8;
+    return value;
+  }
+
+  readString() {
+    const length = this.readUint32();
+    if (length > 1) {
+        const bytes = new Uint8Array(this.view.buffer, this.position, length);
+        this.position += length;
+        // const text = decodeShiftJis(bytes);
+        const text = SHIFT_JIS_DECODER.decode(bytes).replace(/\0+$/, '');
+        return normalizeShiftJisString(text);
+    } else {
+        return "";
+    }   
+  }
+
+  readStdString() {
+    const length = this.readUint32();
+    if (length <= 1) return '';
+    return this.readFixedString(length);
+  }
+
+  readFixedString(length) {
+    const bytes = new Uint8Array(this.view.buffer, this.position, length);
+    this.position += length;
+    // return decodeShiftJis(bytes);
+    const text = SHIFT_JIS_DECODER.decode(bytes).replace(/\0+$/, '');
+    return normalizeShiftJisString(text);
+  }
+
+  readBytes(length) {
+    const bytes = new Uint8Array(this.view.buffer, this.position, length);
+    this.position += length;
+    return bytes;
+  }
+
+  skip(bytes) {
+    this.position += bytes;
+  }
+
+  remaining() {
+    return this.view.byteLength - this.position;
+  }
+}
+
+/**
+ * DataWriter for writing binary data to streams
+ */
+class DataWriter {
+  constructor() {
+    this.chunks = [];
+    this.position = 0;
+  }
+  
+  writeInt8(value) {
+    const buffer = new ArrayBuffer(1);
+    const view = new DataView(buffer);
+    view.setInt8(0, value);
+    this.chunks.push(new Uint8Array(buffer));
+    this.position += 1;
+  }
+
+  writeUint8(value) {
+    const buffer = new ArrayBuffer(1);
+    const view = new DataView(buffer);
+    view.setUint8(0, value);
+    this.chunks.push(new Uint8Array(buffer));
+    this.position += 1;
+  }
+
+  writeUint16(value) {
+    const buffer = new ArrayBuffer(2);
+    const view = new DataView(buffer);
+    view.setUint16(0, value, true); // little endian
+    this.chunks.push(new Uint8Array(buffer));
+    this.position += 2;
+  }
+  
+  // ADDED: Missing method needed by the parser
+  writeInt16(value) {
+    const buffer = new ArrayBuffer(2);
+    const view = new DataView(buffer);
+    view.setInt16(0, value, true); // little endian
+    this.chunks.push(new Uint8Array(buffer));
+    this.position += 2;
+  }
+
+  writeUint32(value) {
+    const buffer = new ArrayBuffer(4);
+    const view = new DataView(buffer);
+    view.setUint32(0, value, true); // little endian
+    this.chunks.push(new Uint8Array(buffer));
+    this.position += 4;
+  }
+
+  writeInt32(value) {
+    const buffer = new ArrayBuffer(4);
+    const view = new DataView(buffer);
+    view.setInt32(0, value, true); // little endian
+    this.chunks.push(new Uint8Array(buffer));
+    this.position += 4;
+  }
+
+  writeFloat32(value) {
+    const buffer = new ArrayBuffer(4);
+    const view = new DataView(buffer);
+    view.setFloat32(0, value, true); // little endian
+    this.chunks.push(new Uint8Array(buffer));
+    this.position += 4;
+  }
+
+  writeFloat64(value) {
+    const buffer = new ArrayBuffer(8);
+    const view = new DataView(buffer);
+    view.setFloat64(0, value, true); // little endian
+    this.chunks.push(new Uint8Array(buffer));
+    this.position += 8;
+  }
+
+  writeStdString(value) {
+    const bytes = encodeShiftJis(value || '');
+    this.writeUint32(bytes.length + 1);
+    this.position += 4
+
+    if (bytes.length > 0) {
+      this.chunks.push(bytes);
+      this.writeUint8(0);
+      this.position += bytes.length + 1
+    }
+  }
+
+  writeBytes(bytes) {
+    this.chunks.push(bytes);
+    this.position += bytes.length;
+  }
+
+  toBuffer() {
+    const totalLength = this.chunks.reduce((sum, chunk) => sum + chunk.length, 0);
+    const result = new Uint8Array(totalLength);
+    let offset = 0;
+    for (const chunk of this.chunks) {
+      result.set(chunk, offset);
+      offset += chunk.length;
+    }
+    return result.buffer;
+  }
+}
+
+
+export { DataReader, DataWriter };

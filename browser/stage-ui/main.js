@@ -1,4 +1,4 @@
-import { parseStage, serializeStage } from './stg4-parser.js';
+import { parseStage, serializeStage } from '../src/data/stage';
 
 // --- i18n & Translations ---
 const translations = {
