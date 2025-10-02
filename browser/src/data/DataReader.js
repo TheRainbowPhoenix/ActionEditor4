@@ -1,128 +1,88 @@
+// SHIFT_JIS and normalization helpers remain the same
 const SHIFT_JIS_DECODER = (() => {
-    if (typeof TextDecoder === 'undefined') {
-        return null;
-    }
-    try {
-        return new TextDecoder('shift-jis');
-    } catch (error) {
-        // Fallback to UTF-8 if the runtime does not support Shift-JIS explicitly.
-        return new TextDecoder('utf-8');
-    }
+    try { return new TextDecoder('shift-jis'); } catch (e) { return new TextDecoder('utf-8'); }
 })();
-
-function normalizeShiftJisString(value) {
-    // Normalise characters that differ between Python's Shift-JIS codec and WHATWG encoders.
-    return value.replace(/\uFF0D/g, '\u2212');
-}
-
-function toArrayBuffer(source) {
-    if (source instanceof ArrayBuffer) {
-        return source;
-    }
-    if (ArrayBuffer.isView(source)) {
-        const { buffer, byteOffset, byteLength } = source;
-        return buffer.slice(byteOffset, byteOffset + byteLength);
-    }
-    throw new TypeError('Unsupported binary source. Expected ArrayBuffer or typed array.');
-}
+function normalizeShiftJisString(value) { return value.replace(/\uFF0D/g, '\u2212'); }
 
 export default class DataReader {
-    constructor(source) {
-        this.buffer = toArrayBuffer(source);
-        this.view = new DataView(this.buffer);
-        this.offset = 0;
-    }
-
-    get remaining() {
-        return this.view.byteLength - this.offset;
-    }
-
-    seek(position) {
-        if (position < 0 || position > this.view.byteLength) {
-            throw new RangeError('Attempted to seek outside the buffer bounds.');
+    constructor(stream) {
+        if (!stream || typeof stream.getReader !== 'function') {
+            throw new TypeError('A ReadableStream instance is required.');
         }
-        this.offset = position;
+        this.reader = stream.getReader();
+        this.buffer = new Uint8Array(0);
+        this.offset = 0; // Position within the current buffer
+        this.streamPosition = 0; // Total position in the stream
+        this.isDone = false;
     }
 
-    skip(bytes) {
-        this.seek(this.offset + bytes);
-    }
-
-    readUint8() {
-        const value = this.view.getUint8(this.offset);
-        this.offset += 1;
-        return value;
-    }
-
-    readInt8() {
-        const value = this.view.getInt8(this.offset);
-        this.offset += 1;
-        return value;
-    }
-
-    readChar() {
-        return this.readInt8();
-    }
-
-    readUint16() {
-        const value = this.view.getUint16(this.offset, true);
-        this.offset += 2;
-        return value;
-    }
-
-    readInt16() {
-        const value = this.view.getInt16(this.offset, true);
-        this.offset += 2;
-        return value;
-    }
-
-    readUint32() {
-        const value = this.view.getUint32(this.offset, true);
-        this.offset += 4;
-        return value;
-    }
-
-    readInt32() {
-        const value = this.view.getInt32(this.offset, true);
-        this.offset += 4;
-        return value;
-    }
-
-    readFloat64() {
-        const value = this.view.getFloat64(this.offset, true);
-        this.offset += 8;
-        return value;
-    }
-    
-    readBytes(length) {
-        if (length < 0 || this.offset + length > this.view.byteLength) {
-            throw new RangeError('Attempted to read beyond the buffer length.');
+    /**
+     * Ensures the internal buffer has at least `required` bytes available.
+     * If not, it reads more from the underlying stream until the requirement is met.
+     * @param {number} required Number of bytes needed.
+     * @returns {Promise<void>}
+     */
+    async #ensureBytes(required) {
+        while (this.buffer.length - this.offset < required && !this.isDone) {
+            const { value, done } = await this.reader.read();
+            if (done) {
+                this.isDone = true;
+                if (this.buffer.length - this.offset < required) {
+                    throw new RangeError('Attempted to read beyond the end of the stream.');
+                }
+                break;
+            }
+            
+            // Trim consumed bytes from the buffer
+            const remaining = this.buffer.slice(this.offset);
+            const newBuffer = new Uint8Array(remaining.length + value.length);
+            newBuffer.set(remaining, 0);
+            newBuffer.set(value, remaining.length);
+            
+            this.buffer = newBuffer;
+            this.offset = 0;
         }
-        const bytes = new Uint8Array(this.buffer, this.offset, length);
+    }
+
+    /**
+     * Reads a specified number of bytes into a DataView for typed reads.
+     * @param {number} byteLength Number of bytes to read.
+     * @returns {Promise<DataView>}
+     */
+    async #readView(byteLength) {
+        await this.#ensureBytes(byteLength);
+        const view = new DataView(this.buffer.buffer, this.buffer.byteOffset + this.offset, byteLength);
+        this.offset += byteLength;
+        this.streamPosition += byteLength;
+        return view;
+    }
+
+    async readUint8() { return (await this.#readView(1)).getUint8(0); }
+    async readInt8() { return (await this.#readView(1)).getInt8(0); }
+    async readUint16() { return (await this.#readView(2)).getUint16(0, true); }
+    async readInt16() { return (await this.#readView(2)).getInt16(0, true); }
+    async readUint32() { return (await this.#readView(4)).getUint32(0, true); }
+    async readInt32() { return (await this.#readView(4)).getInt32(0, true); }
+    async readFloat64() { return (await this.#readView(8)).getFloat64(0, true); }
+
+    async readBytes(length) {
+        await this.#ensureBytes(length);
+        const bytes = this.buffer.subarray(this.offset, this.offset + length);
         this.offset += length;
+        this.streamPosition += length;
         return bytes;
     }
 
-    readString(length) {
-        if (length === 0) {
-            return '';
-        }
-        const bytes = this.readBytes(length);
-        let text;
-        if (!SHIFT_JIS_DECODER) {
-            text = String.fromCharCode(...bytes);
-        } else {
-            text = SHIFT_JIS_DECODER.decode(bytes);
-        }
-        text = text.replace(/\0+$/, '');
+    async readString(length) {
+        if (length === 0) return '';
+        const bytes = await this.readBytes(length);
+        const text = SHIFT_JIS_DECODER.decode(bytes).replace(/\0+$/, '');
         return normalizeShiftJisString(text);
     }
 
-    readStdString() {
-        const length = this.readUint32();
-        if (length <= 1) {
-            return '';
-        }
+    async readStdString() {
+        const length = await this.readUint32();
+        if (length <= 1) return '';
         return this.readString(length);
     }
 }

@@ -1,102 +1,76 @@
+// DataWriter.js (Stream-based)
+
 import { encodeShiftJis } from './shiftJis.js';
 
+// toUint8Array helper remains the same
 function toUint8Array(source) {
-    if (source instanceof Uint8Array) {
-        return source;
-    }
-    if (source instanceof ArrayBuffer) {
-        return new Uint8Array(source);
-    }
-    if (ArrayBuffer.isView(source)) {
-        const { buffer, byteOffset, byteLength } = source;
-        return new Uint8Array(buffer, byteOffset, byteLength);
-    }
+    if (source instanceof Uint8Array) return source;
+    if (source instanceof ArrayBuffer) return new Uint8Array(source);
+    if (ArrayBuffer.isView(source)) return new Uint8Array(source.buffer, source.byteOffset, source.byteLength);
     throw new TypeError('Unsupported binary source. Expected ArrayBuffer or typed array.');
 }
 
+/**
+ * This class acts as a controller for a TransformStream,
+ * providing methods to write structured data which are then enqueued as binary chunks.
+ */
 export default class DataWriter {
-    constructor(initialCapacity = 1024) {
-        this.buffer = new ArrayBuffer(initialCapacity);
-        this.view = new DataView(this.buffer);
-        this.length = 0;
+    #controller;
+
+    constructor(controller) {
+        if (!controller || typeof controller.enqueue !== 'function') {
+            throw new TypeError('A TransformStream controller is required.');
+        }
+        this.#controller = controller;
     }
 
-    ensureCapacity(additional) {
-        const required = this.length + additional;
-        if (required <= this.buffer.byteLength) {
-            return;
-        }
-        let capacity = this.buffer.byteLength || 1;
-        while (capacity < required) {
-            capacity *= 2;
-        }
-        const newBuffer = new ArrayBuffer(capacity);
-        new Uint8Array(newBuffer).set(new Uint8Array(this.buffer, 0, this.length));
-        this.buffer = newBuffer;
-        this.view = new DataView(this.buffer);
+    #enqueue(buffer) {
+        this.#controller.enqueue(new Uint8Array(buffer));
     }
 
     writeUint8(value) {
-        this.ensureCapacity(1);
-        this.view.setUint8(this.length, value);
-        this.length += 1;
+        const buffer = new ArrayBuffer(1);
+        new DataView(buffer).setUint8(0, value);
+        this.#enqueue(buffer);
     }
-
     writeInt8(value) {
-        this.ensureCapacity(1);
-        this.view.setInt8(this.length, value);
-        this.length += 1;
+        const buffer = new ArrayBuffer(1);
+        new DataView(buffer).setInt8(0, value);
+        this.#enqueue(buffer);
     }
-
     writeUint16(value) {
-        this.ensureCapacity(2);
-        this.view.setUint16(this.length, value, true);
-        this.length += 2;
+        const buffer = new ArrayBuffer(2);
+        new DataView(buffer).setUint16(0, value, true);
+        this.#enqueue(buffer);
     }
-
     writeInt16(value) {
-        this.ensureCapacity(2);
-        this.view.setInt16(this.length, value, true);
-        this.length += 2;
+        const buffer = new ArrayBuffer(2);
+        new DataView(buffer).setInt16(0, value, true);
+        this.#enqueue(buffer);
     }
-
     writeUint32(value) {
-        this.ensureCapacity(4);
-        this.view.setUint32(this.length, value, true);
-        this.length += 4;
+        const buffer = new ArrayBuffer(4);
+        new DataView(buffer).setUint32(0, value, true);
+        this.#enqueue(buffer);
     }
-
     writeInt32(value) {
-        this.ensureCapacity(4);
-        this.view.setInt32(this.length, value, true);
-        this.length += 4;
+        const buffer = new ArrayBuffer(4);
+        new DataView(buffer).setInt32(0, value, true);
+        this.#enqueue(buffer);
     }
-
     writeFloat64(value) {
-        this.ensureCapacity(8);
-        this.view.setFloat64(this.length, Number.isFinite(value) ? value : 0, true);
-        this.length += 8;
+        const buffer = new ArrayBuffer(8);
+        new DataView(buffer).setFloat64(0, Number.isFinite(value) ? value : 0, true);
+        this.#enqueue(buffer);
     }
 
     writeBytes(source) {
         const bytes = toUint8Array(source);
-        this.ensureCapacity(bytes.byteLength);
-        new Uint8Array(this.buffer, this.length, bytes.byteLength).set(bytes);
-        this.length += bytes.byteLength;
-    }
-
-    writeString(value, length) {
-        const encoded = encodeShiftJis(value || '');
-        if (encoded.length > length) {
-            this.writeBytes(encoded.subarray(0, length));
-        } else {
-            this.writeBytes(encoded);
-            if (encoded.length < length) {
-                this.writeBytes(new Uint8Array(length - encoded.length));
-            }
+        if (bytes.length > 0) {
+            this.#controller.enqueue(bytes);
         }
     }
-
+    
     writeLengthPrefixedString(value) {
         const bytes = encodeShiftJis(value || '');
         this.writeUint32(bytes.length + 1);
@@ -104,22 +78,5 @@ export default class DataWriter {
             this.writeBytes(bytes);
             this.writeUint8(0);
         }
-    }
-
-    align(alignment) {
-        const remainder = this.length % alignment;
-        if (remainder === 0) {
-            return;
-        }
-        const padding = alignment - remainder;
-        this.writeBytes(new Uint8Array(padding));
-    }
-
-    toArrayBuffer() {
-        return this.buffer.slice(0, this.length);
-    }
-
-    toUint8Array() {
-        return new Uint8Array(this.buffer, 0, this.length);
     }
 }

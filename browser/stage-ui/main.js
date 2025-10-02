@@ -1,322 +1,328 @@
-import { parseStage, serializeStage } from '../src/data/stage.js';
+import { parseStage, serializeStage } from './stg4-parser.js';
 
-// Internationalization strings
+// 多言語対応のテキスト
 const translations = {
   en: {
-    title: 'Stage File Converter',
-    description: 'Dump .stg4_1020 files to JSON, tweak them, then rebuild an identical binary. The parser mirrors the hex pattern so you can debug issues without leaving the browser.',
-    dumpTitle: 'Dump Stage File',
-    dumpDescription: 'Select a binary stage file. The tool parses and prints a formatted JSON payload.',
-    buildTitle: 'Build Stage File',
-    buildDescription: 'Load a JSON payload (dumped or hand-authored) and rebuild a binary stage file.',
-    filePickerLabel: 'Stage file (.stg4_1020)',
-    dumpButton: 'Dump to JSON',
-    copyJson: 'Copy JSON',
-    downloadJson: 'Download JSON',
-    loadJsonFile: 'Load JSON file',
-    buildButton: 'Build binary',
-    downloadDat: 'Download .stg4_1020',
-    jsonOutputPlaceholder: 'JSON output',
-    jsonInputPlaceholder: 'Paste or edit the stage JSON that should become a .stg4_1020 file',
-    footer: 'For testing purpose. Not a final product or tool.',
-    dropZoneDump: 'Drop .stg4_1020 file here or use file picker',
-    dropZoneBuild: 'Drop JSON file here or use file picker',
+    title: 'ActionEditor Stage4 Converter',
+    description: 'Convert between .stg4_* stage files and their JSON representation.',
+    uploadSection: 'Upload STG4 File',
+    dropZoneTitle: 'Drag & Drop your STG4 file here',
+    dropZoneText: 'or',
+    browseButton: 'Browse Files',
+    howItWorks: 'How it works:',
+    instruction1: 'Upload any STG4 file (.stg4_*) or JSON file',
+    instruction2: 'The file will be processed as a stream of STG4 chunks',
+    instruction3: 'Each chunk will be displayed in the table below',
+    instruction4: 'You can convert between binary STG4 and JSON formats',
+    previewSection: 'JSON Preview',
+    previewPlaceholder: 'Converted JSON will appear here',
+    analysisSection: 'STG4 Chunk Analysis',
+    tableStream: 'Stream',
+    tableChunkNo: 'Chunk No.',
+    tableChunkType: 'Chunk Type',
+    tablePlaceholder: 'Upload a STG4 file to see chunk analysis',
+    footer: 'ActionEditor Stage4 Converter | Drag & Drop File Processing | Stream-based Analysis',
     statusReady: 'Ready. Drop a file to begin.',
     statusProcessing: 'Processing...',
-    errorNoFile: 'Select a .stg4_1020 file to dump.',
-    errorNoJson: 'Enter or load JSON before building.',
-    errorClipboard: 'Clipboard access is not available in this browser.',
-    errorNoJsonToCopy: 'There is no JSON to copy yet.',
-    successCopied: 'Copied JSON to clipboard.',
-    successDumped: 'Parsed {0} successfully. JSON is {1} characters.',
-    successLoaded: 'Loaded {0} ({1} bytes) into the editor.',
-    successBuilt: 'Serialised stage file successfully. Binary size: {0} bytes.',
-    errorParse: 'Failed to parse {0}: {1}',
-    errorBuild: 'Failed to build stage file: {1}',
-    errorReadFile: 'Failed to read file: {1}'
+    statusSuccess: 'File processed successfully!',
+    statusError: 'Error processing file: {0}',
+    downloadResult: 'Download result'
   },
   ja: {
-    title: 'ステージファイルコンバーター',
-    description: '.stg4_1020ファイルをJSONに変換して編集し、同一のバイナリを再構築します。16進パターンをミラーリングしたパーサーを使用しているため、ブラウザ内で問題をデバッグできます。',
-    dumpTitle: 'ステージファイルの抽出',
-    dumpDescription: 'バイナリのステージファイルを選択してください。ツールが解析してフォーマットされたJSONを表示します。',
-    buildTitle: 'ステージファイルの構築',
-    buildDescription: 'JSONペイロード（抽出済みまたは手動作成）を読み込んでバイナリのステージファイルを再構築します。',
-    filePickerLabel: 'ステージファイル (.stg4_1020)',
-    dumpButton: 'JSONに変換',
-    copyJson: 'JSONをコピー',
-    downloadJson: 'JSONをダウンロード',
-    loadJsonFile: 'JSONファイルを読み込み',
-    buildButton: 'バイナリを構築',
-    downloadDat: '.stg4_1020をダウンロード',
-    jsonOutputPlaceholder: 'JSON出力',
-    jsonInputPlaceholder: '.stg4_1020になるステージJSONを貼り付けまたは編集してください',
-    footer: 'テスト目的です。最終製品またはツールではありません。',
-    dropZoneDump: '.stg4_1020ファイルをここにドロップするか、ファイルピッカーを使用してください',
-    dropZoneBuild: 'JSONファイルをここにドロップするか、ファイルピッカーを使用してください',
+    title: 'ActionEditor Stage4 コンバーター',
+    description: '.stg4_* ステージファイルとJSON表現を変換します。',
+    uploadSection: 'STG4ファイルをアップロード',
+    dropZoneTitle: 'STG4ファイルをドラッグ＆ドロップ',
+    dropZoneText: 'または',
+    browseButton: 'ファイルを選択',
+    howItWorks: '使い方:',
+    instruction1: 'STG4ファイル (.stg4_*) またはJSONファイルをアップロード',
+    instruction2: 'ファイルはSTG4チャンクのストリームとして処理されます',
+    instruction3: '各チャンクは下のテーブルに表示されます',
+    instruction4: 'バイナリSTG4とJSON形式を相互変換できます',
+    previewSection: 'JSONプレビュー',
+    previewPlaceholder: '変換されたJSONがここに表示されます',
+    analysisSection: 'STG4チャンク解析',
+    tableStream: 'ストリーム',
+    tableChunkNo: 'チャンク番号',
+    tableChunkType: 'チャンクタイプ',
+    tablePlaceholder: 'STG4ファイルをアップロードしてチャンク解析を表示',
+    footer: 'ActionEditor Stage4 コンバーター | ドラッグ＆ドロップ処理 | ストリームベース解析',
     statusReady: '準備完了。ファイルをドロップして開始してください。',
     statusProcessing: '処理中...',
-    errorNoFile: '抽出する.stg4_1020ファイルを選択してください。',
-    errorNoJson: '構築前にJSONを入力または読み込んでください。',
-    errorClipboard: 'このブラウザではクリップボードにアクセスできません。',
-    errorNoJsonToCopy: 'コピーするJSONがまだありません。',
-    successCopied: 'JSONをクリップボードにコピーしました。',
-    successDumped: '{0}の解析に成功しました。JSONは{1}文字です。',
-    successLoaded: '{0} ({1}バイト) をエディターに読み込みました。',
-    successBuilt: 'ステージファイルのシリアライズに成功しました。バイナリサイズ: {0}バイト。',
-    errorParse: '{0}の解析に失敗しました: {1}',
-    errorBuild: 'ステージファイルの構築に失敗しました: {1}',
-    errorReadFile: 'ファイルの読み込みに失敗しました: {1}'
+    statusSuccess: 'ファイルの処理に成功しました！',
+    statusError: 'ファイル処理エラー: {0}',
+    downloadResult: '結果をダウンロード'
   }
 };
 
 let currentLanguage = 'en';
 
-const dumpFileInput = document.getElementById('dump-file');
-const dumpButton = document.getElementById('dump-button');
-const copyJsonButton = document.getElementById('copy-json');
-const downloadJsonLink = document.getElementById('download-json');
-const dumpStatus = document.getElementById('dump-status');
-const jsonOutput = document.getElementById('json-output');
-const dumpDropZone = document.getElementById('dump-drop-zone');
-
-const loadJsonFileButton = document.getElementById('load-json-file');
-const buildFileInput = document.getElementById('build-file');
-const buildButton = document.getElementById('build-button');
-const downloadDatLink = document.getElementById('download-dat');
-const buildStatus = document.getElementById('build-status');
-const jsonInput = document.getElementById('json-input');
-const buildDropZone = document.getElementById('build-drop-zone');
-
-const languageSelect = document.getElementById('language-select');
-
-let jsonDownloadUrl = null;
-let datDownloadUrl = null;
-
-// --- UI and Language Functions (mostly unchanged) ---
-
+// 言語を更新する関数
 function updateLanguage(lang) {
   currentLanguage = lang;
-  languageSelect.value = lang;
+  
+  // データ属性を持つすべての要素を更新
   document.querySelectorAll('[data-i18n]').forEach(element => {
     const key = element.getAttribute('data-i18n');
     if (translations[lang][key]) {
-      element.textContent = translations[lang][key];
+      if (element.tagName === 'INPUT' || element.tagName === 'TEXTAREA') {
+        element.placeholder = translations[lang][key];
+      } else {
+        element.textContent = translations[lang][key];
+      }
     }
   });
-  document.querySelectorAll('[data-i18n-placeholder]').forEach(element => {
-    const key = element.getAttribute('data-i18n-placeholder');
-    if (translations[lang][key]) {
-      element.placeholder = translations[lang][key];
-    }
-  });
-  updateStatusMessages();
 }
 
+// 翻訳関数
 function t(key, ...params) {
-  let text = translations[currentLanguage]?.[key] || translations.en[key] || key;
+  let text = translations[currentLanguage][key] || translations.en[key] || key;
+  
+  // パラメータを置換
   params.forEach((param, index) => {
     text = text.replace(`{${index}}`, param);
   });
+  
   return text;
 }
 
-function updateStatusMessages() {
-  if (dumpStatus.dataset.key === 'statusReady') setStatus(dumpStatus, t('statusReady'));
-  if (buildStatus.dataset.key === 'statusReady') setStatus(buildStatus, t('statusReady'));
-}
-
-function readStoredLanguage() { try { return localStorage.getItem('stage-ui-language'); } catch (e) { console.warn(e); return null; } }
-function writeStoredLanguage(value) { try { localStorage.setItem('stage-ui-language', value); } catch (e) { console.warn(e); } }
-function revokeUrl(url) { if (url) URL.revokeObjectURL(url); }
-
-function setStatus(target, message, state = null, key = null) {
-  if (!target) return;
-  target.textContent = message;
-  target.dataset.key = key || '';
-  if (state) target.dataset.state = state;
-  else delete target.dataset.state;
-}
-
-function showError(target, error) {
-  console.error(error);
-  setStatus(target, error.message, 'error');
-}
-
-function showSuccess(target, message) {
-  setStatus(target, message, 'success');
-}
-
-function updateDownloadLink(link, currentUrl, blob, filename) {
-  if (!link) return currentUrl;
-  revokeUrl(currentUrl);
-  if (!blob) {
-    link.classList.add('disabled');
-    link.removeAttribute('href');
-    link.removeAttribute('download');
-    return null;
+// ブラウザの言語を自動検出
+function detectLanguage() {
+  const browserLang = navigator.language || navigator.userLanguage;
+  if (browserLang.startsWith('ja')) {
+    return 'ja';
   }
-  const url = URL.createObjectURL(blob);
-  link.href = url;
-  link.download = filename;
-  link.classList.remove('disabled');
-  return url;
+  return 'en';
 }
 
-function setupDropZone(dropZone, onFileDrop) {
-  dropZone.addEventListener('dragenter', e => { e.preventDefault(); dropZone.classList.add('dragging'); });
-  dropZone.addEventListener('dragover', e => e.preventDefault());
-  dropZone.addEventListener('dragleave', e => { if (e.target === dropZone || !dropZone.contains(e.relatedTarget)) dropZone.classList.remove('dragging'); });
-  dropZone.addEventListener('drop', e => {
-    e.preventDefault();
-    dropZone.classList.remove('dragging');
-    if (e.dataTransfer.files.length > 0) onFileDrop(e.dataTransfer.files[0]);
-  });
+
+// DOM Elements
+const dropArea = document.getElementById('dropArea');
+const fileInput = document.getElementById('fileInput');
+const browseBtn = document.querySelector('.browse-btn');
+const output = document.getElementById('output');
+const previewPlaceholder = document.getElementById('previewPlaceholder');
+const fileInfo = document.getElementById('fileInfo');
+const chunkTableBody = document.getElementById('chunkTableBody');
+const statusMessage = document.getElementById('statusMessage');
+const downloadButton = document.getElementById('download-button');
+
+const status = document.getElementById('status');
+const fileButton = document.getElementById('file-button');
+
+const languageSelect = document.getElementById('language-select');
+
+document.addEventListener('DOMContentLoaded', function() {
+    const languageSelect = document.getElementById('language-select');
+    
+    // Set initial language based on browser detection
+    currentLanguage = detectLanguage();
+    languageSelect.value = currentLanguage;
+    updateLanguage(currentLanguage);
+
+    // Add event listener for language change
+    languageSelect.addEventListener('change', function() {
+        updateLanguage(this.value);
+    });
+});
+// 初期ステータスを設定
+// status.textContent = t('statusReady');
+
+let downloadUrl = null;
+let downloadName = null;
+
+function resetPreview() {
+    if (downloadUrl) {
+        URL.revokeObjectURL(downloadUrl);
+        downloadUrl = null;
+    }
+    downloadName = null;
+    downloadButton.disabled = true;
+    output.style.display = 'none';
+    previewPlaceholder.style.display = 'block';
 }
 
-// --- Core Application Logic (Refactored for Stage Files) ---
+function setStatus(message, type = 'info') {
+    statusMessage.textContent = message;
+    statusMessage.className = 'status ' + type;
 
-const jsonReplacer = (key, value) => {
-  if (value instanceof Uint8Array) {
-    // Represent the Uint8Array as an object with a type marker and the data as a plain array.
-    return { $type: 'Uint8Array', data: Array.from(value) };
-  }
-  return value;
-};
-
-const jsonReviver = (key, value) => {
-  if (value && typeof value === 'object' && value.$type === 'Uint8Array' && Array.isArray(value.data)) {
-    return new Uint8Array(value.data);
-  }
-  return value;
-};
-
-
-
-async function dumpStageFile(fileFromDrop) {
-  const file = fileFromDrop || dumpFileInput?.files?.[0];
-  if (!file) {
-    setStatus(dumpStatus, t('errorNoFile'), 'error');
-    return;
-  }
-  
-  try {
-    setStatus(dumpStatus, t('statusProcessing'), null, 'statusProcessing');
-    const buffer = await file.arrayBuffer();
-    const parsed = parseStage(buffer);
-    const formatted = JSON.stringify(parsed, jsonReplacer, 2);
-    jsonOutput.value = formatted;
-    const jsonBaseName = file.name.replace(/\.stg4_1020$/i, '') || 'stage';
-    const jsonFileName = `${jsonBaseName}.json`;
-    jsonDownloadUrl = updateDownloadLink(
-      downloadJsonLink,
-      jsonDownloadUrl,
-      new Blob([formatted], { type: 'application/json' }),
-      jsonFileName
-    );
-    showSuccess(dumpStatus, t('successDumped', file.name, formatted.length.toLocaleString()));
-  } catch (error) {
-    jsonDownloadUrl = updateDownloadLink(downloadJsonLink, jsonDownloadUrl, null);
-    showError(dumpStatus, new Error(t('errorParse', file.name, error.message)));
-  }
+    // Auto-hide success messages after 3 seconds
+    if (type === 'success') {
+        setTimeout(() => {
+            statusMessage.style.display = 'none';
+        }, 3000);
+    }
 }
 
-function copyJsonToClipboard() {
-  if (!navigator.clipboard) {
-    setStatus(dumpStatus, t('errorClipboard'), 'error');
-    return;
-  }
-  const text = jsonOutput.value;
-  if (!text) {
-    setStatus(dumpStatus, t('errorNoJsonToCopy'), 'error');
-    return;
-  }
-  navigator.clipboard.writeText(text)
-    .then(() => showSuccess(dumpStatus, t('successCopied')))
-    .catch(error => showError(dumpStatus, error));
+function setDragState(active) {
+    dropArea.classList.toggle('drag-over', active);
 }
 
-function loadJsonFile() {
-  buildFileInput?.click();
+function isStageFile(file) {
+    return /\.stg4(?:_\d+)?$/i.test(file.name);
 }
 
-function readUploadedJson(event) {
-  const [file] = event.target.files || [];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = () => {
-    jsonInput.value = reader.result;
-    showSuccess(buildStatus, t('successLoaded', file.name, file.size.toLocaleString()));
-    buildFileInput.value = '';
-  };
-  reader.onerror = () => {
-    showError(buildStatus, new Error(t('errorReadFile', file.name, reader.error?.message)));
-    buildFileInput.value = '';
-  };
-  reader.readAsText(file);
+function isJsonFile(file) {
+    return file.name.toLowerCase().endsWith('.json');
 }
 
-function buildStageFile() {
-  const source = jsonInput.value;
-  if (!source.trim()) {
-    setStatus(buildStatus, t('errorNoJson'), 'error');
-    return;
-  }
-  try {
-    const payload = JSON.parse(source, jsonReviver);
-    const arrayBuffer = serializeStage(payload);
-    const bytes = new Uint8Array(arrayBuffer);
-    datDownloadUrl = updateDownloadLink(
-      downloadDatLink,
-      datDownloadUrl,
-      new Blob([bytes], { type: 'application/octet-stream' }),
-      'stage_new.stg4_1020'
-    );
-    showSuccess(buildStatus, t('successBuilt', bytes.byteLength.toLocaleString()));
-  } catch (error) {
-    datDownloadUrl = updateDownloadLink(downloadDatLink, datDownloadUrl, null);
-    showError(buildStatus, new Error(t('errorBuild', '', error.message)));
-  }
+async function handleStageFile(file) {
+    setStatus('Processing stream...', 'info');
+    try {
+        const stream = file.stream();
+
+        // The top-level parser now takes the stream directly
+        const parsed = await parseStage(stream);
+
+        const json = JSON.stringify(parsed, null, 2);
+
+        resetPreview();
+        output.value = json.substring(0,255) + "...";
+        output.style.display = 'block';
+        previewPlaceholder.style.display = 'none';
+        const blob = new Blob([json], { type: 'application/json' });
+        downloadUrl = URL.createObjectURL(blob);
+        downloadName = file.name.replace(/\.stg4(?:_\d*)?$/i, '.json');
+        downloadButton.disabled = false;
+        setStatus(`Converted ${file.name} to ${downloadName}.`, 'success');
+    } catch (error) {
+        resetPreview();
+        console.error(error);
+        setStatus(`Failed to parse stream from ${file.name}: ${error.message}`, 'error');
+    }
 }
 
-function handleDumpFileDrop(file) {
-  dumpStageFile(file);
+async function handleJsonFile(file) {
+    setStatus('Building stream...', 'info');
+    try {
+        const text = await file.text();
+        const parsedJson = JSON.parse(text);
+
+        // serializeStage now returns a TransformStream
+        const serializationStream = serializeStage(parsedJson);
+
+        // We will stream the result directly to a Blob
+        const chunks = [];
+        const blobStream = new WritableStream({
+            write(chunk) {
+                chunks.push(chunk);
+            },
+            close() {
+                const combinedBuffer = new Uint8Array(chunks.reduce((sum, chunk) => sum + chunk.length, 0));
+                let offset = 0;
+                for (const chunk of chunks) {
+                    combinedBuffer.set(chunk, offset);
+                    offset += chunk.length;
+                }
+
+                const blob = new Blob([combinedBuffer], { type: 'application/octet-stream' });
+                resetPreview();
+                downloadUrl = URL.createObjectURL(blob);
+                downloadName = (file.name.replace(/\.json$/i, '') || 'stage_new') + '.stg4_1020';
+                downloadButton.disabled = false;
+                output.style.display = 'none';
+                previewPlaceholder.style.display = 'block';
+                setStatus(`Built ${downloadName} from ${file.name}.`, 'success');
+            },
+            abort(err) {
+                console.error("Blob stream aborted:", err);
+                setStatus(`Failed to build stream from ${file.name}: ${err.message}`, 'error');
+            }
+        });
+
+    } catch (error) {
+        resetPreview();
+        console.error(error);
+        setStatus(`Failed to build from ${file.name}: ${error.message}`, 'error');
+    }
 }
 
-function handleBuildFileDrop(file) {
-  const event = { target: { files: [file] } };
-  readUploadedJson(event);
+async function handleFile(file) {
+    if (isStageFile(file)) {
+        await handleStageFile(file);
+        return;
+    }
+    if (isJsonFile(file)) {
+        await handleJsonFile(file);
+        return;
+    }
+    setStatus('Unsupported file type. Provide a .stg4_* or .json file.', 'error');
 }
 
-// --- Initialization ---
+function handleFileSelect(e) {
+    const files = e.target.files;
+    if (files.length) {
+        handleFiles(files); // Pass the entire FileList/array, not files[0]
+    }
+}
 
-function init() {
-  const savedLanguage = readStoredLanguage();
-  const browserLanguage = navigator.language.startsWith('ja') ? 'ja' : 'en';
-  updateLanguage(savedLanguage || browserLanguage);
-  
-  setupDropZone(dumpDropZone, handleDumpFileDrop);
-  setupDropZone(buildDropZone, handleBuildFileDrop);
-  
-  setStatus(dumpStatus, t('statusReady'), null, 'statusReady');
-  setStatus(buildStatus, t('statusReady'), null, 'statusReady');
+
+function handleFiles(files) {
+    if (!files || files.length === 0) {
+        return;
+    }
+    setStatus('Processing...', 'info');
+    handleFile(files[0]);
 }
 
 // Event Listeners
-dumpButton?.addEventListener('click', () => dumpStageFile());
-dumpFileInput?.addEventListener('change', () => dumpStageFile());
-copyJsonButton?.addEventListener('click', copyJsonToClipboard);
-loadJsonFileButton?.addEventListener('click', loadJsonFile);
-buildFileInput?.addEventListener('change', readUploadedJson);
-buildButton?.addEventListener('click', buildStageFile);
-languageSelect?.addEventListener('change', (event) => {
-  const lang = event.target.value;
-  updateLanguage(lang);
-  writeStoredLanguage(lang);
-});
-window.addEventListener('beforeunload', () => {
-  revokeUrl(jsonDownloadUrl);
-  revokeUrl(datDownloadUrl);
+browseBtn.addEventListener('click', () => fileInput.click());
+fileInput.addEventListener('change', handleFileSelect);
+
+// Drag and drop events
+['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+    dropArea.addEventListener(eventName, preventDefaults, false);
 });
 
-init();
+function preventDefaults(e) {
+    e.preventDefault();
+    e.stopPropagation();
+}
+
+['dragenter', 'dragover'].forEach(eventName => {
+    dropArea.addEventListener(eventName, highlight, false);
+});
+
+['dragleave', 'drop'].forEach(eventName => {
+    dropArea.addEventListener(eventName, unhighlight, false);
+});
+
+function highlight() {
+    dropArea.classList.add('drag-over');
+}
+
+function unhighlight() {
+    dropArea.classList.remove('drag-over');
+}
+
+dropArea.addEventListener('drop', handleDrop, false);
+
+function handleDrop(e) {
+    const dt = e.dataTransfer;
+    const files = dt.files;
+
+    if (files.length) {
+        handleFiles(files);
+    }
+}
+
+downloadButton.addEventListener('click', () => {
+    if (!downloadUrl) {
+        return;
+    }
+    const link = document.createElement('a');
+    link.href = downloadUrl;
+    link.download = downloadName || 'stage.stg4_461';
+    document.body.append(link);
+    link.click();
+    link.remove();
+});
+
+setStatus('Ready. Drop a file to begin.', 'info');
+
+function formatFileSize(bytes) {
+    if (bytes < 1024) return bytes + ' bytes';
+    else if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
+    else return (bytes / 1048576).toFixed(1) + ' MB';
+}
