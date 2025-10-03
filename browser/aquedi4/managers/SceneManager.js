@@ -1,4 +1,5 @@
 import { Graphics } from "../core/Graphics.js";
+import { Input } from '../core/Input.js';
 
 /**
  * The static class that manages scene transitions.
@@ -10,6 +11,9 @@ export function SceneManager() {
 SceneManager._scene = null;
 SceneManager._nextScene = null;
 SceneManager._stack = [];
+SceneManager._exiting = false;
+SceneManager._previousScene = null;
+SceneManager._previousClass = null;
 
 SceneManager.run = function(sceneClass) {
     try {
@@ -30,7 +34,7 @@ SceneManager.initialize = function() {
     this.initGraphics();
     // this.initAudio();
     // this.initVideo();
-    // this.initInput();
+    this.initInput();
     // this.setupEventHandlers();
 };
 
@@ -45,6 +49,11 @@ SceneManager.initGraphics = function() {
         throw new Error("Failed to initialize graphics.");
     }
     Graphics.setTickHandler(this.update.bind(this));
+};
+
+SceneManager.initInput = function() {
+    Input.initialize();
+    // TouchInput.initialize();
 };
 
 SceneManager.update = function(deltaTime) {
@@ -88,17 +97,27 @@ SceneManager.updateScene = function(deltaTime) {
         if (this._scene.isStarted()) {
             this._scene.update(deltaTime);
         } else if (this._scene.isReady()) {
+            this.onBeforeSceneStart();
             this._scene.start();
+            this.onSceneStart();
         }
     }
 };
 
 SceneManager.isSceneChanging = function() {
-    return !!this._nextScene;
+    return this._exiting || !!this._nextScene;
 };
 
 SceneManager.isCurrentSceneBusy = function() {
-    return this._scene ? this._scene.isBusy() : false;
+    return this._scene && this._scene.isBusy();
+};
+
+SceneManager.isNextScene = function(sceneClass) {
+    return this._nextScene && this._nextScene.constructor === sceneClass;
+};
+
+SceneManager.isPreviousScene = function(sceneClass) {
+    return this._previousClass === sceneClass;
 };
 
 SceneManager.goto = function(sceneClass) {
@@ -114,8 +133,29 @@ SceneManager.onSceneCreate = function() {
     Graphics.startLoading();
 };
 
+SceneManager.onBeforeSceneStart = function() {
+    if (this._previousScene) {
+        this._previousScene.destroy();
+        this._previousScene = null;
+    }
+    if (Graphics.effekseer) {
+        Graphics.effekseer.stopAll();
+    }
+};
+
+SceneManager.onSceneStart = function() {
+    Graphics.endLoading();
+    Graphics.setStage(this._scene);
+};
+
 SceneManager.onSceneTerminate = function() {
     this._previousScene = this._scene;
     this._previousClass = this._scene.constructor;
     Graphics.setStage(null);
+};
+
+SceneManager.prepareNextScene = function() {
+    if (this._nextScene) {
+        this._nextScene.prepare(...args);
+    }
 };

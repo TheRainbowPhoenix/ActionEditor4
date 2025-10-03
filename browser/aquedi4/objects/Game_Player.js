@@ -61,6 +61,8 @@ Game_Player.prototype.center = function(x, y) {
 
 Game_Player.prototype.locate = function(x, y) {
     Game_Character.prototype.locate.call(this, x, y);
+    this._realX = x;
+    this._realY = y;
     this.center(x, y);
 };
 

@@ -10,26 +10,33 @@ Game_Map.prototype.initialize = function() {
     this._events = [];
     this._displayX = 0;
     this._displayY = 0;
+    this.tileWidth = 32;  // Default for WorldMap
+    this.tileHeight = 32; // Default for WorldMap
 };
 
-Game_Map.prototype.setup = function(mapId) {
-    if (!window.$dataStage) {
-        throw new Error("The stage data is not available");
-    }
-    this._mapId = mapId;
-    this._displayX = 0;
-    this._displayY = 0;
-    this.setupEvents();
+// New method to set up with WorldMap data
+Game_Map.prototype.setupWorldMap = function() {
+    this._mapId = 0; // 0 can represent the world map
+    this.tileWidth = 32;
+    this.tileHeight = 32;
 };
 
-Game_Map.prototype.setupEvents = function() {
-    this._events = [];
-    // Here you would create Game_Event objects from $dataStage.characters
+// New method for setting up a STG4 stage
+Game_Map.prototype.setupStage = function(stageData) {
+    this._mapId = stageData.stage_name; // Use stage name as ID
+    this.tileWidth = 16;  // Stages use 16x16 tiles
+    this.tileHeight = 16;
 };
 
 Game_Map.prototype.update = function(sceneActive) {
-    // Update parallax, scrolling, etc. here if needed
+    // Future logic for scrolling etc. will go here.
 };
+
+Game_Map.prototype.scrollDown = function(distance) { this._displayY += distance; };
+Game_Map.prototype.scrollLeft = function(distance) { this._displayX -= distance; };
+Game_Map.prototype.scrollRight = function(distance) { this._displayX += distance; };
+Game_Map.prototype.scrollUp = function(distance) { this._displayY -= distance; };
+
 
 Game_Map.prototype.setDisplayPos = function(x, y) {
     this._displayX = x;

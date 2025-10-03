@@ -18,12 +18,14 @@ Scene_Base.prototype.initialize = function() {
 
 Scene_Base.prototype.create = function() {};
 Scene_Base.prototype.isReady = function() { return true; };
+Scene_Base.prototype.isActive = function() { return this._active; };
 Scene_Base.prototype.start = function() { this._started = true; this._active = true; };
 Scene_Base.prototype.update = function() { this.updateChildren(); };
 Scene_Base.prototype.stop = function() { this._active = false; };
 Scene_Base.prototype.isStarted = function() { return this._started; };
 Scene_Base.prototype.isBusy = function() { return false; };
 Scene_Base.prototype.terminate = function() {};
+Scene_Base.prototype.prepare = function() {}
 
 Scene_Base.prototype.updateChildren = function() {
     for (const child of this.children) {

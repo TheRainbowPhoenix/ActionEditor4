@@ -68,6 +68,7 @@ class Main {
     }
 
     onModulesLoaded(Graphics, Input, SceneManager, Scene_Boot) {
+        // Now that the engine code is loaded, we can initialize systems
         // Graphics.initialize(640, 480);
         // Input.initialize();
 

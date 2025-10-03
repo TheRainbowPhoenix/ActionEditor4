@@ -36,7 +36,7 @@ Sprite_Character.prototype.updateBitmap = function() {
     if (this.isImageChanged()) {
         this._characterName = this._character._characterName;
         this._characterIndex = this._character._characterIndex;
-        this.bitmap = ImageManager.loadCharacter(this._characterName);
+        this._bitmap = ImageManager.loadCharacter(this._characterName);
     }
 };
 
@@ -66,15 +66,19 @@ Sprite_Character.prototype.characterBlockY = function() {
 };
 
 Sprite_Character.prototype.patternWidth = function() {
-    return this.bitmap ? this.bitmap.width / 12 : 1;
+    return this._bitmap ? this._bitmap.width / 12 : 1;
 };
 
 Sprite_Character.prototype.patternHeight = function() {
-    return this.bitmap ? this.bitmap.height / 8 : 1;
+    return this._bitmap ? this._bitmap.height / 8 : 1;
 };
 
 Sprite_Character.prototype.updatePosition = function() {
-    this.x = this._character._realX * $gameMap.tileWidth();
-    this.y = this._character._realY * $gameMap.tileHeight();
-    this.z = 1;
+    this.x = this._character._realX; // screenX();
+    this.y = this._character._realY; // screenY();
+    this.z = 1; // this._character.screenZ();
+
+    // this.x = this._character._realX * $gameMap.tileWidth();
+    // this.y = this._character._realY * $gameMap.tileHeight();
+    // this.z = 1;
 };

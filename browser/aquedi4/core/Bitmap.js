@@ -33,8 +33,13 @@ Bitmap.load = function(url) {
             .then(bmpCanvas => {
                 bitmap._canvas = bmpCanvas;
                 bitmap._context = bmpCanvas.getContext('2d');
+                // Manually synchronize the baseTexture's dimensions with the new canvas.
+                bitmap._baseTexture.width = bmpCanvas.width;
+                bitmap._baseTexture.height = bmpCanvas.height;
+
                 bitmap._baseTexture.source = bmpCanvas;
                 bitmap._baseTexture.update();
+
                 bitmap._onLoad();
             })
             .catch(() => bitmap._onError());
@@ -45,6 +50,11 @@ Bitmap.load = function(url) {
             bitmap._canvas.width = image.width;
             bitmap._canvas.height = image.height;
             bitmap._context.drawImage(image, 0, 0);
+            
+            // Also apply the fix here for consistency
+            bitmap._baseTexture.width = image.width;
+            bitmap._baseTexture.height = image.height;
+            
             bitmap._baseTexture.update();
             bitmap._onLoad();
         };
