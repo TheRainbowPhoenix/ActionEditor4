@@ -706,6 +706,18 @@ struct PictureDisplayDetails {
 	char bytes[113]                             [[color("907060")]];
 };
 
+struct ScreenColorChangeDetails {
+    char bytes1_38[38]                          [[color("907060")]];
+    u32 r                                       [[color("907060")]];
+    u32 g                                       [[color("907060")]];
+    u32 b                                       [[color("907060")]];
+    u32 percent                                 [[color("907060")]];
+    u32 restore_to_original_color               [[color("907060")]];
+    u32 time_required_for_change                [[color("907060")]];
+    u32 instant_display                         [[color("907060")]];
+    u32 instant_display_count                   [[color("907060")]];
+};
+
 struct BackgroundChangeDetails {
 	u16 execution_time                          [[color("907060")]];
 	u16 execution_time_double                   [[color("907060")]];
@@ -827,7 +839,7 @@ struct Command {
     else if (type == 30) CharacterEffectExecutionDetails details;
     else if (type == 31) ScreenEffectExecutionDetails details;
     else if (type == 32) PictureDisplayDetails details;
-    // else if (type == 33) ScreenColorChangeDetails details;
+    else if (type == 33) ScreenColorChangeDetails details;
     else if (type == 34) BackgroundChangeDetails details;
     else if (type == 35) SoundEffectPlaybackDetails details;
     else if (type == 36) BGMPlaybackDetails details;
@@ -1095,7 +1107,7 @@ struct ItemEffect {
     if (type == 15) CharacterEffectExecutionDetails details;
     if (type == 16) ScreenEffectExecutionDetails details;
     if (type == 17) PictureDisplayDetails details;
-    // if (type == 18) ScreenColorChangeDetails details;
+    if (type == 18) ScreenColorChangeDetails details;
     if (type == 19) BackgroundChangeDetails details;
     if (type == 20) SoundEffectPlaybackDetails details;
     if (type == 21) BGMPlaybackDetails details;
@@ -1216,9 +1228,9 @@ struct StageItem {
 };
 
 struct StageVar {
-    u32 some_count              [[color("15364D")]]; // std::vector<smth> ? always 0
-    u32 some_count_too          [[color("15364D")]]; // std::vector<smth> ? always 1
-    StdString variable_name     [[color("15364D")]];
+    u32 unk              [[color("15364D")]]; // std::vector<smth> ? always 0
+    u32 count          [[color("15364D")]]; // std::vector<smth> ? always 1
+    StdString var_name     [[color("15364D")]];
 };
 
 struct StagePaletteFile {
