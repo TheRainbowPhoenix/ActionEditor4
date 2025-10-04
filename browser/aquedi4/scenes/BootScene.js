@@ -31,6 +31,7 @@ export default class BootScene extends Phaser.Scene {
         // Load World Map assets
         this.load.bmp('worldmap_chip', 'bmp/WorldMapChip.bmp');
         this.load.bmp('worldmap_event', 'bmp/WorldEvent.bmp');
+        this.load.image('global_palette', 'bmp/plt/Palette.bmp');
         
         // Load Character assets
         
@@ -61,11 +62,53 @@ export default class BootScene extends Phaser.Scene {
         globalThis.$dataSound = DataManager.$dataSound = this.cache.custom.dat.get('$dataSound');
         globalThis.$dataAnime = DataManager.$dataAnime = this.cache.custom.dat.get('$dataAnime');
         
+        this.processPalette();
         this.processWorldMapTiles();
         
         console.log("All data loaded. Starting WorldMapScene.");
         
         this.scene.start('WorldMapScene');
+    }
+
+    /**
+     * Parses the loaded Palette.bmp and stores it in the DataManager.
+     * Skips the first 16x8 pixels as required.
+     */
+    processPalette() {
+        const texture = this.textures.get('global_palette');
+        if (!texture || texture.key === '__MISSING') {
+            console.warn("Global palette 'Palette.bmp' not found. Background will be black.");
+            DataManager.$globalPalette = [];
+            return;
+        }
+
+        const source = texture.getSourceImage();
+        const canvas = document.createElement('canvas');
+        canvas.width = source.width;
+        canvas.height = source.height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(source, 0, 0);
+
+        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+        const palette = [];
+
+        const startPixelY = 8; // Skip the first 8 rows (16*8 pixels total)
+        const startPixelX = 0; // We start from the left edge of the 9th row
+
+        for (let y = startPixelY; y < canvas.height; y++) {
+            for (let x = startPixelX; x < canvas.width; x++) {
+                const i = (y * canvas.width + x) * 4;
+                const r = imageData[i];
+                const g = imageData[i + 1];
+                const b = imageData[i + 2];
+                // Phaser uses 0xRRGGBB integer format for colors
+                const colorInt = (r << 16) | (g << 8) | b;
+                palette.push(colorInt);
+            }
+        }
+
+        DataManager.$globalPalette = palette;
+        console.log(`Processed global palette with ${palette.length} colors.`);
     }
 
     /**

@@ -14,6 +14,17 @@ export default class WorldMapScene extends Phaser.Scene {
         const tileWidth = 32;
         const tileHeight = 32;
 
+        // --- Set Background Color from Palette ---
+        const bgIndex = mapData.background_index;
+        if (DataManager.$globalPalette && DataManager.$globalPalette[bgIndex]) {
+            const bgColor = DataManager.$globalPalette[bgIndex];
+            this.cameras.main.setBackgroundColor(bgColor);
+        } else {
+            // Fallback color if palette is missing or index is invalid
+            this.cameras.main.setBackgroundColor(0x000000); 
+            console.warn(`Background color index ${bgIndex} not found in global palette.`);
+        }
+
         this.createPlayerAnimations();
 
         // Pass `this.map` to the Player constructor for tile size info

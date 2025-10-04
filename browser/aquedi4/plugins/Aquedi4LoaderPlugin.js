@@ -13,7 +13,7 @@ export default class Aquedi4LoaderPlugin extends Phaser.Plugins.BasePlugin {
         // Register the file types with Phaser's Loader an tell it how to create them.
         pluginManager.registerFileType('bmp', this.bmpLoaderCallback);
         pluginManager.registerFileType('dat', this.datLoaderCallback);
-        pluginManager.registerFileType('stg4_1020', this.stg4LoaderCallback);
+        pluginManager.registerFileType('stg4', this.stg4LoaderCallback);
         pluginManager.registerFileType('bmpSpritesheet', this.bmpSpritesheetLoaderCallback);
     }
 

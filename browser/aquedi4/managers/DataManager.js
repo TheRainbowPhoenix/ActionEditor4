@@ -13,6 +13,7 @@ DataManager.$dataWorldMap = null;
 DataManager.$dataStage = null;
 DataManager.$dataSound = null;
 DataManager.$dataAnime = null;
+DataManager.$globalPalette = [];
 // ... add other $data globals as needed
 
 DataManager._databaseFiles = [
