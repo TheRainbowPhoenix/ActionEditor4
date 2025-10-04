@@ -23,7 +23,7 @@ export default class Player extends Phaser.GameObjects.Sprite {
         this.tileX = Math.floor(x / this.scene.map.tileWidth);
         this.tileY = Math.floor(y / this.scene.map.tileHeight);
         
-        this.anims.play('idle_down');
+        this.anims.play('idle_up');
         this.direction = 'down';
         
         /** @type {Phaser.Types.Input.Keyboard.CursorKeys} */

@@ -117,25 +117,53 @@ export default class WorldMapScene extends Phaser.Scene {
         return data;
     }
 
+    /**
+     * Creates sprites for the world map events with complex frame calculation.
+     * @param {object} mapData The world map data.
+     * @param {number} tileWidth The width of a tile.
+     * @param {number} tileHeight The height of a tile.
+     */
     createEventSprites(mapData, tileWidth, tileHeight) {
         const eventTexture = this.textures.get('worldmap_event');
-        const tilesPerRow = Math.floor(eventTexture.source[0].width / tileWidth);
+        if (!eventTexture || eventTexture.key === '__MISSING') {
+            console.warn("WorldEvent.bmp texture not found or not loaded.");
+            return;
+        }
 
-        /* for (const event of mapData.events) {
+        // Calculate how many columns are available in the spritesheet
+        const tilesPerColumn = Math.floor(eventTexture.source[0].height / tileHeight);
+        const maxColumnIndex = Math.floor(eventTexture.source[0].width / tileWidth) - 1;
+
+        for (const event of mapData.events) {
             const page = event.pages[0];
             if (!page) continue;
-
-            const tileX = page.graphic % tilesPerRow;
-            const tileY = Math.floor(page.graphic / tilesPerRow);
             
+            // Determine the column from world_number, clamping to the max available column
+            const columnIndex = 1 - Math.min(page.world_number, maxColumnIndex);
+            
+            // The `graphic` value is the row index within that column
+            const rowIndex = page.graphic;
+
+            // Calculate the source pixel coordinates
+            const sourceX = columnIndex * tileWidth;
+            const sourceY = rowIndex * tileHeight;
+
+            // Create the sprite from the spritesheet
             const eventSprite = this.add.sprite(
                 (event.placement_x + 0.5) * tileWidth,
-                (event.placement_y + 1) * tileHeight,
+                (event.placement_y + 1) * tileHeight, // Anchor to bottom of tile
                 'worldmap_event'
             ).setOrigin(0.5, 1);
-
-            eventSprite.setFrame(tileY * tilesPerRow + tileX);
-        } */
+            
+            // Set the frame using the calculated pixel coordinates
+            eventSprite.setFrame(new Phaser.Textures.Frame(
+                eventSprite.texture,
+                'event_' + event.header, // a unique name for the frame
+                0, // source index
+                sourceX, sourceY,
+                tileWidth, tileHeight
+            ));
+        }
     }
 
     checkEventTrigger() {
@@ -148,7 +176,10 @@ export default class WorldMapScene extends Phaser.Scene {
                 const page = event.pages[0];
                 if (page && page.start_stage) {
                     console.log(`Transitioning to stage: ${page.start_stage}`);
-                    this.scene.start('StageScene', { stageFile: page.start_stage });
+                    
+                    // Clean up the stage path
+                    const stageFile = page.start_stage.split('\\').pop();
+                    this.scene.start('StageScene', { stageFile: stageFile });
                 }
             }
         }
