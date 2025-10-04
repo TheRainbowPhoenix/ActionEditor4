@@ -215,7 +215,7 @@ class DBTransformStream {
     }
 }
 
-const PARSER_FUNC_MAP = new Map([
+export const PARSER_FUNC_MAP = new Map([
     ['anime', parseAnime],
     ['anime.dat', parseAnime],
     ['animeset', (r) => parseList(r, parseAnimationSetElement)],
@@ -224,7 +224,8 @@ const PARSER_FUNC_MAP = new Map([
     ['bgm.dat', parseBgm],
     ['sound', parseSound],
     ['sound.dat', parseSound],
-    // ... add all other parsers here
+    // ['picture.dat', parsePicture],
+    // ['effect.dat', (r) => parseList(r, parseEffectElement)],
 ]);
 
 /**
@@ -238,7 +239,7 @@ export async function loadDatabase(stream, name) {
     const parserFunc = PARSER_FUNC_MAP.get(parserName);
 
     if (!parserFunc) {
-        throw new Error(`Unknown database type: ${name}`);
+        throw new Error(`Unknown generic database type: ${name}`);
     }
 
     const transformStream = new DBTransformStream(parserFunc);

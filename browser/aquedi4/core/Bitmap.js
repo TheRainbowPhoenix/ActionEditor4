@@ -1,5 +1,3 @@
-import { Graphics } from "./Graphics.js";
-
 /**
  * The basic object that represents an image, built on a canvas.
  */
@@ -54,7 +52,7 @@ Bitmap.load = function(url) {
             // Also apply the fix here for consistency
             bitmap._baseTexture.width = image.width;
             bitmap._baseTexture.height = image.height;
-            
+
             bitmap._baseTexture.update();
             bitmap._onLoad();
         };

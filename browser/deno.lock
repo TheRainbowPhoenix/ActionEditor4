@@ -2,6 +2,7 @@
   "version": "5",
   "specifiers": {
     "npm:encoding-japanese@2": "2.2.0",
+    "npm:phaser@^3.90.0": "3.90.0",
     "npm:vite@^5.2.0": "5.4.1"
   },
   "npm": {
@@ -236,6 +237,9 @@
       "scripts": true,
       "bin": true
     },
+    "eventemitter3@5.0.1": {
+      "integrity": "sha512-GWkBvjiSZK87ELrYOSESUYeVIc9mvLLf/nXalMOS5dYrgZq9o5OVkbZAVM06CVxYsCwH9BDZFPlQTlPA1j4ahA=="
+    },
     "fsevents@2.3.3": {
       "integrity": "sha512-5xoDfX+fL7faATnagmWPpbFtwh/R77WmMMqqHGS65C3vvB0YHrgF+B1YmZ3441tMj5n63k0212XNoJwzlhffQw==",
       "os": ["darwin"],
@@ -244,6 +248,12 @@
     "nanoid@3.3.7": {
       "integrity": "sha512-eSRppjcPIatRIMC1U6UngP8XFcz8MQWGQdt1MTBQ7NaAmvXDfvNxbvWV3x2y6CdEUciCSsDHDQZbhYaB8QEo2g==",
       "bin": true
+    },
+    "phaser@3.90.0": {
+      "integrity": "sha512-/cziz/5ZIn02uDkC9RzN8VF9x3Gs3XdFFf9nkiMEQT3p7hQlWuyjy4QWosU802qqno2YSLn2BfqwOKLv/sSVfQ==",
+      "dependencies": [
+        "eventemitter3"
+      ]
     },
     "picocolors@1.1.1": {
       "integrity": "sha512-xceH2snhtb5M9liqDsmEw56le376mTZkEX/jEb/RxNFyegNul7eNslCXP9FDj/Lcu0X8KEyMceP2ntpaHrDEVA=="
@@ -302,6 +312,7 @@
     "packageJson": {
       "dependencies": [
         "npm:encoding-japanese@2",
+        "npm:phaser@^3.90.0",
         "npm:vite@^5.2.0"
       ]
     }

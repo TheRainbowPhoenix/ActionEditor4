@@ -8,9 +8,11 @@ export function DataManager() {
 }
 
 // Global variables for data
-window.$dataSystem = null;
-window.$dataWorldMap = null;
-window.$dataStage = null;
+DataManager.$dataSystem = null;
+DataManager.$dataWorldMap = null;
+DataManager.$dataStage = null;
+DataManager.$dataSound = null;
+DataManager.$dataAnime = null;
 // ... add other $data globals as needed
 
 DataManager._databaseFiles = [

@@ -18,7 +18,8 @@
     "build:engine": "vite build --config aquedi4/vite.config.js"
   },
   "dependencies": {
-    "encoding-japanese": "^2.0.0"
+    "encoding-japanese": "^2.0.0",
+    "phaser": "^3.90.0"
   },
   "devDependencies": {
     "vite": "^5.2.0"
