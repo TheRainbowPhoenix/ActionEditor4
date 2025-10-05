@@ -1,4 +1,9 @@
-// agent.js — Frida 17+ compatible
+/*
+Please note this is a beta/test
+Don't make translation longer than the JP text !!
+If you know Frida/Win32/Detours/Hooking, please PM me with fixes.
+*/
+
 'use strict';
 //# sourceURL=agent.js
 
@@ -935,6 +940,12 @@ const TRANSLATIONS = {
   '縦スクロール速度': 'V scroll spd',
   'スコア': 'Score',
   '残り人数': 'Lives',
+  '上記ステージのパレットをそのまま使用': 'Parent stage palette',
+  'データなし': 'Empty',
+  'コモンパレットをコピー': 'Copy common pal',
+  'ステージパレットファイルからコピー': 'Copy from stage file',
+  'ステージの新規作成': 'New Stage',
+  'ステージを作成しています...': 'Creating stage...',
 
   //Messages Box
   'ステージが変更された可能性があります。\n保存しますか？': 'Stage may have changed.\nSave?',
@@ -947,7 +958,13 @@ const TRANSLATIONS = {
   '旧バージョンのステージファイルを削除': 'Delete old stage files',
   'プロジェクトオプション': 'Project Options',
   'データが存在しません！デフォルトデータを作成しますか？\n': 'No data exists! Create default data?',
-  'デフォルトデータ作成の確認': 'Confirm creation'
+  'デフォルトデータ作成の確認': 'Confirm creation',
+  '現在のステージは破棄されます。\n新規作成しますか？': 'Current stage will be lost.\nCreate new?',
+  '新規作成の確認': 'Confirm new',
+  '既に起動しています。\n二重起動しますか？  ※非推奨。データの上書き保存に注意！\n': 'Already running.\nStart second instance? *Not recommended! Watch for overwrites!',
+  '二重起動': '2nd Edit',
+  'ステージの保存': 'Save stage',
+  'ステージを保存しています...': 'Saving stage...'
 };
 
 
@@ -1133,23 +1150,4 @@ if (!mainMod) {
   console.log('[!] Failed to find module base for Editor_v1020.exe');
 } else {
   console.log('[+] Module base:', mainMod.base);
-}
-
-// Optional: show a disclaimer box once
-if (messageBoxAPtr) {
-  const MessageBoxA = new NativeFunction(
-    messageBoxAPtr,
-    'int', ['pointer','pointer','pointer','uint']
-  );
-  const msg = Memory.allocUtf8String(
-`String Swap Translator Active!
-
-Please note this is a beta/test
-Don't make translation longer than the JP text !!
-If you know Frida/Win32/Detours/Hooking, please PM me with fixes.
-
-Foxxo ~`
-  );
-  const title = Memory.allocUtf8String('DISCLAIMER :: AQU3DiTR4NSLAT0R :: Do expect bugs !');
-  MessageBoxA(NULL, msg, title, 0x40); // MB_ICONINFORMATION
 }
