@@ -113,7 +113,7 @@ function writeAnimationSetElement(writer, element) {
     writer.writeUint32(element.invincibility_offset ?? 0);
     writer.writeUint32(element.block_offset ?? 0);
     writer.writeUint32(element.flying_offset ?? 0);
-    writer.writeUint32(element.unknown ?? 0);
+    writer.writeUint32(1); // element.strings_count ?? 0);
     writeLengthPrefixedString(writer, element.name);
 
     const animations = Array.isArray(element.animations) ? element.animations : [];
