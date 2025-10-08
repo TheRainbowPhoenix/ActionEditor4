@@ -1,14 +1,22 @@
-import DataReader from './DataReader.js';
-import DataWriter from './DataWriter.js';
+// Import the synchronous reader/writer and the Shift-JIS encoder
+import { DataReader, DataWriter } from './data-reader-writer.js';
+import { encodeShiftJis } from './shiftJis.js'; // Assuming you have this function available for the writer
 
 const MAGIC_VALUES = new Set([0xB6, 0x03c6, 0x03fc]);
 
+// Helper to ensure we are working with a DataReader instance
 function ensureReader(source) {
     if (source instanceof DataReader) {
         return source;
     }
-    return new DataReader(source);
+    // The new DataReader expects an ArrayBuffer
+    if (source instanceof ArrayBuffer) {
+        return new DataReader(source);
+    }
+    throw new TypeError('Source must be an ArrayBuffer or a DataReader instance.');
 }
+
+// --- Core Helper Functions (Now Synchronous) ---
 
 function readVersion(reader) {
     const version = reader.readUint32();
@@ -18,12 +26,16 @@ function readVersion(reader) {
     return version;
 }
 
-function readLengthPrefixedString(reader) {
-    const length = reader.readUint32();
-    if (length <= 1) {
-        return '';
+/**
+ * Writes the database version to the stream.
+ * @param {DataWriter} writer The stream writer instance.
+ * @param {number} version The version number to write.
+ */
+function writeVersion(writer, version) {
+    if (!MAGIC_VALUES.has(version)) {
+        throw new Error(`Unexpected database version: 0x${version?.toString(16)}`);
     }
-    return reader.readString(length);
+    writer.writeUint32(version);
 }
 
 function writeLengthPrefixedString(writer, value) {
@@ -51,7 +63,8 @@ function parseAnimation(reader) {
         sample_type: reader.readUint8(),
         frame_start: reader.readUint16(),
         strings_count: reader.readUint32(),
-        name: readLengthPrefixedString(reader),
+        // Use the reader's built-in method
+        name: reader.readStdString(),
         frames: []
     };
 
@@ -67,13 +80,14 @@ function parseAnimation(reader) {
     return animation;
 }
 
+/** @param {DataWriter} writer @param {object} animation */
 function writeAnimation(writer, animation) {
     writer.writeUint32(animation.header ?? 0);
     writer.writeUint16(animation.sample_list_index ?? 0);
     writer.writeUint8(animation.sample_type ?? 0);
     writer.writeUint16(animation.frame_start ?? 0);
-    writer.writeUint32(animation.strings_count ?? 0);
-    writeLengthPrefixedString(writer, animation.name);
+    writer.writeUint32(1); // animation.strings_count);
+    writer.writeStdString(animation.name);
 
     const frames = Array.isArray(animation.frames) ? animation.frames : [];
     writer.writeUint32(frames.length);
@@ -114,7 +128,7 @@ function writeAnimationSetElement(writer, element) {
     writer.writeUint32(element.block_offset ?? 0);
     writer.writeUint32(element.flying_offset ?? 0);
     writer.writeUint32(1); // element.strings_count ?? 0);
-    writeLengthPrefixedString(writer, element.name);
+    writer.writeStdString(element.name);
 
     const animations = Array.isArray(element.animations) ? element.animations : [];
     writer.writeUint32(animations.length);
@@ -138,6 +152,22 @@ function parseSwordPosition(reader) {
     };
 }
 
+function writeSwordPosition(writer, position) {
+    writer.writeUint32(position.header ?? 0);
+    writer.writeInt32(position.x ?? 0);
+    writer.writeInt32(position.y ?? 0);
+    writer.writeUint32(position.unknown1 ?? 0);
+    writer.writeUint32(position.unknown2 ?? 0);
+    writer.writeUint32(position.unknown3 ?? 0);
+    writer.writeUint32(position.unknown4 ?? 0);
+    writer.writeUint32(position.unknown5 ?? 0);
+    writer.writeUint32(position.width ?? 0);
+    writer.writeUint32(position.height ?? 0);
+    writer.writeUint32(position.index ?? 0);
+    writer.writeUint32(position.unknown6 ?? 0);
+}
+
+
 function parseEffectAnimation(reader) {
     return {
         header: reader.readUint32(),
@@ -146,6 +176,14 @@ function parseEffectAnimation(reader) {
         unknown: reader.readUint32()
     };
 }
+
+function writeEffectAnimation(writer, animation) {
+    writer.writeUint32(animation.header ?? 0);
+    writer.writeUint32(animation.start ?? 0);
+    writer.writeUint32(animation.end ?? 0);
+    writer.writeUint32(animation.unknown ?? 0);
+}
+
 
 function parseSimpleAsset(reader, hasVolume = false) {
     const element = {
@@ -160,8 +198,8 @@ function parseSimpleAsset(reader, hasVolume = false) {
         element.unknown2 = reader.readUint32();
     }
 
-    element.name = readLengthPrefixedString(reader);
-    element.path = readLengthPrefixedString(reader);
+    element.name = reader.readStdString();
+    element.path = reader.readStdString();
     return element;
 }
 
@@ -349,7 +387,7 @@ function writeList(database, elementWriter) {
     const elements = database?.data?.elements ?? [];
     writer.writeUint32(elements.length);
     writeElements(elements, (element) => elementWriter(writer, element));
-    return writer.toArrayBuffer();
+    return writer.toBuffer();
 }
 
 export function parseAnime(source) {
@@ -379,7 +417,7 @@ export function serializeAnimeSet(database) {
     const elements = database?.data?.elements ?? [];
     writer.writeUint32(elements.length);
     writeElements(elements, (element) => writeAnimationSetElement(writer, element));
-    return writer.toArrayBuffer();
+    return writer.toBuffer();
 }
 
 export function parseBgm(source) {
@@ -441,7 +479,7 @@ export function serializeEffect(database) {
     const elements = database?.data?.elements ?? [];
     writer.writeUint32(elements.length);
     writeElements(elements, (element) => writeEffectElement(writer, element));
-    return writer.toArrayBuffer();
+    return writer.toBuffer();
 }
 
 export function parseScrEffect(source) {
@@ -471,14 +509,7 @@ export function serializeSwordType(database) {
     const elements = database?.data?.elements ?? [];
     writer.writeUint32(elements.length);
     writeElements(elements, (element) => writeSwordTypeElement(writer, element));
-    return writer.toArrayBuffer();
-}
-
-function writeVersion(writer, version) {
-    if (!MAGIC_VALUES.has(version)) {
-        throw new Error(`Unexpected database version: 0x${version?.toString(16)}`);
-    }
-    writer.writeUint32(version);
+    return writer.toBuffer();
 }
 
 function normalizeName(name) {
@@ -562,7 +593,7 @@ export async function loadDatabase(url, name) {
 }
 
 export async function loadDatabaseByUrl(url) {
-    const name = url.split('/').pop();
+    const name = url.split('/').pop() || '';
     const parser = resolveParser(name);
     const buffer = await loadArrayBuffer(url);
     return parser(buffer);
