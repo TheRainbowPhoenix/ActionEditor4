@@ -38,8 +38,9 @@ function writeVersion(writer, version) {
     writer.writeUint32(version);
 }
 
+/** @param {DataWriter} writer */
 function writeLengthPrefixedString(writer, value) {
-    writer.writeLengthPrefixedString(value ?? '');
+    writer.writeStdString(value ?? '');
 }
 
 function loadElements(count, factory) {
@@ -100,13 +101,14 @@ function writeAnimation(writer, animation) {
     });
 }
 
+/** @param {DataReader} reader stream reader */
 function parseAnimationSetElement(reader) {
     const header = reader.readUint32();
     const invincibilityOffset = reader.readUint32();
     const blockOffset = reader.readUint32();
     const flyingOffset = reader.readUint32();
     const strings_count = reader.readUint32();
-    const name = readLengthPrefixedString(reader);
+    const name = reader.readStdString();
 
     const animationCount = reader.readUint32();
     const animations = loadElements(animationCount, () => parseAnimation(reader));
@@ -216,6 +218,7 @@ function writeSimpleAsset(writer, element, hasVolume = false) {
     writeLengthPrefixedString(writer, element.path);
 }
 
+/** @param {DataReader} reader stream reader */
 function parseEffectElement(reader) {
     const element = {
         header: reader.readUint32(),
@@ -224,8 +227,8 @@ function parseEffectElement(reader) {
         height: reader.readUint32(),
         is_giant: reader.readUint32(),
         strings_count: reader.readUint32(),
-        name: readLengthPrefixedString(reader),
-        path: readLengthPrefixedString(reader)
+        name: reader.readStdString(),
+        path: reader.readStdString()
     };
 
     const animationCount = reader.readUint32();
@@ -263,7 +266,7 @@ function parseCharaEffectElement(reader) {
         param4: reader.readUint32(),
         param5: reader.readUint32(),
         strings_count: reader.readUint32(),
-        name: readLengthPrefixedString(reader)
+        name: reader.readStdString()
     };
 }
 
@@ -289,7 +292,7 @@ function parseScreenEffectElement(reader) {
         param4: reader.readUint32(),
         param5: reader.readUint32(),
         strings_count: reader.readUint32(),
-        name: readLengthPrefixedString(reader)
+        name: reader.readStdString()
     };
 }
 
@@ -312,8 +315,8 @@ function parseBmpCharaExcElement(reader) {
         is_giant: reader.readUint32(),
         scale_mode: reader.readUint32(),
         strings_count: reader.readUint32(),
-        name: readLengthPrefixedString(reader),
-        path: readLengthPrefixedString(reader)
+        name: reader.readStdString(),
+        path: reader.readStdString()
     };
 }
 
@@ -332,9 +335,9 @@ function parseSwordTypeElement(reader) {
         header: reader.readUint32(),
         is_name_same_path: reader.readUint32(),
         strings_count: reader.readUint32(),
-        name: readLengthPrefixedString(reader),
-        path_left: readLengthPrefixedString(reader),
-        path_right: readLengthPrefixedString(reader)
+        name: reader.readStdString(),
+        path_left: reader.readStdString(),
+        path_right: reader.readStdString()
     };
 
     const positionCount = reader.readUint32();
