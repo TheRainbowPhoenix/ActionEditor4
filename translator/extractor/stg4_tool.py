@@ -2143,7 +2143,7 @@ class Stage(ActedBinaryFile):
     
     def _write_stage_item(self, si: StageItem):
         self.write_u32(si.position)
-        self._write_item(si.item)
+        self._write_item(Item(**si.item))
 
     def _read_background(self) -> Background:
         b = Background()
