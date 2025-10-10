@@ -2213,8 +2213,8 @@ class Stage(ActedBinaryFile):
             10: self._read_jump_details,
             11: self._read_shot_details,
             12: self._read_sword_details,
-            13: self._read_summon_details, # BlockSummon
-            14: self._read_summon_details, # CharacterSummon
+            13: self._read_block_summon_details, # BlockSummon
+            14: self._read_chara_summon_details, # CharacterSummon
             15: self._read_item_summon_details, # ItemSummon
             16: self._read_flow_operation_details,
             17: self._read_stage_clear_details,
@@ -2806,6 +2806,7 @@ class Stage(ActedBinaryFile):
 
     def _read_block_summon_details(self) -> SummonDetails:
         return self._read_summon_details()
+    
     def _read_chara_summon_details(self) -> SummonDetails:
         return self._read_summon_details()
     
@@ -2885,9 +2886,8 @@ class Stage(ActedBinaryFile):
         d.attack = self.read_u8()
         d.attack_flow = self.read_u8()
         d.bytes128_143 = self.read_bytes(16)
-        # These fields are only for Block and Character summon -- are these unused ?
-        # d.return_value_to_flow_variable = self.read_u8()
-        # d.bytes145_147 = self.read_bytes(3)
+        d.return_value_to_flow_variable = self.read_u8()
+        d.bytes145_147 = self.read_bytes(3)
         return d
     
     def _write_item_summon_details(self, d: ItemSummonDetails):
