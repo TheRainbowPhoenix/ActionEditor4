@@ -53,7 +53,6 @@ jobs:
 
       - name: Install minhook
         shell: pwsh
-        working-directory: ${{ env.VCPKG_ROOT }}
         run: |
           & "${{ env.VCPKG_ROOT }}\vcpkg.exe" integrate install
           & "${{ env.VCPKG_ROOT }}\vcpkg.exe" install minhook:${{ env.TRIPLET }}
