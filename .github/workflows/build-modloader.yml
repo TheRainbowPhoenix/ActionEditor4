@@ -1,4 +1,4 @@
-name: Build (x86, vcpkg, Ninja)
+name: Build ModLoader
 
 on:
   push:
@@ -6,12 +6,12 @@ on:
   workflow_dispatch:
 
 jobs:
-  build-windows-x86:
+  build:
     runs-on: windows-latest
 
     env:
-      VCPKG_ROOT: ${{ runner.temp }}\vcpkg
-      BUILD_TYPE: Release
+      # Put vcpkg inside the repo workspace so paths are predictable
+      VCPKG_ROOT: ${{ github.workspace }}\vcpkg
       TRIPLET: x86-windows
       SRC_DIR: modloader
       BUILD_DIR: modloader/build
@@ -20,48 +20,61 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # MSVC environment (x86) so Ninja uses the 32-bit toolchain
-      - name: MSVC Dev Cmd (x86)
+      - name: Set up MSVC developer command prompt
         uses: ilammy/msvc-dev-cmd@v1
         with:
           arch: x86
 
-      - name: Setup Ninja
-        uses: ashutoshvarma/setup-ninja@v1
-
-      - name: Install CMake (optional; windows-latest already has it)
-        uses: jwlawson/actions-setup-cmake@v2
-
-      - name: Install vcpkg
+      - name: Ensure Ninja in PATH
         shell: pwsh
         run: |
-          git clone --depth 1 https://github.com/microsoft/vcpkg "$env:VCPKG_ROOT"
-          & "$env:VCPKG_ROOT\bootstrap-vcpkg.bat" -disableMetrics
+          $ninja = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\2022\BuildTools\Common7\IDE\CommonExtensions\Microsoft\CMake\Ninja\ninja.exe"
+          if (Test-Path $ninja) { $env:Path = "$([System.IO.Path]::GetDirectoryName($ninja));$env:Path" }
+          ninja --version
 
-      - name: Integrate and install dependencies
+      - name: Bootstrap vcpkg (+ cache)
+        uses: actions/cache@v4
+        with:
+          path: |
+            ${{ env.VCPKG_ROOT }}\installed
+            ${{ env.VCPKG_ROOT }}\downloads
+          key: vcpkg-${{ runner.os }}-${{ env.TRIPLET }}-minhook
+      - name: Clone vcpkg
         shell: pwsh
         run: |
-          & "$env:VCPKG_ROOT\vcpkg.exe" integrate install
-          & "$env:VCPKG_ROOT\vcpkg.exe" install minhook:${{ env.TRIPLET }}
-
-      - name: Configure (CMake + vcpkg toolchain)
+          if (!(Test-Path "${{ env.VCPKG_ROOT }}")) {
+            git clone https://github.com/microsoft/vcpkg "${{ env.VCPKG_ROOT }}"
+          }
+      - name: Bootstrap vcpkg.exe
         shell: pwsh
-        run: >
-          cmake -S "${{ env.SRC_DIR }}" -B "${{ env.BUILD_DIR }}" -G "Ninja"
-          -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }}
-          -DCMAKE_TOOLCHAIN_FILE="${{ env:VCPKG_ROOT }}\scripts\buildsystems\vcpkg.cmake"
-          -DVCPKG_TARGET_TRIPLET=${{ env.TRIPLET }}
-          -DVCPKG_APPLOCAL_DEPS=OFF
+        working-directory: ${{ env.VCPKG_ROOT }}
+        run: .\bootstrap-vcpkg.bat
+
+      - name: Install MinHook (x86)
+        shell: pwsh
+        working-directory: ${{ env.VCPKG_ROOT }}
+        run: |
+          .\vcpkg.exe integrate install
+          .\vcpkg.exe install minhook:${{ env.TRIPLET }}
+
+      - name: Configure (CMake + Ninja)
+        shell: pwsh
+        run: |
+          cmake -S modloader -B build -G Ninja `
+            -DCMAKE_BUILD_TYPE=Release `
+            -DCMAKE_TOOLCHAIN_FILE="${{ env.VCPKG_ROOT }}\scripts\buildsystems\vcpkg.cmake" `
+            -DVCPKG_TARGET_TRIPLET=${{ env.TRIPLET }} `
+            -DVCPKG_APPLOCAL_DEPS=OFF
 
       - name: Build
         shell: pwsh
-        run: cmake --build "${{ env.BUILD_DIR }}" --config $env:BUILD_TYPE
+        run: cmake --build build --config Release -v
 
-      - name: Upload artifact (DLL + PDB)
+      - name: Upload DLLs
         uses: actions/upload-artifact@v4
         with:
-          name: modloader-${{ env.TRIPLET }}-${{ env.BUILD_TYPE }}
+          name: modloader-x86-dlls
           path: |
-            ${{ env.BUILD_DIR }}\*.dll
-            ${{ env.BUILD_DIR }}\*.pdb
-            ${{ env.BUILD_DIR }}\*.lib
+            build\*.dll
+            build\bin\Release\*.dll
+            build\Release\*.dll
