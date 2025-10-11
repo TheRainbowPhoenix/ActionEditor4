@@ -1,5 +1,8 @@
 {
   "name": "modloader",
   "version-string": "0.1.0",
-  "dependencies": [ "minhook" ]
+  "builtin-baseline": "50c0cb48a0cf2f6fc5c7b2c0d2bafbe26d0a7ca2",
+  "dependencies": [
+    "minhook"
+  ]
 }
