@@ -106,6 +106,10 @@ export default class WorldMapScene extends Phaser.Scene {
         // this.scene.start('StageScene', { stageFile: 'Stage01.bin' });
         // this.sound?.play?.('confirm'); // if you have sfx
         console.log('Menu confirm on index:', this.selectedIndex);
+
+        if (this.selectedIndex == 0) {
+            this.scene.start('WorldMapScene');
+        }
     }
 
     // sub_452FF0 equivalent: ping-pong 0..255 with a direction flag.
