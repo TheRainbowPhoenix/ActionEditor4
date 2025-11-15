@@ -40,12 +40,12 @@ export default class WorldMapScene extends Phaser.Scene {
         // Add Events as Sprites on top of the tilemap layer
         this.createEventSprites(mapData, tileWidth, tileHeight);
 
-        // Use the 'player_world' texture from Accessory.bmp
+        // Use the 'accessory32' texture from Accessory.bmp
         this.player = new Player(
             this,
             (mapData.init_x + 0.5) * tileWidth,
             (mapData.init_y + 0.5) * tileHeight,
-            'player_world'
+            'accessory32'
         );
         this.add.existing(this.player);
 
@@ -63,49 +63,49 @@ export default class WorldMapScene extends Phaser.Scene {
         // Down: frames 8, 9
         this.anims.create({
             key: 'walk_down',
-            frames: this.anims.generateFrameNumbers('player_world', { start: frameOffset + 0, end: frameOffset + 1 }),
+            frames: this.anims.generateFrameNumbers('accessory32', { start: frameOffset + 0, end: frameOffset + 1 }),
             frameRate: frameRate,
             repeat: -1
         });
         this.anims.create({
             key: 'idle_down',
-            frames: [{ key: 'player_world', frame: frameOffset + 0 }],
+            frames: [{ key: 'accessory32', frame: frameOffset + 0 }],
         });
 
         // Up: frames 10, 11
         this.anims.create({
             key: 'walk_up',
-            frames: this.anims.generateFrameNumbers('player_world', { start: frameOffset + 2, end: frameOffset + 3 }),
+            frames: this.anims.generateFrameNumbers('accessory32', { start: frameOffset + 2, end: frameOffset + 3 }),
             frameRate: frameRate,
             repeat: -1
         });
         this.anims.create({
             key: 'idle_up',
-            frames: [{ key: 'player_world', frame: frameOffset + 2 }],
+            frames: [{ key: 'accessory32', frame: frameOffset + 2 }],
         });
 
         // Right: frames 12, 13
         this.anims.create({
             key: 'walk_right',
-            frames: this.anims.generateFrameNumbers('player_world', { start: frameOffset + 4, end: frameOffset + 5 }),
+            frames: this.anims.generateFrameNumbers('accessory32', { start: frameOffset + 4, end: frameOffset + 5 }),
             frameRate: frameRate,
             repeat: -1
         });
          this.anims.create({
             key: 'idle_right',
-            frames: [{ key: 'player_world', frame: frameOffset + 4 }],
+            frames: [{ key: 'accessory32', frame: frameOffset + 4 }],
         });
 
         // Left: frames 14, 15
         this.anims.create({
             key: 'walk_left',
-            frames: this.anims.generateFrameNumbers('player_world', { start: frameOffset + 6, end: frameOffset + 7 }),
+            frames: this.anims.generateFrameNumbers('accessory32', { start: frameOffset + 6, end: frameOffset + 7 }),
             frameRate: frameRate,
             repeat: -1
         });
         this.anims.create({
             key: 'idle_left',
-            frames: [{ key: 'player_world', frame: frameOffset + 6 }],
+            frames: [{ key: 'accessory32', frame: frameOffset + 6 }],
         });
     }
 

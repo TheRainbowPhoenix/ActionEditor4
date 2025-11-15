@@ -2,6 +2,7 @@
 import BootScene from './scenes/BootScene.js';
 import WorldMapScene from './scenes/WorldMapScene.js';
 import StageScene from './scenes/StageScene.js';
+import MainMenuScene from './scenes/MainMenuScene.js';
 
 import Aquedi4LoaderPlugin from './plugins/Aquedi4LoaderPlugin.js';
 
@@ -20,7 +21,8 @@ const config = {
     scene: [
         BootScene,
         WorldMapScene,
-        StageScene
+        StageScene,
+        MainMenuScene
     ],
     plugins: {
         global: [

@@ -32,10 +32,16 @@ export default class BootScene extends Phaser.Scene {
         this.load.bmp('worldmap_chip', 'bmp/WorldMapChip.bmp');
         this.load.bmp('worldmap_event', 'bmp/WorldEvent.bmp');
         this.load.image('global_palette', 'bmp/plt/Palette.bmp');
+        // this.load.bmp('game_mode', 'bmp/GameMode.bmp');
+
+        this.load.bmpSpritesheet('game_mode', 'bmp/GameMode.bmp', {
+            frameWidth: 160,
+            frameHeight: 32
+        });
         
         // Load Character assets
         
-        this.load.bmpSpritesheet('player_world', 'bmp/Accessory.bmp', {
+        this.load.bmpSpritesheet('accessory32', 'bmp/Accessory.bmp', {
             frameWidth: 32,
             frameHeight: 32
         });
@@ -67,7 +73,8 @@ export default class BootScene extends Phaser.Scene {
         
         console.log("All data loaded. Starting WorldMapScene.");
         
-        this.scene.start('WorldMapScene');
+        // this.scene.start('WorldMapScene');
+        this.scene.start('MainMenuScene');
     }
 
     /**
