@@ -242,10 +242,10 @@ struct GroundMovementDetails {
 	u16 execution_time_double   [[color("907060")]];
 	u8 parallel_execution       [[color("907060")]];
     u8 padding_to_align[3]      [[color("907060")]];
-    u32 param1_minmax_source        [[color("907060")]];
-    u32 param2_operator_value       [[color("907060")]];
-    u32 param3_switch_value         [[color("907060")]];
-    u32 param4_index_source         [[color("907060")]];
+    u32 param1_minmax_source        [[color("907060")]]; // from sub_41D060(a2, 1u)
+    u32 param2_operator_value       [[color("907060")]]; // from sub_41D060(a2, 2u)
+    u32 param3_switch_value         [[color("907060")]]; // from sub_41D060(a2, 3u)
+    u32 param4_index_source         [[color("907060")]]; // from sub_41D060(a2, 4u)
 	char remaining_bytes[77]        [[color("907060")]];
 };
 
@@ -254,10 +254,10 @@ struct CircularMovementDetails {
 	u16 execution_time_double   [[color("907060")]];
 	u8 parallel_execution       [[color("907060")]];
     u8 padding_to_align[3]      [[color("907060")]];
-    u32 param1_minmax_source        [[color("907060")]];
-    u32 param2_operator_value       [[color("907060")]];
-    u32 param3_switch_value         [[color("907060")]];
-    u32 param4_index_source         [[color("907060")]];
+    u32 param1_minmax_source        [[color("907060")]]; // from sub_41D060(a2, 1u)
+    u32 param2_operator_value       [[color("907060")]]; // from sub_41D060(a2, 2u)
+    u32 param3_switch_value         [[color("907060")]]; // from sub_41D060(a2, 3u)
+    u32 param4_index_source         [[color("907060")]]; // from sub_41D060(a2, 4u)
 	char remaining_bytes[77]        [[color("907060")]];
 };
 
@@ -266,10 +266,10 @@ struct ChargeMovementDetails {
 	u16 execution_time_double   [[color("907060")]];
 	u8 parallel_execution       [[color("907060")]];
     u8 padding_to_align[3]      [[color("907060")]];
-    u32 param1_minmax_source        [[color("907060")]];
-    u32 param2_operator_value       [[color("907060")]];
-    u32 param3_switch_value         [[color("907060")]];
-    u32 param4_index_source         [[color("907060")]];
+    u32 param1_minmax_source        [[color("907060")]]; // from sub_41D060(a2, 1u)
+    u32 param2_operator_value       [[color("907060")]]; // from sub_41D060(a2, 2u)
+    u32 param3_switch_value         [[color("907060")]]; // from sub_41D060(a2, 3u)
+    u32 param4_index_source         [[color("907060")]]; // from sub_41D060(a2, 4u)
 	char remaining_bytes[77]        [[color("907060")]];
 };
 
@@ -443,10 +443,10 @@ struct ScreenOutsideAvoidanceMovementDetails {
     u16 execution_time_double       [[color("907060")]];
     u8 parallel_execution           [[color("907060")]];
     u8 padding_to_align[3]      [[color("907060")]];
-    u32 param1_minmax_source        [[color("907060")]];
-    u32 param2_operator_value       [[color("907060")]];
-    u32 param3_switch_value         [[color("907060")]];
-    u32 param4_index_source         [[color("907060")]];
+    u32 param1_minmax_source        [[color("907060")]]; // from sub_41D060(a2, 1u)
+    u32 param2_operator_value       [[color("907060")]]; // from sub_41D060(a2, 2u)
+    u32 param3_switch_value         [[color("907060")]]; // from sub_41D060(a2, 3u)
+    u32 param4_index_source         [[color("907060")]]; // from sub_41D060(a2, 4u)
 	char remaining_bytes[77]        [[color("907060")]];
 };
 
@@ -455,10 +455,10 @@ struct MovementInvalidationDetails {
     u16 execution_time_double       [[color("907060")]];
     u8 parallel_execution           [[color("907060")]];
     u8 padding_to_align[3]      [[color("907060")]];
-    u32 param1_minmax_source        [[color("907060")]];
-    u32 param2_operator_value       [[color("907060")]];
-    u32 param3_switch_value         [[color("907060")]];
-    u32 param4_index_source         [[color("907060")]];
+    u32 param1_minmax_source        [[color("907060")]]; // from sub_41D060(a2, 1u)
+    u32 param2_operator_value       [[color("907060")]]; // from sub_41D060(a2, 2u)
+    u32 param3_switch_value         [[color("907060")]]; // from sub_41D060(a2, 3u)
+    u32 param4_index_source         [[color("907060")]]; // from sub_41D060(a2, 4u)
 	char remaining_bytes[77]        [[color("907060")]];
 };
 
@@ -467,10 +467,10 @@ struct DirectionChangeDetails {
     u16 execution_time_double       [[color("907060")]];
     u8 parallel_execution           [[color("907060")]];
     u8 padding_to_align[3]      [[color("907060")]];
-    u32 param1_minmax_source        [[color("907060")]];
-    u32 param2_operator_value       [[color("907060")]];
-    u32 param3_switch_value         [[color("907060")]];
-    u32 param4_index_source         [[color("907060")]];
+    u32 param1_minmax_source        [[color("907060")]]; // from sub_41D060(a2, 1u)
+    u32 param2_operator_value       [[color("907060")]]; // from sub_41D060(a2, 2u)
+    u32 param3_switch_value         [[color("907060")]]; // from sub_41D060(a2, 3u)
+    u32 param4_index_source         [[color("907060")]]; // from sub_41D060(a2, 4u)
 	char remaining_bytes[18]        [[color("907060")]];
 };
 
@@ -519,10 +519,23 @@ struct DisappearanceDetails {
 };
 
 struct FlowOperationDetails {
-    char bytes1_34[34]                             [[color("907060")]];
+    u32 unknown_0; // from sub_41D060(a2, 1u)
+    u16 unknown_1; // from sub_41D060(a2, 2u)
+    u16 unknown_2; // from sub_41D060(a2, 3u)
+    u16 unknown_3; // from sub_41D060(a2, 4u)
+    u16 unknown_4; // from sub_41D060(a2, 5u)
+    u16 unknown_5; // from sub_41D060(a2, 6u)
+    u16 unknown_6; // from sub_41D060(a2, 7u)
+    u32 unknown_7; // from sub_41D060(a2, 8u)
+    u32 unknown_8; // from sub_41D060(a2, 9u)
+    u16 unknown_9; // from sub_41D060(a2, 10u)
+    u16 unknown_10; // from sub_41D060(a2, 11u)
+    u16 unknown_11; // from sub_41D060(a2, 12u)
+    u16 unknown_12; // from sub_41D060(a2, 13u)
+    u16 unknown_13; // from sub_41D060(a2, 14u)
+    u32 unknown_14; // from sub_41D060(a2, 15u)
 	u8 condition_present                           [[color("907060")]];
 	u8 judgment_type                               [[color("907060")]];
-	char bytes37_40[4]                             [[color("907060")]];
 
 	// std::vector<BasicCondition> condition_data;
     u32 condition_count                                    [[color("907060")]];
