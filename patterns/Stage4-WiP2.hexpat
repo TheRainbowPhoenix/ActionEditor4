@@ -185,16 +185,22 @@ struct WaitDetails {
     u16 execution_time                      [[color("907060")]];
     u16 execution_time_double               [[color("907060")]];
     u8 parallel_execution                   [[color("907060")]];
-    char bytes[33]                          [[color("907060")]];
+    u8 padding[3]                           [[color("907060")]];
+    u32 switch_value                        [[color("907060")]];
+    u32 unknown_index                       [[color("907060")]];
+    char remaining_bytes[22]                [[color("907060")]];
 };
 
 struct LinearMovementDetails {
     u16 execution_time                                                  [[color("907060")]];
     u16 execution_time_double                                           [[color("907060")]];
     u8 parallel_execution                                               [[color("907060")]];
-    char bytes6_8[3]                                                    [[color("907060")]];
+    u8 padding_to_align[3]                                              [[color("907060")]];
     u16 animation_and_other_type                                        [[color("907060")]];
-    char bytes11_26[16]                                                 [[color("907060")]];
+    u32 param1_minmax_source        [[color("907060")]]; // from sub_41D060(a2, 1u)
+    u32 param2_operator_value       [[color("907060")]]; // from sub_41D060(a2, 2u)
+    u32 param3_switch_value         [[color("907060")]]; // from sub_41D060(a2, 3u)
+    u32 param4_index_source         [[color("907060")]]; // from sub_41D060(a2, 4u)
     u8 movement_direction_setting_type                                  [[color("907060")]];
     u8 movement_direction_direction                                     [[color("907060")]];
     u16 movement_direction_angle                                        [[color("907060")]];
@@ -235,29 +241,48 @@ struct GroundMovementDetails {
 	u16 execution_time          [[color("907060")]];
 	u16 execution_time_double   [[color("907060")]];
 	u8 parallel_execution       [[color("907060")]];
-	char bytes6_101[96]         [[color("907060")]];
-
+    u8 padding_to_align[3]      [[color("907060")]];
+    u32 param1_minmax_source        [[color("907060")]];
+    u32 param2_operator_value       [[color("907060")]];
+    u32 param3_switch_value         [[color("907060")]];
+    u32 param4_index_source         [[color("907060")]];
+	char remaining_bytes[77]        [[color("907060")]];
 };
 
 struct CircularMovementDetails {
 	u16 execution_time          [[color("907060")]];
 	u16 execution_time_double   [[color("907060")]];
 	u8 parallel_execution       [[color("907060")]];
-	char bytes6_101[96]         [[color("907060")]];
+    u8 padding_to_align[3]      [[color("907060")]];
+    u32 param1_minmax_source        [[color("907060")]];
+    u32 param2_operator_value       [[color("907060")]];
+    u32 param3_switch_value         [[color("907060")]];
+    u32 param4_index_source         [[color("907060")]];
+	char remaining_bytes[77]        [[color("907060")]];
 };
 
 struct ChargeMovementDetails {
 	u16 execution_time          [[color("907060")]];
 	u16 execution_time_double   [[color("907060")]];
 	u8 parallel_execution       [[color("907060")]];
-	char bytes6_101[96]         [[color("907060")]];
+    u8 padding_to_align[3]      [[color("907060")]];
+    u32 param1_minmax_source        [[color("907060")]];
+    u32 param2_operator_value       [[color("907060")]];
+    u32 param3_switch_value         [[color("907060")]];
+    u32 param4_index_source         [[color("907060")]];
+	char remaining_bytes[77]        [[color("907060")]];
 };
 
 struct GuidedMovementDetails {
 	u16 execution_time          [[color("907060")]];
 	u16 execution_time_double   [[color("907060")]];
 	u8 parallel_execution       [[color("907060")]];
-	char bytes6_101[96]         [[color("907060")]];
+    u8 padding_to_align[3]      [[color("907060")]];
+    u32 param1_minmax_source        [[color("907060")]];
+    u32 param2_operator_value       [[color("907060")]];
+    u32 param3_switch_value         [[color("907060")]];
+    u32 param4_index_source         [[color("907060")]];
+	char remaining_bytes[77]        [[color("907060")]];
 };
 
 struct JumpDetails {
@@ -280,7 +305,11 @@ struct ShotDetails {
     u16 sound_effect                                      [[color("907060")]];
     u8 play_if_outside_screen                             [[color("907060")]];
     u16 animation                                         [[color("907060")]];
-    char bytes11_30[20]                                   [[color("907060")]];
+    u32 param1_minmax_source                              [[color("907060")]];
+    u32 param2_operator_value                             [[color("907060")]];
+    u32 param3_switch_value                               [[color("907060")]];
+    u32 param4_index_source                               [[color("907060")]];
+    char remaining_bytes[4]                               [[color("907060")]];
     u8 number_of_shots_fired                              [[color("907060")]];
     u8 formation                                          [[color("907060")]];
     u16 firing_parameter1                                 [[color("907060")]]; //interval angle in scatter distance in encircle (hbl)
@@ -413,21 +442,36 @@ struct ScreenOutsideAvoidanceMovementDetails {
     u16 execution_time              [[color("907060")]];
     u16 execution_time_double       [[color("907060")]];
     u8 parallel_execution           [[color("907060")]];
-    char bytes6_101[96]             [[color("907060")]];
+    u8 padding_to_align[3]      [[color("907060")]];
+    u32 param1_minmax_source        [[color("907060")]];
+    u32 param2_operator_value       [[color("907060")]];
+    u32 param3_switch_value         [[color("907060")]];
+    u32 param4_index_source         [[color("907060")]];
+	char remaining_bytes[77]        [[color("907060")]];
 };
 
 struct MovementInvalidationDetails {
     u16 execution_time              [[color("907060")]];
     u16 execution_time_double       [[color("907060")]];
     u8 parallel_execution           [[color("907060")]];
-    char bytes6_101[96]             [[color("907060")]];
+    u8 padding_to_align[3]      [[color("907060")]];
+    u32 param1_minmax_source        [[color("907060")]];
+    u32 param2_operator_value       [[color("907060")]];
+    u32 param3_switch_value         [[color("907060")]];
+    u32 param4_index_source         [[color("907060")]];
+	char remaining_bytes[77]        [[color("907060")]];
 };
 
 struct DirectionChangeDetails {
     u16 execution_time              [[color("907060")]];
     u16 execution_time_double       [[color("907060")]];
     u8 parallel_execution           [[color("907060")]];
-    char bytes6_42[37]              [[color("907060")]];
+    u8 padding_to_align[3]      [[color("907060")]];
+    u32 param1_minmax_source        [[color("907060")]];
+    u32 param2_operator_value       [[color("907060")]];
+    u32 param3_switch_value         [[color("907060")]];
+    u32 param4_index_source         [[color("907060")]];
+	char remaining_bytes[18]        [[color("907060")]];
 };
 
 struct StatusOperationDetails {
