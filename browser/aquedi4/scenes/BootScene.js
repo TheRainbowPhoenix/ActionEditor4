@@ -31,7 +31,7 @@ export default class BootScene extends Phaser.Scene {
         // Load World Map assets
         this.load.bmp('worldmap_chip', 'bmp/WorldMapChip.bmp');
         this.load.bmp('worldmap_event', 'bmp/WorldEvent.bmp');
-        this.load.image('global_palette', 'bmp/plt/Palette.bmp');
+        this.load.bmp('global_palette', 'bmp/plt/Palette.bmp');
         // this.load.bmp('game_mode', 'bmp/GameMode.bmp');
 
         this.load.bmpSpritesheet('game_mode', 'bmp/GameMode.bmp', {

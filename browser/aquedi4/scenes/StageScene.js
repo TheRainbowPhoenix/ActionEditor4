@@ -1,6 +1,12 @@
 // scenes/StageScene.js
 import { DataManager } from '../managers/DataManager.js';
-import { AQUEDI_PHYSICS, PlayerEntity } from '../objects/AquediPhysics.js';
+import {
+    ActorEntity,
+    ActorEntityList,
+    AQUEDI_PHYSICS,
+    PlayerEntity,
+    commandSpeedToSubstepSpeed
+} from '../objects/AquediPhysics.js';
 
 const TILE     = AQUEDI_PHYSICS.TILE;
 const SCROLL   = 10;
@@ -18,7 +24,7 @@ const BLOCK_TILE_ROWS = 15; // Number of rows in Block.bmp
 
 function itemTileFrame(imageNumber) {
     if (!imageNumber || imageNumber < 1) return 0;
-    const idx = imageNumber; // Convert to 0-based
+    const idx = imageNumber;
     // Each sprite is duplicated on x-axis, so column stride is 2
     const col = (idx / ITEM_TILE_ROWS) | 0;
     const row = idx % ITEM_TILE_ROWS;
@@ -26,8 +32,9 @@ function itemTileFrame(imageNumber) {
 }
 
 function blockTileFrame(imageNumber) {
+    console.log(imageNumber);
     if (!imageNumber || imageNumber < 1) return 0;
-    const idx = imageNumber - 1; // Convert to 0-based
+    const idx = imageNumber; // Convert to 0-based
     // Column-first indexing: y-axis (rows) first, then x-axis (cols)
     const col = (idx / BLOCK_TILE_ROWS) | 0;
     const row = idx % BLOCK_TILE_ROWS;
@@ -35,7 +42,7 @@ function blockTileFrame(imageNumber) {
 }
 
 function stageFrame(imageNumber) {
-    return (imageNumber || 0) + 1; // Math.max(0, (imageNumber || 1) - 1);
+    return Math.max(0, (imageNumber || 1) - 1);
 }
 
 function ceilLog2(n) {
@@ -61,7 +68,7 @@ export default class StageScene extends Phaser.Scene {
         this._stageKey  = 'stage_' + this._stageFile;
         this._accum     = 0;
         this._player    = null;
-        this._enemies   = [];
+        this._actors    = new ActorEntityList();
         this._pickups   = [];
     }
 
@@ -111,6 +118,7 @@ export default class StageScene extends Phaser.Scene {
 
         this._cursors = this.input.keyboard.createCursorKeys();
         this._keyZ    = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.Z);
+        this._keyX    = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.X);
         this.input.keyboard.on('keydown-ESC', () => this.scene.start('WorldMapScene'));
 
         this._buildHud();
@@ -154,7 +162,7 @@ export default class StageScene extends Phaser.Scene {
             for (let c = 0; c < cols; c++) {
                 const idx = (c + SCROLL) + (r + SCROLL) * stride;
                 const gfx = this._gfx[idx];
-                row.push(gfx >= 0 ? blockTileFrame(gfx + 1) : 0);
+                row.push(gfx > 0 ? blockTileFrame(gfx) : 0);
             }
             mapData.push(row);
         }
@@ -201,7 +209,7 @@ export default class StageScene extends Phaser.Scene {
                 e.flying       = fly;
                 e.hp = e.maxHp = ch.hp;
                 e.sp = e.maxSp = ch.sp;
-                // Player01.bmp faces left by default; flipX=true faces right.
+                // Player01.bmp faces right by default; flipX mirrors to face left.
                 e.facingRight  = !!ch.facing_right;
                 const cx       = (e.xmin + e.xmax) * 0.5;
                 const cy       = (e.ymin + e.ymax) * 0.5;
@@ -212,17 +220,37 @@ export default class StageScene extends Phaser.Scene {
             } else if (!(ch.faction === 0 && ch.operation === 0)) {
                 const cw  = fly ? (ec.flying_character_width  || 12) : (ec.walking_character_width  || 12);
                 const ch2 = fly ? (ec.flying_character_height || 16) : (ec.walking_character_height || 24);
-                const e   = makeEntityAtTile(ch.position_x, ch.position_y, cw, ch2, 1);
+                const e   = new ActorEntity({
+                    ...makeEntityAtTile(ch.position_x, ch.position_y, cw, ch2, 1),
+                    actions: this._extractActorActions(ch),
+                    facingRight: !!ch.facing_right
+                });
                 e.isEnemy      = true;
                 e.flying       = fly;
                 e.hp = e.maxHp = ch.hp;
+                e.facingRight  = !!ch.facing_right;
                 const type     = Math.max(1, Math.min(8, ch.image_type || 1));
                 const cx       = (e.xmin + e.xmax) * 0.5;
                 const cy       = (e.ymin + e.ymax) * 0.5;
-                e.sprite       = this.add.sprite(cx, cy, 'chara_' + type, stageFrame(ch.image_number)).setDepth(4);
-                this._enemies.push(e);
+                e.sprite       = this.add.sprite(cx, cy, 'chara_' + type, stageFrame(ch.image_number))
+                    .setFlipX(!!e.facingRight)
+                    .setDepth(4);
+                this._actors.push(e);
             }
         }
+    }
+
+    _extractActorActions(ch) {
+        const flows = ch.flows || ch.flow_data || [];
+        const commands = [];
+        for (const flow of flows) {
+            for (const command of (flow.commands || flow.command_data || [])) {
+                if (command.type === 2 || command.type === 3 || command.type === 10) {
+                    commands.push(command);
+                }
+            }
+        }
+        return commands;
     }
 
     _buildHud() {
@@ -314,15 +342,19 @@ export default class StageScene extends Phaser.Scene {
             e.onGround = false;
             return;
         }
-        // Apply IDA Entity_OnLand snap formula exactly:
-        // ymin -= (int(ymax) & 31) + 1
-        // Result: ymax ends up approximately at tile_top - 1.
-        const dy   = -(((e.ymax | 0) & 31) + 1);
-        e.translateY(dy);
-        e.velY     = 0;
-        e.onGround = true;
-        e.airTime  = 0;
-        e.contactB = true;
+        // Snap to the top of the floor tile we detected.
+        // The floor tile's top boundary is at: (floor(probeY) & ~31)
+        // We want ymax to sit exactly at that boundary minus 1 (so ymax = tileTop - 1).
+        const tileTop = (probeY | 0) & ~31;
+        const dy      = tileTop - 1 - e.ymax;
+        // Only snap if we're within a small tolerance to avoid teleporting from far away
+        if (dy > -2 && dy <= 2) {
+            e.translateY(dy);
+        }
+        e.velY        = 0;
+        e.onGround    = true;
+        e.airTime     = 0;
+        e.contactB    = true;
     }
 
     // Entity_CheckCeilingTile + Entity_OnHitCeiling.
@@ -362,9 +394,70 @@ export default class StageScene extends Phaser.Scene {
         }
     }
 
+    _updateActorActivation(e) {
+        if (!e.sprite) return;
+        const view = this.cameras.main.worldView;
+        const margin = e.activationMargin ?? TILE * 4;
+        e.entityGate4D4 =
+            e.xmax >= view.left - margin &&
+            e.xmin <= view.right + margin &&
+            e.ymax >= view.top - margin &&
+            e.ymin <= view.bottom + margin ? 1 : 0;
+    }
+
+    _runActorActions(e) {
+        if (!e.actions.length || !e.canRunPhysics()) return;
+
+        const command = e.actions[e.actionCursor % e.actions.length];
+        if (!command) return;
+
+        if (command.type === 2 || command.type === 3) {
+            this._runLinearActorCommand(e, command.details || {});
+        } else if (command.type === 10) {
+            this._runJumpActorCommand(e, command.details || {});
+        }
+
+        e.actionTicks++;
+        const duration = Math.max(1, (command.details?.execution_time || 1) * PHYSICS_SUBSTEPS);
+        if (e.actionTicks >= duration) {
+            e.actionTicks = 0;
+            e.actionCursor++;
+        }
+    }
+
+    _runLinearActorCommand(e, details) {
+        const speed = commandSpeedToSubstepSpeed(
+            details.time_speed_distance_speed,
+            details.time_speed_distance_speed_double && e.formVariant ? details.time_speed_distance_speed_double : 0
+        );
+        let dir = e.facingRight ? 1 : -1;
+
+        if (details.movement_direction_direction === 4) dir = -1;
+        if (details.movement_direction_direction === 6) dir = 1;
+        if (details.movement_direction_reverse_speed_if_direction_changes && (e.contactL || e.contactR)) {
+            e.facingRight = !e.facingRight;
+            dir = e.facingRight ? 1 : -1;
+            if (e.sprite) e.sprite.setFlipX(!e.facingRight);
+        }
+
+        if (!details.movement_direction_invalidate_horizontal_movement) {
+            e.speedX = dir * speed;
+        }
+    }
+
+    _runJumpActorCommand(e, details) {
+        if (!e.onGround || e.jumpLatch) return;
+        const height = details.max_jump_height || 0;
+        if (height <= 0) return;
+        e.startJumpFromHeight(height);
+    }
+
     _syncSprite(e) {
         if (!e.sprite) return;
-        e.sprite.setPosition((e.xmin + e.xmax) * 0.5, (e.ymin + e.ymax) * 0.5);
+        // Round position to nearest half-pixel to avoid sub-pixel blur
+        const cx = Math.round((e.xmin + e.xmax) * 0.5 * 2) / 2;
+        const cy = Math.round((e.ymin + e.ymax) * 0.5 * 2) / 2;
+        e.sprite.setPosition(cx, cy);
     }
 
     //-----------------------------------------------------------------------
@@ -392,7 +485,7 @@ export default class StageScene extends Phaser.Scene {
         // Jump: allowed within coyote window.
         // IDA: in_air flag only sets after g_max_air_time_frames (many frames).
         // We use a small coyote window so the player can jump just after stepping off an edge.
-        if (Phaser.Input.Keyboard.JustDown(this._keyZ) && e.airTime < COYOTE) {
+        if (Phaser.Input.Keyboard.JustDown(this._keyX) && e.airTime < COYOTE) {
             e.jump();
             e.airTime  = COYOTE; // block double-jump until landing resets airTime
         }
@@ -401,15 +494,21 @@ export default class StageScene extends Phaser.Scene {
     //-----------------------------------------------------------------------
 
     update(time, delta) {
+        // Handle player input ONCE per frame (not per substep) to avoid multiple jumps.
+        if (this._player) this._handleInput(this._player);
+
         this._accum += delta / 1000;
         let steps    = 0;
         while (this._accum >= FIXED_DT && steps < 5) {
-            if (this._player) this._handleInput(this._player);
+            // if (this._player) this._handleInput(this._player);
 
+            // Physics substeps - no input polling here.
             for (let substep = 0; substep < PHYSICS_SUBSTEPS; substep++) {
                 if (this._player) this._stepEntity(this._player);
-                for (const e of this._enemies) {
-                    if (e.active) this._stepEntity(e);
+                for (const e of this._actors.entities()) {
+                    this._updateActorActivation(e);
+                    this._runActorActions(e);
+                    if (e.active && e.canRunPhysics()) this._stepEntity(e);
                 }
             }
 
@@ -418,7 +517,7 @@ export default class StageScene extends Phaser.Scene {
         }
 
         if (this._player) this._syncSprite(this._player);
-        for (const e of this._enemies) this._syncSprite(e);
+        for (const e of this._actors.entities()) this._syncSprite(e);
         for (const e of this._pickups)  this._syncSprite(e);
 
         this._updateHud();

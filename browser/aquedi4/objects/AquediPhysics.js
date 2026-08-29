@@ -3,18 +3,61 @@
 
 export const AQUEDI_PHYSICS = Object.freeze({
     TILE: 32,
+    HALF_TILE: 16,
     FIXED_DT: 1 / 60,
     SUBSTEPS: 10,
     GRAVITY: 0.004,
     MAX_ENTITY_SPEED: 6,
+    FRAME_RATE_CONSTANT: 60,
     SCALAR_FRICTION: 10,
     DEFAULT_DECAY_STEP: 0.0081,
     PLAYER_WALK_SPEED: 0.4,
-    PLAYER_JUMP_SPEED: -0.75
+    PLAYER_JUMP_SPEED: -0.929603
 });
 
 export function physicsScalarPerFrame60(value, scalarFriction = AQUEDI_PHYSICS.SCALAR_FRICTION) {
     return value / scalarFriction / 60;
+}
+
+export function computeJumpInitialSpeed(heightPixels, gravity = AQUEDI_PHYSICS.GRAVITY) {
+    return (-gravity - Math.sqrt((heightPixels * 8.0 + gravity) * gravity)) * 0.5;
+}
+
+export function computeModifiedJumpInitialSpeed(
+    heightPixels,
+    playerControlledFlag = 0,
+    modifierEnabled = 1,
+    modifierScalar = 0.4,
+    gravity = AQUEDI_PHYSICS.GRAVITY
+) {
+    const base = computeJumpInitialSpeed(heightPixels, gravity);
+    if (modifierEnabled && !playerControlledFlag) {
+        return base * (0.99 - modifierScalar * 0.025);
+    }
+    return base;
+}
+
+export function computeJumpDurationFrames(
+    speed,
+    gravity = AQUEDI_PHYSICS.GRAVITY,
+    frameRateConstant = AQUEDI_PHYSICS.FRAME_RATE_CONSTANT
+) {
+    return Math.trunc(frameRateConstant - speed / gravity);
+}
+
+export function computeJumpDurationTicks(
+    speed,
+    substeps = AQUEDI_PHYSICS.SUBSTEPS
+) {
+    return Math.trunc(computeJumpDurationFrames(speed) / substeps / 6) + 1;
+}
+
+export function commandSpeedToSubstepSpeed(speed, formSpeed = 0) {
+    return (Number(speed || 0) + Number(formSpeed || 0)) * 0.01;
+}
+
+export function commandJumpHeightToPixels(height) {
+    return Number(height || 0) * AQUEDI_PHYSICS.HALF_TILE;
 }
 
 export function decayTowardZero(value, step, enabled) {
@@ -56,8 +99,12 @@ export class PlayerEntity {
         this.flying = !!options.flying;
         this.onGround = !!options.onGround;
         this.airTime = options.airTime ?? 0;
+        this.jumpLatch = options.jumpLatch ?? 0;
+        this.jumpWindowCounter = options.jumpWindowCounter ?? 0;
+        this.playerControlledFlag = options.playerControlledFlag ?? (options.isPlayer ? 0 : 1);
         this.walkSpeed = options.walkSpeed ?? AQUEDI_PHYSICS.PLAYER_WALK_SPEED;
         this.jumpSpeed = options.jumpSpeed ?? AQUEDI_PHYSICS.PLAYER_JUMP_SPEED;
+        this.facingRight = options.facingRight ?? true;
 
         this.contactL = false;
         this.contactR = false;
@@ -173,8 +220,71 @@ export class PlayerEntity {
     }
 
     jump() {
-        this.speedY = this.jumpSpeed;
+        this.startJump(this.jumpSpeed);
+    }
+
+    startJump(speed = this.jumpSpeed) {
+        this.speedY = speed;
         this.onGround = false;
+        this.jumpLatch = 1;
+        this.jumpWindowCounter = 1;
+    }
+
+    startJumpFromHeight(heightUnits, modifierEnabled = 1, modifierScalar = this.speedScalar) {
+        const heightPixels = commandJumpHeightToPixels(heightUnits);
+        this.startJump(computeModifiedJumpInitialSpeed(
+            heightPixels,
+            this.playerControlledFlag,
+            modifierEnabled,
+            modifierScalar
+        ));
+    }
+}
+
+export class ActorEntity extends PlayerEntity {
+    constructor(options = {}) {
+        super({
+            ...options,
+            playerControlledFlag: options.playerControlledFlag ?? 1
+        });
+        this.isActor = true;
+        this.nodeByte1E2 = options.nodeByte1E2 ?? 0;
+        this.removeFlag = options.removeFlag ?? 0;
+        this.entityGate104 = options.entityGate104 ?? 1;
+        this.entityGate4D4 = options.entityGate4D4 ?? 0;
+        this.actions = options.actions ?? [];
+        this.actionCursor = 0;
+        this.actionTicks = 0;
+        this.activationMargin = options.activationMargin ?? AQUEDI_PHYSICS.TILE * 4;
+    }
+
+    canRunPhysics() {
+        return !this.nodeByte1E2 && !this.removeFlag && !!this.entityGate104 && !!this.entityGate4D4;
+    }
+}
+
+export class ActorEntityList {
+    constructor(items = []) {
+        this.items = [];
+        for (const item of items) this.push(item);
+    }
+
+    push(entity) {
+        this.items.push({ entity });
+        return entity;
+    }
+
+    remove(entity) {
+        const idx = this.items.findIndex(node => node.entity === entity);
+        if (idx >= 0) this.items.splice(idx, 1);
+    }
+
+    *entities() {
+        for (const node of this.items) yield node.entity;
+    }
+
+    get count() {
+        return this.items.length;
     }
 }
 
