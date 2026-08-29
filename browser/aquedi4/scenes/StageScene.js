@@ -8,6 +8,32 @@ const FIXED_DT = AQUEDI_PHYSICS.FIXED_DT;
 const PHYSICS_SUBSTEPS = AQUEDI_PHYSICS.SUBSTEPS;
 const COYOTE   = 6;
 
+// Convert Aquedi4 1-based image_number to Phaser 0-based frame index.
+// Aquedi4 indexes spritesheets column-first (top-to-bottom/y-axis first),
+// then row (left-to-right/x-axis). Item.bmp has each sprite duplicated horizontally.
+const ITEM_TILE_COLS = 8;   // Number of columns in Item.bmp
+const ITEM_TILE_ROWS = 15;   // Number of rows in Item.bmp
+const BLOCK_TILE_COLS = 8; // Number of columns in Block.bmp
+const BLOCK_TILE_ROWS = 15; // Number of rows in Block.bmp
+
+function itemTileFrame(imageNumber) {
+    if (!imageNumber || imageNumber < 1) return 0;
+    const idx = imageNumber; // Convert to 0-based
+    // Each sprite is duplicated on x-axis, so column stride is 2
+    const col = (idx / ITEM_TILE_ROWS) | 0;
+    const row = idx % ITEM_TILE_ROWS;
+    return row * (ITEM_TILE_COLS * 2) + col * 2;
+}
+
+function blockTileFrame(imageNumber) {
+    if (!imageNumber || imageNumber < 1) return 0;
+    const idx = imageNumber - 1; // Convert to 0-based
+    // Column-first indexing: y-axis (rows) first, then x-axis (cols)
+    const col = (idx / BLOCK_TILE_ROWS) | 0;
+    const row = idx % BLOCK_TILE_ROWS;
+    return row * BLOCK_TILE_COLS + col;
+}
+
 function stageFrame(imageNumber) {
     return (imageNumber || 0) + 1; // Math.max(0, (imageNumber || 1) - 1);
 }
@@ -128,7 +154,7 @@ export default class StageScene extends Phaser.Scene {
             for (let c = 0; c < cols; c++) {
                 const idx = (c + SCROLL) + (r + SCROLL) * stride;
                 const gfx = this._gfx[idx];
-                row.push(gfx >= 0 ? gfx + 1: 0);
+                row.push(gfx >= 0 ? blockTileFrame(gfx + 1) : 0);
             }
             mapData.push(row);
         }
@@ -145,7 +171,7 @@ export default class StageScene extends Phaser.Scene {
             const e  = makeEntityAtTile(it.position_x, it.position_y, iw, ih, 0);
             e.sprite   = this.add.sprite(
                 (e.xmin + e.xmax) * 0.5, (e.ymin + e.ymax) * 0.5,
-                'item_tiles', stageFrame(it.image_number)
+                'item_tiles', itemTileFrame(it.image_number)
             ).setDepth(2);
             e.isPickup = true;
             this._pickups.push(e);
