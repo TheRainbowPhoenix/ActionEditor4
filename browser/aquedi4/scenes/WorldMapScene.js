@@ -54,6 +54,10 @@ export default class WorldMapScene extends Phaser.Scene {
         this.cameras.main.setBounds(0, 0, this.map.widthInPixels, this.map.heightInPixels);
 
         this.input.keyboard.on('keydown-Z', () => { this.checkEventTrigger(); });
+        // Debug shortcut: press S to jump straight to StorySample01
+        this.input.keyboard.once('keydown-S', () => {
+            this.scene.start('StageScene', { stageFile: 'StorySample01.stg4_1020' });
+        });
     }
 
     createPlayerAnimations() {
@@ -177,6 +181,63 @@ export default class WorldMapScene extends Phaser.Scene {
         }
     }
 
+    _showStageMenu(stageFile) {
+        if (this._stageMenu) return;
+
+        const px = this.cameras.main.scrollX + 320;
+        const py = this.cameras.main.scrollY + 240;
+
+        this._stageMenuBg = this.add.rectangle(px, py, 160, 64, 0x444444, 0.9)
+            .setDepth(50);
+
+        const style = { font: '14px monospace', fill: '#ffffff' };
+
+        this._stageMenuItems = [
+            this.add.text(px - 72, py - 20, 'ステージに挑む', style).setDepth(51),
+            this.add.text(px - 72, py + 4,  'やっぱりやめる',  style).setDepth(51),
+        ];
+        this._stageMenuIndex  = 0;
+        this._stageMenuFile   = stageFile;
+        this._stageMenuActive = true;
+
+        this._stageMenuKeys = [
+            this.input.keyboard.on('keydown-UP',   () => this._moveStageMenu(-1)),
+            this.input.keyboard.on('keydown-DOWN', () => this._moveStageMenu(+1)),
+            this.input.keyboard.on('keydown-Z',    () => this._confirmStageMenu()),
+            this.input.keyboard.on('keydown-X',    () => this._closeStageMenu()),
+        ];
+    }
+
+    _moveStageMenu(delta) {
+        if (!this._stageMenuActive) return;
+        this._stageMenuIndex = (this._stageMenuIndex + delta + 2) % 2;
+        this._stageMenuItems[0].setText(
+            (this._stageMenuIndex === 0 ? '-> ' : '   ') + 'ステージに挑む'
+        );
+        this._stageMenuItems[1].setText(
+            (this._stageMenuIndex === 1 ? '-> ' : '   ') + 'やっぱりやめる'
+        );
+    }
+
+    _confirmStageMenu() {
+        if (!this._stageMenuActive) return;
+        if (this._stageMenuIndex === 0) {
+            this._closeStageMenu();
+            this.scene.start('StageScene', { stageFile: this._stageMenuFile });
+        } else {
+            this._closeStageMenu();
+        }
+    }
+
+    _closeStageMenu() {
+        if (!this._stageMenuActive) return;
+        this._stageMenuActive = false;
+        this._stageMenuBg.destroy();
+        this._stageMenuItems.forEach(t => t.destroy());
+        this._stageMenu      = null;
+        this._stageMenuItems = null;
+    }
+
     checkEventTrigger() {
         // Position in tiles
         const x = Math.floor(this.player.x / 32);
@@ -186,11 +247,17 @@ export default class WorldMapScene extends Phaser.Scene {
             if (event.placement_x === x && event.placement_y === y) {
                 const page = event.pages[0];
                 if (page && page.start_stage) {
-                    console.log(`Transitioning to stage: ${page.start_stage}`);
+                    let stageFile = page.start_stage.split(/[/\\]/).pop();
+            
+                    console.log(`Transitioning to stage: ${stageFile}`);
+                    // Engine saves .stg4_966 references but we have _1020 builds
+                    stageFile = stageFile.replace(/\.stg4_\d+$/, '.stg4_1020');
+                    this._showStageMenu(stageFile);
+                    
                     
                     // Clean up the stage path
-                    const stageFile = page.start_stage.split('\\').pop();
-                    this.scene.start('StageScene', { stageFile: stageFile });
+                    // const stageFile = page.start_stage.split('\\').pop();
+                    // this.scene.start('StageScene', { stageFile: stageFile });
                 }
             }
         }
