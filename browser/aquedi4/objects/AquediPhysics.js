@@ -256,6 +256,8 @@ export class ActorEntity extends PlayerEntity {
         this.reactiveActions = options.reactiveActions ?? [];
         this.actionCursor = 0;
         this.actionTicks = 0;
+        this.cloneIndex = options.cloneIndex ?? 0;
+        this.cloneCount = options.cloneCount ?? 1;
         this.activationMargin = options.activationMargin ?? AQUEDI_PHYSICS.TILE * 4;
     }
 

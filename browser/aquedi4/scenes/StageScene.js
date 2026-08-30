@@ -81,6 +81,16 @@ function makeEntityAtTile(tileX, tileY, cw, ch, layer, options = {}) {
     return PlayerEntity.atTile(tileX, tileY, cw, ch, layer, SCROLL, TILE, options);
 }
 
+function cloneAxisOffset(ch, axis, cloneIndex) {
+    const base  = Number(ch['appearance_position_offset_' + axis + '_bl'] || 0);
+    const clone = Number(ch['appearance_position_offset_' + axis + '_dot'] || 0);
+    let offset = base + clone * cloneIndex;
+    if (ch['appearance_position_offset_' + axis + '_flip_if_facing_right'] && ch.facing_right) {
+        offset = -offset;
+    }
+    return offset;
+}
+
 export default class StageScene extends Phaser.Scene {
     constructor() {
         super('StageScene');
@@ -274,33 +284,42 @@ export default class StageScene extends Phaser.Scene {
                 const cw  = fly ? (ec.flying_character_width  || 12) : (ec.walking_character_width  || 12);
                 const ch2 = fly ? (ec.flying_character_height || 16) : (ec.walking_character_height || 24);
                 const actionModel = this._extractActorActions(ch);
-                const e   = new ActorEntity({
-                    ...makeEntityAtTile(ch.position_x, ch.position_y, cw, ch2, 1),
-                    actions: actionModel.continuous,
-                    reactiveActions: actionModel.reactive,
-                    facingRight: !!ch.facing_right
-                });
-                e.isEnemy      = true;
-                e.flying       = fly;
-                e.baseFrame    = characterFrame(ch.image_number);
-                e.animationSet = ch.animation_set || 0;
-                e.hp = e.maxHp = ch.hp;
-                e.facingRight  = !!ch.facing_right;
-                e.directionFixed = !!ch.direction_fixed;
-                e.characterDefinition = def;
-                e.characterName = def.name;
-                e.groupNumber = ch.has_group ? ch.group_number : null;
-                e.bodyHitPower = ch.body_hit_power || 0;
-                e.defense = ch.defense || 0;
-                e.score = ch.score || 0;
-                e.renderOffsetY = (e.height - TILE) * 0.5;
-                const type     = Math.max(1, Math.min(8, ch.image_type || 1));
-                const cx       = (e.xmin + e.xmax) * 0.5;
-                const cy       = (e.ymin + e.ymax) * 0.5 + e.renderOffsetY;
-                e.sprite       = this.add.sprite(cx, cy, 'chara_' + type, e.baseFrame)
-                    .setFlipX(!!e.facingRight)
-                    .setDepth(3 + (ch.z_coordinate || 0));
-                this._actors.push(e);
+                const cloneCount = Math.max(1, Number(ch.number_of_doubles || 0) + 1);
+                for (let cloneIndex = 0; cloneIndex < cloneCount; cloneIndex++) {
+                    const e = new ActorEntity({
+                        ...makeEntityAtTile(ch.position_x, ch.position_y, cw, ch2, 1),
+                        actions: actionModel.continuous,
+                        reactiveActions: actionModel.reactive,
+                        facingRight: !!ch.facing_right,
+                        cloneIndex,
+                        cloneCount
+                    });
+                    const offsetX = cloneAxisOffset(ch, 'x', cloneIndex);
+                    const offsetY = cloneAxisOffset(ch, 'y', cloneIndex);
+                    if (offsetX) e.translateX(offsetX);
+                    if (offsetY) e.translateY(offsetY);
+                    e.isEnemy      = true;
+                    e.flying       = fly;
+                    e.baseFrame    = characterFrame(ch.image_number);
+                    e.animationSet = ch.animation_set || 0;
+                    e.hp = e.maxHp = ch.hp;
+                    e.facingRight  = !!ch.facing_right;
+                    e.directionFixed = !!ch.direction_fixed;
+                    e.characterDefinition = def;
+                    e.characterName = def.name;
+                    e.groupNumber = ch.has_group ? ch.group_number : null;
+                    e.bodyHitPower = ch.body_hit_power || 0;
+                    e.defense = ch.defense || 0;
+                    e.score = ch.score || 0;
+                    e.renderOffsetY = (e.height - TILE) * 0.5;
+                    const type     = Math.max(1, Math.min(8, ch.image_type || 1));
+                    const cx       = (e.xmin + e.xmax) * 0.5;
+                    const cy       = (e.ymin + e.ymax) * 0.5 + e.renderOffsetY;
+                    e.sprite       = this.add.sprite(cx, cy, 'chara_' + type, e.baseFrame)
+                        .setFlipX(!!e.facingRight)
+                        .setDepth(3 + (ch.z_coordinate || 0));
+                    this._actors.push(e);
+                }
             }
         }
     }
@@ -521,7 +540,7 @@ export default class StageScene extends Phaser.Scene {
         const details = command.details || {};
         const speed = commandSpeedToSubstepSpeed(
             details.time_speed_distance_speed,
-            details.time_speed_distance_speed_double && e.formVariant ? details.time_speed_distance_speed_double : 0
+            Number(details.time_speed_distance_speed_double || 0) * Number(e.cloneIndex || 0)
         );
         let dir = e.facingRight ? 1 : -1;
 
