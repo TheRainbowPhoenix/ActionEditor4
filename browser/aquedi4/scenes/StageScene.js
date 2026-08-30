@@ -26,6 +26,13 @@ const ACQUIRED_MINI_MS = 1000 / 60 * 20;
 const ACQUIRED_MINI_RISE = 18;
 const MESSAGE_DEFAULT_MS = 3000;
 const MODAL_ZOOM_MS = 1000 / 60 * 12;
+const MESSAGE_FONT = '"MS Gothic", "MS PGothic", "Yu Gothic", monospace';
+const MESSAGE_PANEL_COLOR = 0x808080;
+const MESSAGE_TEXT_COLOR = '#ffffff';
+const MODAL_MESSAGE_W = 450;
+const MODAL_MESSAGE_H = 146;
+const MESSAGE_PADDING_X = 2;
+const MESSAGE_PADDING_Y = 1;
 
 function itemTileFrame(imageNumber) {
     if (!imageNumber || imageNumber < 1) return 0;
@@ -89,6 +96,7 @@ export default class StageScene extends Phaser.Scene {
         this._messageQueue = [];
         this._floatingMessages = [];
         this._modalMessage = null;
+        this._modalTextImage = null;
         this._messagePanel = null;
         this._messageText = null;
         this._collectionStats = Object.create(null);
@@ -299,16 +307,17 @@ export default class StageScene extends Phaser.Scene {
             stroke: '#000000', strokeThickness: 2
         }).setScrollFactor(0).setDepth(20);
 
-        this._messagePanel = this.add.rectangle(160, 184, 304, 64, 0xffffff, 0.96)
-            .setStrokeStyle(1, 0x202020, 1)
+        this._messagePanel = this.add.rectangle(160, 184, 304, 64, MESSAGE_PANEL_COLOR, 1)
             .setScrollFactor(0)
             .setDepth(30)
             .setVisible(false);
         this._messageText = this.add.text(18, 158, '', {
-            font: '13px sans-serif',
-            fill: '#111111',
+            fontFamily: MESSAGE_FONT,
+            fontSize: '16px',
+            fill: MESSAGE_TEXT_COLOR,
             wordWrap: { width: 284, useAdvancedWrap: true },
-            lineSpacing: 3
+            lineSpacing: 0,
+            resolution: 1
         }).setScrollFactor(0).setDepth(31).setVisible(false);
     }
 
@@ -701,6 +710,74 @@ export default class StageScene extends Phaser.Scene {
         this._displayMessage(message, details);
     }
 
+    _messageLines(message, maxWidth) {
+        const lines = [];
+        const canvas = typeof document !== 'undefined' ? document.createElement('canvas') : null;
+        const ctx = canvas ? canvas.getContext('2d') : null;
+        if (ctx) ctx.font = '16px ' + MESSAGE_FONT;
+
+        const measure = (s) => ctx ? ctx.measureText(s).width : s.length * 16;
+        for (const rawLine of String(message).replace(/\r\n/g, '\n').split('\n')) {
+            if (measure(rawLine) <= maxWidth) {
+                lines.push(rawLine);
+                continue;
+            }
+            let line = '';
+            for (const ch of rawLine) {
+                if (line && measure(line + ch) > maxWidth) {
+                    lines.push(line);
+                    line = ch;
+                } else {
+                    line += ch;
+                }
+            }
+            lines.push(line);
+        }
+        return lines.length ? lines : [''];
+    }
+
+    _makeBitmapMessage(message, maxWidth) {
+        if (typeof document === 'undefined') return null;
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d', { willReadFrequently: true });
+        if (!ctx) return null;
+
+        ctx.font = '16px ' + MESSAGE_FONT;
+        const lines = this._messageLines(message, maxWidth);
+        const lineH = 16;
+        const textW = Math.ceil(Math.max(...lines.map(line => ctx.measureText(line).width), 1));
+        canvas.width = Math.max(1, Math.min(maxWidth, textW));
+        canvas.height = Math.max(1, lines.length * lineH);
+        ctx.font = '16px ' + MESSAGE_FONT;
+        ctx.textBaseline = 'top';
+        ctx.fillStyle = MESSAGE_TEXT_COLOR;
+        ctx.imageSmoothingEnabled = false;
+        for (let i = 0; i < lines.length; i++) {
+            ctx.fillText(lines[i], 0, i * lineH);
+        }
+
+        const image = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        for (let i = 0; i < image.data.length; i += 4) {
+            const a = image.data[i + 3] > 96 ? 255 : 0;
+            image.data[i] = 255;
+            image.data[i + 1] = 255;
+            image.data[i + 2] = 255;
+            image.data[i + 3] = a;
+        }
+        ctx.putImageData(image, 0, 0);
+
+        const key = 'msg_text_' + this.sys.game.loop.frame + '_' + Math.random().toString(36).slice(2);
+        this.textures.addCanvas(key, canvas);
+        return { key, width: canvas.width, height: canvas.height };
+    }
+
+    _destroyBitmapMessage(image) {
+        if (!image) return;
+        const key = image.texture?.key;
+        image.destroy();
+        if (key && this.textures.exists(key)) this.textures.remove(key);
+    }
+
     _displayMessage(message, details = {}) {
         const duration = details.display_time ? details.display_time * 100 : MESSAGE_DEFAULT_MS;
         this._messageText.setText(message);
@@ -713,32 +790,53 @@ export default class StageScene extends Phaser.Scene {
         if (!this._player) return;
         const duration = details.display_time ? details.display_time * 100 : MESSAGE_DEFAULT_MS;
         const p = this._player;
-        const x = Math.round((p.xmin + p.xmax) * 0.5);
-        const y = Math.round(p.ymin - 24);
-        const text = this.add.text(
-            x,
-            y - 4,
-            message,
-            {
-                font: '13px sans-serif',
-                fill: '#111111'
-            }
-        ).setOrigin(0.5, 1).setDepth(22);
+        const pos = this._floatingMessagePosition(message);
+        const bitmap = this._makeBitmapMessage(message, MODAL_MESSAGE_W);
+        const text = bitmap
+            ? this.add.image(pos.x, pos.y - MESSAGE_PADDING_Y, bitmap.key).setOrigin(0.5, 1).setDepth(22)
+            : this.add.text(pos.x, pos.y - MESSAGE_PADDING_Y, message, {
+                fontFamily: MESSAGE_FONT,
+                fontSize: '16px',
+                fill: MESSAGE_TEXT_COLOR,
+                wordWrap: { width: MODAL_MESSAGE_W, useAdvancedWrap: true },
+                lineSpacing: 0,
+                resolution: 1
+            }).setOrigin(0.5, 1).setDepth(22);
         const panel = this.add.rectangle(
-            x,
-            y,
-            Math.max(32, text.width + 14),
-            Math.max(20, text.height + 8),
-            0xffffff,
-            0.96
-        ).setOrigin(0.5, 1).setStrokeStyle(1, 0x202020, 1).setDepth(21);
+            pos.x,
+            pos.y,
+            Math.max(32, Math.min(MODAL_MESSAGE_W, text.width + MESSAGE_PADDING_X * 2)),
+            Math.max(18, text.height + MESSAGE_PADDING_Y * 2),
+            MESSAGE_PANEL_COLOR,
+            1
+        ).setOrigin(0.5, 1).setDepth(21);
 
         this._floatingMessages.push({
             panel,
             text,
+            message,
             elapsed: 0,
             duration: Math.max(duration, 500)
         });
+    }
+
+    _floatingMessagePosition(message = '') {
+        const p = this._player;
+        const view = this.cameras.main.worldView;
+        const maxWidth = Math.min(MODAL_MESSAGE_W, view.width - 8);
+        const approxWidth = Math.min(maxWidth, Math.max(32, message.length * 16 + 4));
+        const half = approxWidth * 0.5;
+        const x = Phaser.Math.Clamp(
+            Math.round((p.xmin + p.xmax) * 0.5),
+            Math.round(view.left + half + 4),
+            Math.round(view.right - half - 4)
+        );
+        const y = Phaser.Math.Clamp(
+            Math.round(p.ymin - 24),
+            Math.round(view.top + 20),
+            Math.round(view.bottom - 4)
+        );
+        return { x, y };
     }
 
     _updateFloatingMessages(delta) {
@@ -748,14 +846,13 @@ export default class StageScene extends Phaser.Scene {
             msg.elapsed += delta;
             if (msg.elapsed >= msg.duration || !p) {
                 msg.panel.destroy();
-                msg.text.destroy();
+                this._destroyBitmapMessage(msg.text);
                 this._floatingMessages.splice(i, 1);
                 continue;
             }
-            const x = Math.round((p.xmin + p.xmax) * 0.5);
-            const y = Math.round(p.ymin - 24);
-            msg.panel.setPosition(x, y);
-            msg.text.setPosition(x, y - 4);
+            const pos = this._floatingMessagePosition(msg.message);
+            msg.panel.setPosition(pos.x, pos.y);
+            msg.text.setPosition(pos.x, pos.y - MESSAGE_PADDING_Y);
         }
     }
 
@@ -768,16 +865,25 @@ export default class StageScene extends Phaser.Scene {
 
         const w = this.scale.width || 320;
         const h = this.scale.height || 240;
-        const panelW = Math.min(300, w - 24);
-        const panelH = Math.min(150, h - 28);
+        const panelW = Math.min(MODAL_MESSAGE_W, w - 24);
+        const panelH = Math.min(MODAL_MESSAGE_H, h - 28);
+        const bitmap = this._makeBitmapMessage(message, panelW - MESSAGE_PADDING_X * 2);
+        this._destroyBitmapMessage(this._modalTextImage);
+        this._modalTextImage = bitmap
+            ? this.add.image(
+                Math.round(w * 0.5 - panelW * 0.5 + MESSAGE_PADDING_X),
+                Math.round(h * 0.5 - panelH * 0.5 + MESSAGE_PADDING_Y),
+                bitmap.key
+            ).setOrigin(0, 0).setScrollFactor(0).setDepth(31).setVisible(false)
+            : null;
         this._messagePanel
             .setPosition(w * 0.5, h * 0.5)
             .setSize(panelW, panelH)
             .setScale(0.2)
             .setVisible(true);
         this._messageText
-            .setPosition(w * 0.5 - panelW * 0.5 + 10, h * 0.5 - panelH * 0.5 + 10)
-            .setWordWrapWidth(panelW - 20, true)
+            .setPosition(Math.round(w * 0.5 - panelW * 0.5 + 2), Math.round(h * 0.5 - panelH * 0.5 + 1))
+            .setWordWrapWidth(panelW - 4, true)
             .setText(message)
             .setScale(1)
             .setVisible(false);
@@ -791,6 +897,8 @@ export default class StageScene extends Phaser.Scene {
         this._modalMessage = null;
         if (this._messagePanel) this._messagePanel.setVisible(false);
         if (this._messageText) this._messageText.setVisible(false);
+        this._destroyBitmapMessage(this._modalTextImage);
+        this._modalTextImage = null;
         const next = this._messageQueue.shift();
         if (next) this._showMessage(next.message, next.details);
     }
@@ -800,7 +908,8 @@ export default class StageScene extends Phaser.Scene {
             this._modalMessage.elapsed += delta;
             const scale = Math.min(1, Math.max(0.2, this._modalMessage.elapsed / MODAL_ZOOM_MS));
             if (this._messagePanel) this._messagePanel.setScale(scale);
-            if (this._messageText) this._messageText.setVisible(scale >= 1);
+            if (this._messageText) this._messageText.setVisible(scale >= 1 && !this._modalTextImage);
+            if (this._modalTextImage) this._modalTextImage.setVisible(scale >= 1);
             if (this._keyZ && Phaser.Input.Keyboard.JustDown(this._keyZ)) {
                 this._closeModalMessage();
             }
