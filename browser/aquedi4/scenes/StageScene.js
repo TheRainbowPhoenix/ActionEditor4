@@ -113,8 +113,9 @@ export default class StageScene extends Phaser.Scene {
         this._spawnCharacters(sd);
 
         this.cameras.main.setBounds(SCROLL * TILE, SCROLL * TILE, cols * TILE, rows * TILE);
+        this.cameras.main.roundPixels = true;
         if (this._player)
-            this.cameras.main.startFollow(this._player.sprite, true, 0.15, 0.15);
+            this.cameras.main.startFollow(this._player.sprite, true, 1, 1);
 
         this._cursors = this.input.keyboard.createCursorKeys();
         this._keyZ    = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.Z);
@@ -454,9 +455,8 @@ export default class StageScene extends Phaser.Scene {
 
     _syncSprite(e) {
         if (!e.sprite) return;
-        // Round position to nearest half-pixel to avoid sub-pixel blur
-        const cx = Math.round((e.xmin + e.xmax) * 0.5 * 2) / 2;
-        const cy = Math.round((e.ymin + e.ymax) * 0.5 * 2) / 2;
+        const cx = Math.round((e.xmin + e.xmax) * 0.5);
+        const cy = Math.round((e.ymin + e.ymax) * 0.5);
         e.sprite.setPosition(cx, cy);
     }
 
