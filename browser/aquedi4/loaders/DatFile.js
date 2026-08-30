@@ -1,6 +1,7 @@
 // loaders/DatFile.js
 import { parseWorldMap } from '../parsers/worldMap.js';
 import { parseSystem } from '../parsers/system.js';
+import { parseCommonPalette } from '../parsers/stg4-parser.js';
 import { PARSER_FUNC_MAP } from '../parsers/database.js';
 import { DataReader } from '../parsers/data-reader-writer.js'; // Assuming this is where DataReader is
 
@@ -8,7 +9,8 @@ import { DataReader } from '../parsers/data-reader-writer.js'; // Assuming this 
 const ALL_PARSERS = new Map([
     ...PARSER_FUNC_MAP,
     ['system.dat', parseSystem],
-    ['worldmap.dat', parseWorldMap]
+    ['worldmap.dat', parseWorldMap],
+    ['commonpalette.cplt4', parseCommonPalette]
 ]);
 
 export class DatFile extends Phaser.Loader.File {
@@ -38,6 +40,8 @@ export class DatFile extends Phaser.Loader.File {
                 parsedData = await parseSystem(response.body);
             } else if (this.parserName === 'worldmap') {
                 parsedData = await parseWorldMap(response.body);
+            } else if (this.parserName === 'commonpalette.cplt4') {
+                parsedData = await parseCommonPalette(response.body);
             } 
             // Then check the generic parser map
             else if (PARSER_FUNC_MAP.has(this.parserName)) {

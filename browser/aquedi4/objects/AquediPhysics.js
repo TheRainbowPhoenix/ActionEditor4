@@ -253,6 +253,7 @@ export class ActorEntity extends PlayerEntity {
         this.entityGate104 = options.entityGate104 ?? 1;
         this.entityGate4D4 = options.entityGate4D4 ?? 0;
         this.actions = options.actions ?? [];
+        this.reactiveActions = options.reactiveActions ?? [];
         this.actionCursor = 0;
         this.actionTicks = 0;
         this.activationMargin = options.activationMargin ?? AQUEDI_PHYSICS.TILE * 4;

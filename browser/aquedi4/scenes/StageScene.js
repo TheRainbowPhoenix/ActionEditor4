@@ -7,6 +7,10 @@ import {
     PlayerEntity,
     commandSpeedToSubstepSpeed
 } from '../objects/AquediPhysics.js';
+import {
+    CharacterInheritanceResolver,
+    normalizeActorCommandDetails
+} from '../objects/AquediCharacterModel.js';
 import { createAquediMessageWindow, measureAquediText } from '../ui/AquediGui.js';
 
 const TILE     = AQUEDI_PHYSICS.TILE;
@@ -44,7 +48,6 @@ function itemBlinkFrame(imageNumber, phase) {
 }
 
 function blockTileFrame(imageNumber) {
-    console.log(imageNumber);
     if (!imageNumber || imageNumber < 1) return 0;
     const idx = imageNumber; // Convert to 0-based
     // Column-first indexing: y-axis (rows) first, then x-axis (cols)
@@ -55,6 +58,10 @@ function blockTileFrame(imageNumber) {
 
 function stageFrame(imageNumber) {
     return Math.max(0, (imageNumber || 1) - 1);
+}
+
+function characterFrame(imageNumber) {
+    return Math.max(0, imageNumber || 0) * 16;
 }
 
 function frameDurationMs(frame) {
@@ -225,12 +232,17 @@ export default class StageScene extends Phaser.Scene {
     _spawnCharacters(sd) {
         const pc = sd.player_collide;
         const ec = sd.enemy_collide;
+        const resolver = new CharacterInheritanceResolver({
+            stagePalette: sd.palette,
+            commonPalette: DataManager.$commonPalette || globalThis.$commonPalette
+        });
 
         for (const sc of (sd.characters || [])) {
-            const ch  = sc.character;
+            const def = resolver.resolve(sc.character);
+            const ch  = def.raw;
             const fly = !!ch.flying;
 
-            if (ch.faction === 0 && ch.operation === 0 && !this._player) {
+            if (def.isPlayerControlled && !this._player) {
                 // Player: use walking_character width/height from hitbox globals.
                 // Confirmed IDA: registered CollBox 16x24 for StorySample01 player.
                 // coll_w=12 but with sprite offset, AABB is 16x24. Use 16 for now.
@@ -249,6 +261,7 @@ export default class StageScene extends Phaser.Scene {
                 e.sp = e.maxSp = ch.sp;
                 // Player01.bmp faces left in the sheet; flipX mirrors to face right.
                 e.facingRight  = !!ch.facing_right;
+                e.characterDefinition = def;
                 e.renderOffsetY = (e.height - TILE) * 0.5;
                 const cx       = (e.xmin + e.xmax) * 0.5;
                 const cy       = (e.ymin + e.ymax) * 0.5 + e.renderOffsetY;
@@ -256,27 +269,36 @@ export default class StageScene extends Phaser.Scene {
                     .setFlipX(!!e.facingRight)
                     .setDepth(5);
                 this._player   = e;
-            } else if (!(ch.faction === 0 && ch.operation === 0)) {
+            } else if (def.isActor) {
                 const cw  = fly ? (ec.flying_character_width  || 12) : (ec.walking_character_width  || 12);
                 const ch2 = fly ? (ec.flying_character_height || 16) : (ec.walking_character_height || 24);
+                const actionModel = this._extractActorActions(ch);
                 const e   = new ActorEntity({
                     ...makeEntityAtTile(ch.position_x, ch.position_y, cw, ch2, 1),
-                    actions: this._extractActorActions(ch),
+                    actions: actionModel.continuous,
+                    reactiveActions: actionModel.reactive,
                     facingRight: !!ch.facing_right
                 });
                 e.isEnemy      = true;
                 e.flying       = fly;
-                e.baseFrame    = stageFrame(ch.image_number);
+                e.baseFrame    = characterFrame(ch.image_number);
                 e.animationSet = ch.animation_set || 0;
                 e.hp = e.maxHp = ch.hp;
                 e.facingRight  = !!ch.facing_right;
+                e.directionFixed = !!ch.direction_fixed;
+                e.characterDefinition = def;
+                e.characterName = def.name;
+                e.groupNumber = ch.has_group ? ch.group_number : null;
+                e.bodyHitPower = ch.body_hit_power || 0;
+                e.defense = ch.defense || 0;
+                e.score = ch.score || 0;
                 e.renderOffsetY = (e.height - TILE) * 0.5;
                 const type     = Math.max(1, Math.min(8, ch.image_type || 1));
                 const cx       = (e.xmin + e.xmax) * 0.5;
                 const cy       = (e.ymin + e.ymax) * 0.5 + e.renderOffsetY;
                 e.sprite       = this.add.sprite(cx, cy, 'chara_' + type, e.baseFrame)
                     .setFlipX(!!e.facingRight)
-                    .setDepth(4);
+                    .setDepth(3 + (ch.z_coordinate || 0));
                 this._actors.push(e);
             }
         }
@@ -284,15 +306,21 @@ export default class StageScene extends Phaser.Scene {
 
     _extractActorActions(ch) {
         const flows = ch.flows || ch.flow_data || [];
-        const commands = [];
+        const continuous = [];
+        const reactive = [];
         for (const flow of flows) {
             for (const command of (flow.commands || flow.command_data || [])) {
-                if (command.type === 2 || command.type === 3 || command.type === 10) {
-                    commands.push(command);
-                }
+                if (command.type !== 2 && command.type !== 3 && command.type !== 9 && command.type !== 10) continue;
+                const normalized = {
+                    ...command,
+                    flow,
+                    details: normalizeActorCommandDetails(command)
+                };
+                if (command.type === 9) reactive.push(normalized);
+                else continuous.push(normalized);
             }
         }
-        return commands;
+        return { continuous, reactive };
     }
 
     _buildHud() {
@@ -448,7 +476,11 @@ export default class StageScene extends Phaser.Scene {
     }
 
     _runActorActions(e) {
-        if (!e.actions.length || !e.canRunPhysics()) return;
+        if (!e.canRunPhysics()) return;
+
+        this._runReactiveActorActions(e);
+
+        if (!e.actions.length) return;
 
         const command = e.actions[e.actionCursor % e.actions.length];
         if (!command) return;
@@ -464,6 +496,23 @@ export default class StageScene extends Phaser.Scene {
         if (e.actionTicks >= duration) {
             e.actionTicks = 0;
             e.actionCursor++;
+        }
+    }
+
+    _runReactiveActorActions(e) {
+        if (!e.reactiveActions?.length) return;
+
+        for (const command of e.reactiveActions) {
+            if (command.type !== 9) continue;
+            const bytes = command.details?.bytes6_42 || [];
+            const directionMode = bytes[33] || 0;
+
+            // DirectionChange "Face Away Block". The sample enemy flows use this
+            // as a separate always-active rule while straight/ground movement runs.
+            if (directionMode === 11 && (e.contactL || e.contactR)) {
+                e.facingRight = !!e.contactL;
+                if (e.sprite) e.sprite.setFlipX(!!e.facingRight);
+            }
         }
     }
 

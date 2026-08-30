@@ -2771,6 +2771,20 @@ function parseStagePaletteFile(reader) {
   
 }
 
+function parseCommonPaletteFile(reader) {
+  const magic = reader.readUint32();
+  if (magic !== 966 && magic !== 1020) {
+    throw new Error(`Invalid CPLT4 magic: ${magic}, expected 966 or 1020`);
+  }
+
+  return {
+    magic,
+    unk1: reader.readUint32(),
+    unk2: reader.readUint32(),
+    palette: readStagePalette(reader)
+  };
+}
+
 /**
  * @param {DataWriter} writer
  * @param {object} data
@@ -3018,6 +3032,24 @@ async function parseStage(stream) {
   return parsedFile;
 }
 
+async function parseCommonPalette(stream) {
+  const fileBuffer = await new Response(stream).arrayBuffer();
+  try {
+    return parseCommonPaletteFile(new DataReader(fileBuffer));
+  } catch (error) {
+    console.warn('CommonPalette.cplt4 parse failed; continuing without external palette data: ' + (error?.message || error));
+    const reader = new DataReader(fileBuffer);
+    const magic = reader.readUint32();
+    return {
+      magic,
+      parseError: error?.message || String(error),
+      unk1: reader.readUint32(),
+      unk2: reader.readUint32(),
+      palette: { blocks: [], characters: [], items: [] }
+    };
+  }
+}
+
 /**
  * Serialize STG4 object to a ReadableStream of bytes.
  * @param {object} data The STG4 data object.
@@ -3040,4 +3072,4 @@ function serializeStage(data) {
   });
 }
 
-export { parseStage, serializeStage };
+export { parseStage, parseCommonPalette, serializeStage };

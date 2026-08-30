@@ -27,6 +27,7 @@ export default class BootScene extends Phaser.Scene {
         this.load.dat('$dataSound', 'data/database/Sound.dat', 'sound.dat');
         this.load.dat('$dataAnime', 'data/database/Anime.dat', 'anime.dat');
         this.load.dat('$dataAnimeSet', 'data/database/AnimeSet.dat', 'animeset.dat');
+        this.load.dat('$commonPalette', 'data/CommonPalette.cplt4', 'commonpalette.cplt4');
         // ... load other .dat files
 
         // Load World Map assets
@@ -69,6 +70,7 @@ export default class BootScene extends Phaser.Scene {
         globalThis.$dataSound = DataManager.$dataSound = this.cache.custom.dat.get('$dataSound');
         globalThis.$dataAnime = DataManager.$dataAnime = this.cache.custom.dat.get('$dataAnime');
         globalThis.$dataAnimeSet = DataManager.$dataAnimeSet = this.cache.custom.dat.get('$dataAnimeSet');
+        globalThis.$commonPalette = DataManager.$commonPalette = this.cache.custom.dat.get('$commonPalette');
         
         this.processPalette();
         this.processWorldMapTiles();

@@ -1,4 +1,4 @@
-import { parseStage } from "../parsers/stg4-parser.js";
+import { parseStage, parseCommonPalette } from "../parsers/stg4-parser.js";
 import { parseWorldMap } from "../parsers/worldMap.js";
 import { loadDatabase } from "../parsers/database.js";
 import { parseSystem } from "../parsers/system.js";
@@ -15,6 +15,7 @@ DataManager.$dataSound = null;
 DataManager.$dataAnime = null;
 DataManager.$dataAnimeSet = null;
 DataManager.$globalPalette = [];
+DataManager.$commonPalette = null;
 // ... add other $data globals as needed
 
 DataManager._databaseFiles = [
@@ -34,6 +35,7 @@ DataManager.loadDatabases = function() {
     // Load special, non-list databases separately
     promises.push(this.loadDataFile("$dataSystem", "data/System.dat", true));
     promises.push(this.loadDataFile("$dataWorldMap", "data/WorldMap.dat", true));
+    promises.push(this.loadDataFile("$commonPalette", "data/CommonPalette.cplt4", true));
 
     return Promise.all(promises);
 };
@@ -49,6 +51,8 @@ DataManager.loadDataFile = async function(name, path, isSpecial = false) {
                 data = await parseSystem(response.body);
             } else if (path.endsWith("WorldMap.dat")) {
                 data = await parseWorldMap(response.body);
+            } else if (path.endsWith("CommonPalette.cplt4")) {
+                data = await parseCommonPalette(response.body);
             }
         } else {
             // Use the generic database stream parser
