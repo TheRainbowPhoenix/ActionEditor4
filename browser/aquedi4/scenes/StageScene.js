@@ -91,6 +91,40 @@ function cloneAxisOffset(ch, axis, cloneIndex) {
     return offset;
 }
 
+function paletteBlocks(paletteData) {
+    return paletteData?.palette?.blocks || paletteData?.blocks || [];
+}
+
+function resolveBlockDefinition(block, stagePalette, commonPalette) {
+    const resolved = { ...(block || {}) };
+    const parentBlocks = block?.inherit_palette === 1 ? paletteBlocks(commonPalette) :
+        block?.inherit_palette === 2 ? paletteBlocks(stagePalette) : [];
+    const parent = parentBlocks[block?.inherit_palette_data];
+    if (!parent) return resolved;
+
+    const fields = [
+        ['inherit_block_name', ['name']],
+        ['inherit_image', ['image_number', 'image_type']],
+        ['inherit_in_front_of_character', ['in_front_of_character']],
+        ['inherit_transparency', ['transparency']],
+        ['inherit_mark', ['mark_display', 'mark_number']],
+        ['inherit_block_type', ['block_type']],
+        ['inherit_invalid_faction', ['invalid_faction']],
+        ['inherit_action', ['action', 'action_parameter']],
+        ['inherit_acquired_item', ['acquired_item_palette', 'acquired_item_palette_data_number']],
+        ['inherit_block_summon', ['block_summon_invalid']]
+    ];
+
+    for (const [flag, names] of fields) {
+        if (!block[flag]) continue;
+        for (const name of names) {
+            if (Object.prototype.hasOwnProperty.call(parent, name)) resolved[name] = parent[name];
+        }
+    }
+    resolved.parentBlock = parent;
+    return resolved;
+}
+
 export default class StageScene extends Phaser.Scene {
     constructor() {
         super('StageScene');
@@ -98,7 +132,7 @@ export default class StageScene extends Phaser.Scene {
     }
 
     init(data) {
-        this._stageFile = data.stageFile || 'StorySample01.stg4_1020';
+        this._stageFile = /* data.stageFile || */ 'StorySample02-1.stg4_1020';
         this._stageKey  = 'stage_' + this._stageFile;
         this._accum     = 0;
         this._player    = null;
@@ -112,6 +146,7 @@ export default class StageScene extends Phaser.Scene {
         this._modalWindow = null;
         this._messageWindow = null;
         this._collectionStats = Object.create(null);
+        this._lastSpecialBlockTile = null;
     }
 
     preload() {
@@ -176,15 +211,18 @@ export default class StageScene extends Phaser.Scene {
         this._attr       = new Uint8Array(total);
         this._cat        = new Uint8Array(total).fill(255);
         this._gfx        = new Int16Array(total).fill(-1);
+        this._block      = new Array(total);
+        const commonPalette = DataManager.$commonPalette || globalThis.$commonPalette;
 
         for (const sb of (sd.blocks || [])) {
-            const blk   = sb.block;
+            const blk   = resolveBlockDefinition(sb.block, sd.palette, commonPalette);
             const ax    = blk.position_x + SCROLL;
             const ay    = blk.position_y + SCROLL;
             if (ax < 0 || ay < 0 || ax >= stride) continue;
             const idx       = ax + ay * stride;
             this._attr[idx] = blk.block_type > 0 ? 1 : 0;
             this._gfx[idx]  = blk.image_number >= 0 ? blk.image_number : -1;
+            this._block[idx] = blk;
         }
     }
 
@@ -307,6 +345,7 @@ export default class StageScene extends Phaser.Scene {
                     e.directionFixed = !!ch.direction_fixed;
                     e.characterDefinition = def;
                     e.characterName = def.name;
+                    e.flowModel = actionModel.flows;
                     e.groupNumber = ch.has_group ? ch.group_number : null;
                     e.bodyHitPower = ch.body_hit_power || 0;
                     e.defense = ch.defense || 0;
@@ -326,21 +365,25 @@ export default class StageScene extends Phaser.Scene {
 
     _extractActorActions(ch) {
         const flows = ch.flows || ch.flow_data || [];
+        const flowModel = flows.map((flow, index) => ({
+            ...flow,
+            index,
+            commands: (flow.commands || flow.command_data || []).map(command => ({
+                ...command,
+                flow,
+                details: normalizeActorCommandDetails(command)
+            }))
+        }));
         const continuous = [];
         const reactive = [];
-        for (const flow of flows) {
-            for (const command of (flow.commands || flow.command_data || [])) {
+        for (const flow of flowModel) {
+            for (const command of flow.commands) {
                 if (command.type !== 2 && command.type !== 3 && command.type !== 9 && command.type !== 10) continue;
-                const normalized = {
-                    ...command,
-                    flow,
-                    details: normalizeActorCommandDetails(command)
-                };
-                if (flow.timing === AQUEDI_FLOW_TIMING.BLOCK_HIT_LR) reactive.push(normalized);
-                else if (flow.timing === AQUEDI_FLOW_TIMING.ALWAYS) continuous.push(normalized);
+                if (flow.timing === AQUEDI_FLOW_TIMING.BLOCK_HIT_LR) reactive.push(command);
+                else if (flow.timing === AQUEDI_FLOW_TIMING.ALWAYS) continuous.push(command);
             }
         }
-        return { continuous, reactive };
+        return { continuous, reactive, flows: flowModel };
     }
 
     _buildHud() {
@@ -386,10 +429,25 @@ export default class StageScene extends Phaser.Scene {
         return this._attr[idx] !== 0 && this._cat[idx] !== layer;
     }
 
+    _blockAt(wx, wy, layer) {
+        if (wx < 0 || wy < 0) return null;
+        const tc  = (wx / TILE) | 0;
+        const tr  = (wy / TILE) | 0;
+        const idx = tc + tr * this._stride;
+        if (idx < 0 || idx >= this._attr.length) return null;
+        if (this._attr[idx] === 0 || this._cat[idx] === layer) return null;
+        return this._block[idx] ? { block: this._block[idx], tileX: tc - SCROLL, tileY: tr - SCROLL } : null;
+    }
+
     // Horizontal edge: probe three evenly-spaced points at height y from x0 to x1.
     _solidH(x0, y, x1, layer) {
         const xm = (x0 + x1) * 0.5;
         return this._solid(x0, y, layer) || this._solid(xm, y, layer) || this._solid(x1, y, layer);
+    }
+
+    _blockOnHorizontalEdge(x0, y, x1, layer) {
+        const xm = (x0 + x1) * 0.5;
+        return this._blockAt(x0, y, layer) || this._blockAt(xm, y, layer) || this._blockAt(x1, y, layer);
     }
 
     // Vertical edge: probe top and bottom of a column at x.
@@ -397,23 +455,31 @@ export default class StageScene extends Phaser.Scene {
         return this._solid(x, yTop, layer) || this._solid(x, yBot, layer);
     }
 
+    _blockOnVerticalEdge(x, yTop, yBot, layer) {
+        return this._blockAt(x, yTop, layer) || this._blockAt(x, yBot, layer);
+    }
+
     // Entity_VerticalCollision: right wall (vertical scan at x=xmax from ymin to ymax).
     // BUG FIX: use ymax-1 so we don't probe the floor tile when standing on ground.
     _resolveRight(e) {
-        if (!this._solidV(e.xmax, e.ymin, e.ymax - 1, e.collLayer)) return;
+        const hit = this._blockOnVerticalEdge(e.xmax, e.ymin, e.ymax - 1, e.collLayer);
+        if (!hit) return;
         const dx    = -(((e.xmax | 0) & 31) + 1);
         e.translateX(dx);
         e.velX      = 0;
         e.contactR  = true;
+        this._applyBlockAction(e, hit, 'right');
     }
 
     // Entity_ResolveTileCollisionX: left wall (vertical scan at x=xmin from ymin to ymax).
     _resolveLeft(e) {
-        if (!this._solidV(e.xmin, e.ymin, e.ymax - 1, e.collLayer)) return;
+        const hit = this._blockOnVerticalEdge(e.xmin, e.ymin, e.ymax - 1, e.collLayer);
+        if (!hit) return;
         const dx   = 32 - ((e.xmin | 0) & 31);
         e.translateX(dx);
         e.velX     = 0;
         e.contactL = true;
+        this._applyBlockAction(e, hit, 'left');
     }
 
     // Entity_CheckFloorTile + Entity_OnLand.
@@ -421,7 +487,8 @@ export default class StageScene extends Phaser.Scene {
     // When solid and falling: apply IDA snap (ymin -= (int(ymax)&31)+1).
     _resolveFloor(e) {
         const probeY = e.ymax + 1;
-        if (!this._solidH(e.xmin, probeY, e.xmax, e.collLayer)) {
+        const hit = this._blockOnHorizontalEdge(e.xmin, probeY, e.xmax, e.collLayer);
+        if (!hit) {
             // No floor below — start falling.
             e.onGround  = false;
             e.airTime++;
@@ -446,15 +513,41 @@ export default class StageScene extends Phaser.Scene {
         e.airTime     = 0;
         e.jumpLatch   = 0;
         e.contactB    = true;
+        this._applyBlockAction(e, hit, 'floor');
     }
 
     // Entity_CheckCeilingTile + Entity_OnHitCeiling.
     _resolveCeiling(e) {
-        if (!this._solidH(e.xmin, e.ymin, e.xmax, e.collLayer)) return;
+        const hit = this._blockOnHorizontalEdge(e.xmin, e.ymin, e.xmax, e.collLayer);
+        if (!hit) return;
         const dy  = 32 - ((e.ymin | 0) & 31);
         e.translateY(dy);
         if (e.velY < 0) e.velY = 0;
         e.contactT = true;
+        this._applyBlockAction(e, hit, 'ceiling');
+    }
+
+    _applyBlockAction(e, hit, side) {
+        if (!e?.isPlayer || !hit?.block) return;
+        const action = hit.block.action || 0;
+        if (!action) return;
+
+        if (action === 1) {
+            const key = hit.tileX + ',' + hit.tileY + ':' + side + ':' + action;
+            if (this._lastSpecialBlockTile === key && e.velY < 0) return;
+            this._lastSpecialBlockTile = key;
+            e.startJumpFromHeight(hit.block.action_parameter || 0, 0);
+            e.airTime = COYOTE;
+            return;
+        }
+
+        if (action === 2) {
+            e.noJumpTicks = Math.max(e.noJumpTicks || 0, 2);
+            return;
+        }
+
+        if (action === 4) e.speedX = -commandSpeedToSubstepSpeed(hit.block.action_parameter || 0);
+        if (action === 5) e.speedX = commandSpeedToSubstepSpeed(hit.block.action_parameter || 0);
     }
 
     _stepEntity(e) {
@@ -918,10 +1011,12 @@ export default class StageScene extends Phaser.Scene {
         // Jump: allowed within coyote window.
         // IDA: in_air flag only sets after g_max_air_time_frames (many frames).
         // We use a small coyote window so the player can jump just after stepping off an edge.
-        if (Phaser.Input.Keyboard.JustDown(this._keyX) && e.airTime < COYOTE) {
+        const jumpBlocked = (e.noJumpTicks || 0) > 0;
+        if (Phaser.Input.Keyboard.JustDown(this._keyX) && e.airTime < COYOTE && !jumpBlocked) {
             e.jump();
             e.airTime  = COYOTE; // block double-jump until landing resets airTime
         }
+        if (e.noJumpTicks > 0) e.noJumpTicks--;
     }
 
     //-----------------------------------------------------------------------

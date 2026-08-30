@@ -70,7 +70,8 @@ export const AQUEDI_FLOW_TIMING = Object.freeze({
     BLOCK_HIT_UP: 16,
     BLOCK_HIT_DOWN: 17,
     HERO_RIDING: 18,
-    CHARACTER_RIDING: 19
+    CHARACTER_RIDING: 19,
+    PRE_STAGE: 25
 });
 
 function cloneValue(value) {

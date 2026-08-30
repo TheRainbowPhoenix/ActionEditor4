@@ -112,6 +112,7 @@ export class PlayerEntity {
         this.contactB = false;
         this.sprite = options.sprite ?? null;
         this.active = options.active ?? true;
+        this.noJumpTicks = options.noJumpTicks ?? 0;
     }
 
     static atTile(tileX, tileY, width, height, collLayer, scroll = 10, tile = AQUEDI_PHYSICS.TILE, options = {}) {
@@ -254,6 +255,7 @@ export class ActorEntity extends PlayerEntity {
         this.entityGate4D4 = options.entityGate4D4 ?? 0;
         this.actions = options.actions ?? [];
         this.reactiveActions = options.reactiveActions ?? [];
+        this.flowModel = options.flowModel ?? [];
         this.actionCursor = 0;
         this.actionTicks = 0;
         this.cloneIndex = options.cloneIndex ?? 0;
