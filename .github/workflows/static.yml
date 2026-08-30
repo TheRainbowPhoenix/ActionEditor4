@@ -43,6 +43,12 @@ jobs:
         working-directory: ./browser
         run: npm run build:engine
 
+      - name: Copy Aquedi4 runtime files
+        run: |
+          for dir in assets bmp core data libs loaders managers parsers plugins scenes ui; do
+            cp -a "browser/aquedi4/$dir" browser/aquedi4/dist/
+          done
+
       # Assemble everything that should appear on GitHub Pages.
       - name: Prepare Pages directory
         run: |
