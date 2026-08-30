@@ -8,6 +8,7 @@ import {
     commandSpeedToSubstepSpeed
 } from '../objects/AquediPhysics.js';
 import {
+    AQUEDI_FLOW_TIMING,
     CharacterInheritanceResolver,
     normalizeActorCommandDetails
 } from '../objects/AquediCharacterModel.js';
@@ -316,8 +317,8 @@ export default class StageScene extends Phaser.Scene {
                     flow,
                     details: normalizeActorCommandDetails(command)
                 };
-                if (command.type === 9) reactive.push(normalized);
-                else continuous.push(normalized);
+                if (flow.timing === AQUEDI_FLOW_TIMING.BLOCK_HIT_LR) reactive.push(normalized);
+                else if (flow.timing === AQUEDI_FLOW_TIMING.ALWAYS) continuous.push(normalized);
             }
         }
         return { continuous, reactive };
@@ -424,6 +425,7 @@ export default class StageScene extends Phaser.Scene {
         e.velY        = 0;
         e.onGround    = true;
         e.airTime     = 0;
+        e.jumpLatch   = 0;
         e.contactB    = true;
     }
 
@@ -482,20 +484,14 @@ export default class StageScene extends Phaser.Scene {
 
         if (!e.actions.length) return;
 
-        const command = e.actions[e.actionCursor % e.actions.length];
-        if (!command) return;
-
-        if (command.type === 2 || command.type === 3) {
-            this._runLinearActorCommand(e, command.details || {});
-        } else if (command.type === 10) {
-            this._runJumpActorCommand(e, command.details || {});
-        }
-
-        e.actionTicks++;
-        const duration = Math.max(1, (command.details?.execution_time || 1) * PHYSICS_SUBSTEPS);
-        if (e.actionTicks >= duration) {
-            e.actionTicks = 0;
-            e.actionCursor++;
+        for (const command of e.actions) {
+            if (command.type === 2 || command.type === 3) {
+                this._runLinearActorCommand(e, command);
+            } else if (command.type === 10) {
+                this._runJumpActorCommand(e, command.details || {});
+            } else if (command.type === 9) {
+                this._runDirectionChangeCommand(e, command);
+            }
         }
     }
 
@@ -503,20 +499,26 @@ export default class StageScene extends Phaser.Scene {
         if (!e.reactiveActions?.length) return;
 
         for (const command of e.reactiveActions) {
-            if (command.type !== 9) continue;
-            const bytes = command.details?.bytes6_42 || [];
-            const directionMode = bytes[33] || 0;
-
-            // DirectionChange "Face Away Block". The sample enemy flows use this
-            // as a separate always-active rule while straight/ground movement runs.
-            if (directionMode === 11 && (e.contactL || e.contactR)) {
-                e.facingRight = !!e.contactL;
-                if (e.sprite) e.sprite.setFlipX(!!e.facingRight);
-            }
+            const timing = command.flow?.timing ?? 0;
+            if (timing === AQUEDI_FLOW_TIMING.BLOCK_HIT_LR && !(e.contactL || e.contactR)) continue;
+            this._runDirectionChangeCommand(e, command);
         }
     }
 
-    _runLinearActorCommand(e, details) {
+    _runDirectionChangeCommand(e, command) {
+        if (command.type !== 9) return;
+        const bytes = command.details?.bytes6_42 || [];
+        const directionMode = bytes[33] || 0;
+
+        // DirectionChange "Face Away Block".
+        if (directionMode === 11 && (e.contactL || e.contactR)) {
+            e.facingRight = !!e.contactL;
+            if (e.sprite) e.sprite.setFlipX(!!e.facingRight);
+        }
+    }
+
+    _runLinearActorCommand(e, command) {
+        const details = command.details || {};
         const speed = commandSpeedToSubstepSpeed(
             details.time_speed_distance_speed,
             details.time_speed_distance_speed_double && e.formVariant ? details.time_speed_distance_speed_double : 0
@@ -525,7 +527,8 @@ export default class StageScene extends Phaser.Scene {
 
         if (details.movement_direction_direction === 4) dir = -1;
         if (details.movement_direction_direction === 6) dir = 1;
-        if (details.movement_direction_reverse_speed_if_direction_changes && (e.contactL || e.contactR)) {
+
+        if (command.type === 3 && e.onGround && !this._hasGroundAhead(e, dir)) {
             e.facingRight = !e.facingRight;
             dir = e.facingRight ? 1 : -1;
             if (e.sprite) e.sprite.setFlipX(!!e.facingRight);
@@ -534,6 +537,12 @@ export default class StageScene extends Phaser.Scene {
         if (!details.movement_direction_invalidate_horizontal_movement) {
             e.speedX = dir * speed;
         }
+    }
+
+    _hasGroundAhead(e, dir) {
+        const probeX = dir >= 0 ? e.xmax + 1 : e.xmin - 1;
+        const probeY = e.ymax + 1;
+        return this._solid(probeX, probeY, e.collLayer);
     }
 
     _runJumpActorCommand(e, details) {

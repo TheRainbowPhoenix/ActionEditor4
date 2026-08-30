@@ -50,6 +50,29 @@ const CHARACTER_INHERIT_GROUPS = [
     ['inherit_action', ['flows']]
 ];
 
+export const AQUEDI_FLOW_TIMING = Object.freeze({
+    ALWAYS: 0,
+    DAMAGE_TAKEN_POWER_NONZERO: 1,
+    DAMAGE_TAKEN_ANY: 2,
+    SHOCK_TAKEN_STRENGTH_NONZERO: 3,
+    SHOCK_TAKEN_ANY_DIRECTION: 4,
+    ON_DEATH: 5,
+    HIT_CHARACTER: 6,
+    HIT_BLOCK_CHARACTER: 7,
+    RIDING_BLOCK: 8,
+    HIT_SHOT: 9,
+    HIT_ITEM: 10,
+    HIT_BLOCK: 11,
+    BLOCK_HIT_LR: 12,
+    BLOCK_HIT_LEFT: 13,
+    BLOCK_HIT_RIGHT: 14,
+    BLOCK_HIT_UD: 15,
+    BLOCK_HIT_UP: 16,
+    BLOCK_HIT_DOWN: 17,
+    HERO_RIDING: 18,
+    CHARACTER_RIDING: 19
+});
+
 function cloneValue(value) {
     if (Array.isArray(value)) return value.map(cloneValue);
     if (value && typeof value === 'object') return { ...value };
