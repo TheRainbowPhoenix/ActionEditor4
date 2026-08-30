@@ -212,8 +212,9 @@ export default class StageScene extends Phaser.Scene {
                 e.sp = e.maxSp = ch.sp;
                 // Player01.bmp faces right by default; flipX mirrors to face left.
                 e.facingRight  = !!ch.facing_right;
+                e.renderOffsetY = (e.height - TILE) * 0.5;
                 const cx       = (e.xmin + e.xmax) * 0.5;
-                const cy       = (e.ymin + e.ymax) * 0.5;
+                const cy       = (e.ymin + e.ymax) * 0.5 + e.renderOffsetY;
                 e.sprite       = this.add.sprite(cx, cy, 'player_stage', 0)
                     .setFlipX(!e.facingRight)
                     .setDepth(5);
@@ -230,9 +231,10 @@ export default class StageScene extends Phaser.Scene {
                 e.flying       = fly;
                 e.hp = e.maxHp = ch.hp;
                 e.facingRight  = !!ch.facing_right;
+                e.renderOffsetY = (e.height - TILE) * 0.5;
                 const type     = Math.max(1, Math.min(8, ch.image_type || 1));
                 const cx       = (e.xmin + e.xmax) * 0.5;
-                const cy       = (e.ymin + e.ymax) * 0.5;
+                const cy       = (e.ymin + e.ymax) * 0.5 + e.renderOffsetY;
                 e.sprite       = this.add.sprite(cx, cy, 'chara_' + type, stageFrame(ch.image_number))
                     .setFlipX(!!e.facingRight)
                     .setDepth(4);
@@ -455,8 +457,8 @@ export default class StageScene extends Phaser.Scene {
 
     _syncSprite(e) {
         if (!e.sprite) return;
-        const cx = Math.round((e.xmin + e.xmax) * 0.5);
-        const cy = Math.round((e.ymin + e.ymax) * 0.5);
+        const cx = Math.round((e.xmin + e.xmax) * 0.5 + (e.renderOffsetX || 0));
+        const cy = Math.round((e.ymin + e.ymax) * 0.5 + (e.renderOffsetY || 0));
         e.sprite.setPosition(cx, cy);
     }
 
