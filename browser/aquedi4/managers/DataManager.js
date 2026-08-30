@@ -13,6 +13,7 @@ DataManager.$dataWorldMap = null;
 DataManager.$dataStage = null;
 DataManager.$dataSound = null;
 DataManager.$dataAnime = null;
+DataManager.$dataAnimeSet = null;
 DataManager.$globalPalette = [];
 // ... add other $data globals as needed
 
@@ -20,6 +21,7 @@ DataManager._databaseFiles = [
     // The parser is resolved by filename.
     // { name: "$dataSystem", path: "data/System.dat" },
     { name: "$dataAnime", path: "data/database/Anime.dat" },
+    { name: "$dataAnimeSet", path: "data/database/AnimeSet.dat" },
     { name: "$dataSound", path: "data/database/Sound.dat" },
     // ... all other database files
 ];

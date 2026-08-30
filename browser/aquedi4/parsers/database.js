@@ -81,6 +81,39 @@ function writeAnimation(writer, animation) {
     });
 }
 
+function parseAnimationSetElement(reader) {
+    const header = reader.readUint32();
+    const invincibilityOffset = reader.readUint32();
+    const blockOffset = reader.readUint32();
+    const flyingOffset = reader.readUint32();
+    const strings_count = reader.readUint32();
+    const name = readStdString(reader);
+    const animationCount = reader.readUint32();
+    const animations = loadElements(reader, animationCount, parseAnimation);
+
+    return {
+        header,
+        invincibility_offset: invincibilityOffset,
+        block_offset: blockOffset,
+        flying_offset: flyingOffset,
+        strings_count,
+        name,
+        animations
+    };
+}
+
+function writeAnimationSetElement(writer, element) {
+    writer.writeUint32(element.header ?? 0);
+    writer.writeUint32(element.invincibility_offset ?? 0);
+    writer.writeUint32(element.block_offset ?? 0);
+    writer.writeUint32(element.flying_offset ?? 0);
+    writer.writeUint32(element.strings_count ?? 1);
+    writeStdString(writer, element.name);
+    const animations = element.animations || [];
+    writer.writeUint32(animations.length);
+    writeElements(writer, animations, (w, animation) => writeAnimation(w, animation));
+}
+
 // ... (And so on for all your other `parse...` and `write...` functions)
 // I will include a few more for completeness.
 
@@ -163,6 +196,9 @@ function writeList(writer, database, elementWriter) {
 export function parseAnime(reader) { return parseList(reader, parseAnimation); }
 export function serializeAnime(writer, db) { writeList(writer, db, writeAnimation); }
 
+export function parseAnimeSet(reader) { return parseList(reader, parseAnimationSetElement); }
+export function serializeAnimeSet(writer, db) { writeList(writer, db, writeAnimationSetElement); }
+
 export function parseBgm(reader) { return parseList(reader, r => parseSimpleAsset(r, true)); }
 export function serializeBgm(writer, db) { writeList(writer, db, (w, e) => writeSimpleAsset(w, e, true)); }
 
@@ -218,8 +254,8 @@ class DBTransformStream {
 export const PARSER_FUNC_MAP = new Map([
     ['anime', parseAnime],
     ['anime.dat', parseAnime],
-    ['animeset', (r) => parseList(r, parseAnimationSetElement)],
-    ['animeset.dat', (r) => parseList(r, parseAnimationSetElement)],
+    ['animeset', parseAnimeSet],
+    ['animeset.dat', parseAnimeSet],
     ['bgm', parseBgm],
     ['bgm.dat', parseBgm],
     ['sound', parseSound],

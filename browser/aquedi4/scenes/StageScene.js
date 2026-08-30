@@ -21,14 +21,20 @@ const ITEM_TILE_COLS = 8;   // Number of columns in Item.bmp
 const ITEM_TILE_ROWS = 15;   // Number of rows in Item.bmp
 const BLOCK_TILE_COLS = 8; // Number of columns in Block.bmp
 const BLOCK_TILE_ROWS = 15; // Number of rows in Block.bmp
+const ITEM_BLINK_FRAME_MS = 200;
 
 function itemTileFrame(imageNumber) {
     if (!imageNumber || imageNumber < 1) return 0;
     const idx = imageNumber;
-    // Each sprite is duplicated on x-axis, so column stride is 2
+    // Item.bmp is 32x32. Each logical item uses two adjacent columns:
+    // frame 0 is the base sprite, frame 1 is the native blink/alternate sprite.
     const col = (idx / ITEM_TILE_ROWS) | 0;
     const row = idx % ITEM_TILE_ROWS;
     return row * (ITEM_TILE_COLS * 2) + col * 2;
+}
+
+function itemBlinkFrame(imageNumber, phase) {
+    return itemTileFrame(imageNumber) + (phase ? 1 : 0);
 }
 
 function blockTileFrame(imageNumber) {
@@ -43,6 +49,10 @@ function blockTileFrame(imageNumber) {
 
 function stageFrame(imageNumber) {
     return Math.max(0, (imageNumber || 1) - 1);
+}
+
+function frameDurationMs(frame) {
+    return Math.max(1, frame?.display_time || 1) * 100;
 }
 
 function ceilLog2(n) {
@@ -175,7 +185,8 @@ export default class StageScene extends Phaser.Scene {
     _spawnPickups(sd) {
         const iw = sd.item_collision_width  || 28;
         const ih = sd.item_collision_height || 28;
-        for (const si of (sd.items || [])) {
+        for (let i = 0; i < (sd.items || []).length; i++) {
+            const si = sd.items[i];
             const it = si.item;
             const e  = makeEntityAtTile(it.position_x, it.position_y, iw, ih, 0);
             e.sprite   = this.add.sprite(
@@ -183,6 +194,10 @@ export default class StageScene extends Phaser.Scene {
                 'item_tiles', itemTileFrame(it.image_number)
             ).setDepth(2);
             e.isPickup = true;
+            e.renderOffsetY = -2;
+            e.imageNumber = it.image_number;
+            e.itemAnimElapsed = (i & 1) * 100;
+            e.itemAnimFrame = 0;
             this._pickups.push(e);
         }
     }
@@ -208,6 +223,8 @@ export default class StageScene extends Phaser.Scene {
                 });
                 e.isPlayer     = true;
                 e.flying       = fly;
+                e.baseFrame    = stageFrame(ch.image_number);
+                e.animationSet = ch.animation_set || 0;
                 e.hp = e.maxHp = ch.hp;
                 e.sp = e.maxSp = ch.sp;
                 // Player01.bmp faces right by default; flipX mirrors to face left.
@@ -216,7 +233,7 @@ export default class StageScene extends Phaser.Scene {
                 const cx       = (e.xmin + e.xmax) * 0.5;
                 const cy       = (e.ymin + e.ymax) * 0.5 + e.renderOffsetY;
                 e.sprite       = this.add.sprite(cx, cy, 'player_stage', 0)
-                    .setFlipX(!e.facingRight)
+                    .setFlipX(!!e.facingRight)
                     .setDepth(5);
                 this._player   = e;
             } else if (!(ch.faction === 0 && ch.operation === 0)) {
@@ -229,13 +246,15 @@ export default class StageScene extends Phaser.Scene {
                 });
                 e.isEnemy      = true;
                 e.flying       = fly;
+                e.baseFrame    = stageFrame(ch.image_number);
+                e.animationSet = ch.animation_set || 0;
                 e.hp = e.maxHp = ch.hp;
                 e.facingRight  = !!ch.facing_right;
                 e.renderOffsetY = (e.height - TILE) * 0.5;
                 const type     = Math.max(1, Math.min(8, ch.image_type || 1));
                 const cx       = (e.xmin + e.xmax) * 0.5;
                 const cy       = (e.ymin + e.ymax) * 0.5 + e.renderOffsetY;
-                e.sprite       = this.add.sprite(cx, cy, 'chara_' + type, stageFrame(ch.image_number))
+                e.sprite       = this.add.sprite(cx, cy, 'chara_' + type, e.baseFrame)
                     .setFlipX(!!e.facingRight)
                     .setDepth(4);
                 this._actors.push(e);
@@ -440,7 +459,7 @@ export default class StageScene extends Phaser.Scene {
         if (details.movement_direction_reverse_speed_if_direction_changes && (e.contactL || e.contactR)) {
             e.facingRight = !e.facingRight;
             dir = e.facingRight ? 1 : -1;
-            if (e.sprite) e.sprite.setFlipX(!e.facingRight);
+            if (e.sprite) e.sprite.setFlipX(!!e.facingRight);
         }
 
         if (!details.movement_direction_invalidate_horizontal_movement) {
@@ -460,6 +479,64 @@ export default class StageScene extends Phaser.Scene {
         const cx = Math.round((e.xmin + e.xmax) * 0.5 + (e.renderOffsetX || 0));
         const cy = Math.round((e.ymin + e.ymax) * 0.5 + (e.renderOffsetY || 0));
         e.sprite.setPosition(cx, cy);
+    }
+
+    _getBasicAnimationSet(e) {
+        const sets = DataManager.$dataAnimeSet?.data?.elements || [];
+        return sets[e.animationSet || 0] || null;
+    }
+
+    _selectBasicAnimation(e) {
+        const set = this._getBasicAnimationSet(e);
+        if (!set) return null;
+
+        const moving = Math.abs(e.speedX || e.velX || 0) > 0.001;
+        const index  = e.flying ? (moving ? 3 : 2) : (moving ? 1 : 0);
+        const anim   = set.animations?.[index] || set.animations?.[0] || null;
+        if (!anim) return null;
+
+        let offset = 0;
+        if (e.flying) offset += set.flying_offset || 0;
+        if (e.blocking) offset += set.block_offset || 0;
+        if (e.invincible) offset += set.invincibility_offset || 0;
+
+        return { anim, offset, stateKey: index + ':' + offset };
+    }
+
+    _updateBasicAnimation(e, delta) {
+        if (!e.sprite) return;
+
+        const selected = this._selectBasicAnimation(e);
+        if (!selected || !selected.anim.frames?.length) {
+            e.sprite.setFrame(e.baseFrame || 0);
+            return;
+        }
+
+        if (e.animStateKey !== selected.stateKey) {
+            e.animStateKey = selected.stateKey;
+            e.animFrame = 0;
+            e.animElapsed = 0;
+        }
+
+        e.animElapsed = (e.animElapsed || 0) + delta;
+        let frame = selected.anim.frames[e.animFrame || 0];
+        while (e.animElapsed >= frameDurationMs(frame) && selected.anim.frames.length > 1) {
+            e.animElapsed -= frameDurationMs(frame);
+            e.animFrame = ((e.animFrame || 0) + 1) % selected.anim.frames.length;
+            frame = selected.anim.frames[e.animFrame];
+        }
+
+        e.sprite.setFrame((e.baseFrame || 0) + selected.offset + (frame.frame_index || 0));
+    }
+
+    _updatePickupAnimation(e, delta) {
+        if (!e.sprite || !e.imageNumber) return;
+        e.itemAnimElapsed = (e.itemAnimElapsed || 0) + delta;
+        while (e.itemAnimElapsed >= ITEM_BLINK_FRAME_MS) {
+            e.itemAnimElapsed -= ITEM_BLINK_FRAME_MS;
+            e.itemAnimFrame = (e.itemAnimFrame || 0) ^ 1;
+        }
+        e.sprite.setFrame(itemBlinkFrame(e.imageNumber, e.itemAnimFrame || 0));
     }
 
     //-----------------------------------------------------------------------
@@ -518,9 +595,18 @@ export default class StageScene extends Phaser.Scene {
             steps++;
         }
 
-        if (this._player) this._syncSprite(this._player);
-        for (const e of this._actors.entities()) this._syncSprite(e);
-        for (const e of this._pickups)  this._syncSprite(e);
+        if (this._player) {
+            this._syncSprite(this._player);
+            this._updateBasicAnimation(this._player, delta);
+        }
+        for (const e of this._actors.entities()) {
+            this._syncSprite(e);
+            this._updateBasicAnimation(e, delta);
+        }
+        for (const e of this._pickups) {
+            this._syncSprite(e);
+            this._updatePickupAnimation(e, delta);
+        }
 
         this._updateHud();
     }
