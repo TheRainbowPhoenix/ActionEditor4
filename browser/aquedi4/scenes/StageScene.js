@@ -22,6 +22,10 @@ const ITEM_TILE_ROWS = 15;   // Number of rows in Item.bmp
 const BLOCK_TILE_COLS = 8; // Number of columns in Block.bmp
 const BLOCK_TILE_ROWS = 15; // Number of rows in Block.bmp
 const ITEM_BLINK_FRAME_MS = 200;
+const ACQUIRED_MINI_MS = 1000 / 60 * 20;
+const ACQUIRED_MINI_RISE = 18;
+const MESSAGE_DEFAULT_MS = 3000;
+const MODAL_ZOOM_MS = 1000 / 60 * 12;
 
 function itemTileFrame(imageNumber) {
     if (!imageNumber || imageNumber < 1) return 0;
@@ -80,6 +84,14 @@ export default class StageScene extends Phaser.Scene {
         this._player    = null;
         this._actors    = new ActorEntityList();
         this._pickups   = [];
+        this._pickupEffects = [];
+        this._messageTimer = 0;
+        this._messageQueue = [];
+        this._floatingMessages = [];
+        this._modalMessage = null;
+        this._messagePanel = null;
+        this._messageText = null;
+        this._collectionStats = Object.create(null);
     }
 
     preload() {
@@ -88,6 +100,8 @@ export default class StageScene extends Phaser.Scene {
             this.load.bmpSpritesheet('block_tiles', 'bmp/Block.bmp', { frameWidth: TILE, frameHeight: TILE });
         if (!this.textures.exists('item_tiles'))
             this.load.bmpSpritesheet('item_tiles', 'bmp/Item.bmp', { frameWidth: TILE, frameHeight: TILE });
+        if (!this.textures.exists('item_mini_tiles'))
+            this.load.bmpSpritesheet('item_mini_tiles', 'bmp/Item_Mini.bmp', { frameWidth: 16, frameHeight: 16 });
         if (!this.textures.exists('player_stage'))
             this.load.bmpSpritesheet('player_stage', 'bmp/chara_sp/Player01.bmp', { frameWidth: TILE, frameHeight: TILE });
         for (let i = 1; i <= 8; i++) {
@@ -194,10 +208,14 @@ export default class StageScene extends Phaser.Scene {
                 'item_tiles', itemTileFrame(it.image_number)
             ).setDepth(2);
             e.isPickup = true;
-            e.renderOffsetY = -2;
+            e.renderOffsetY = -3;
+            e.item = it;
             e.imageNumber = it.image_number;
+            e.acquisitionType = it.acquisition_type || 0;
+            e.displayAboveHead = !!it.display_above_head_on_acquisition;
             e.itemAnimElapsed = (i & 1) * 100;
             e.itemAnimFrame = 0;
+            e.triggerCooldownMs = 0;
             this._pickups.push(e);
         }
     }
@@ -227,7 +245,7 @@ export default class StageScene extends Phaser.Scene {
                 e.animationSet = ch.animation_set || 0;
                 e.hp = e.maxHp = ch.hp;
                 e.sp = e.maxSp = ch.sp;
-                // Player01.bmp faces right by default; flipX mirrors to face left.
+                // Player01.bmp faces left in the sheet; flipX mirrors to face right.
                 e.facingRight  = !!ch.facing_right;
                 e.renderOffsetY = (e.height - TILE) * 0.5;
                 const cx       = (e.xmin + e.xmax) * 0.5;
@@ -280,6 +298,18 @@ export default class StageScene extends Phaser.Scene {
             font: '12px monospace', fill: '#ffffff',
             stroke: '#000000', strokeThickness: 2
         }).setScrollFactor(0).setDepth(20);
+
+        this._messagePanel = this.add.rectangle(160, 184, 304, 64, 0xffffff, 0.96)
+            .setStrokeStyle(1, 0x202020, 1)
+            .setScrollFactor(0)
+            .setDepth(30)
+            .setVisible(false);
+        this._messageText = this.add.text(18, 158, '', {
+            font: '13px sans-serif',
+            fill: '#111111',
+            wordWrap: { width: 284, useAdvancedWrap: true },
+            lineSpacing: 3
+        }).setScrollFactor(0).setDepth(31).setVisible(false);
     }
 
     //-----------------------------------------------------------------------
@@ -539,6 +569,256 @@ export default class StageScene extends Phaser.Scene {
         e.sprite.setFrame(itemBlinkFrame(e.imageNumber, e.itemAnimFrame || 0));
     }
 
+    _aabbOverlap(a, b) {
+        return a.xmin <= b.xmax && a.xmax >= b.xmin && a.ymin <= b.ymax && a.ymax >= b.ymin;
+    }
+
+    _checkPickupCollisions() {
+        if (!this._player) return;
+        for (const e of this._pickups) {
+            if (e.collected) continue;
+            const overlapping = this._aabbOverlap(this._player, e);
+            if (!overlapping) {
+                e.wasOverlapping = false;
+                continue;
+            }
+            if (e.triggerCooldownMs > 0 || e.wasOverlapping) continue;
+            e.wasOverlapping = true;
+            this._activatePickup(e);
+        }
+    }
+
+    _activatePickup(e) {
+        const item = e.item || {};
+        this._runItemEffects(item);
+
+        if (e.displayAboveHead) {
+            this._showAcquiredMini(e);
+        }
+
+        if (e.acquisitionType === 1) {
+            e.triggerCooldownMs = 700;
+            return;
+        }
+
+        e.collected = true;
+        if (e.sprite) e.sprite.destroy();
+    }
+
+    _runItemEffects(item) {
+        const effects = item.item_effects || [];
+        if (item.item_name) {
+            this._collectionStats[item.item_name] = (this._collectionStats[item.item_name] || 0) + 1;
+        }
+
+        for (const effect of effects) {
+            const details = effect.details || {};
+            if (effect.type === 4) {
+                this._showMessage(details.message || '', details);
+            } else if (effect.type === 7) {
+                this._applyStatusOperation(details, item);
+            } else if (effect.type === 2) {
+                this._showMessage('STAGE CLEAR', { display_time: 30 });
+            }
+        }
+    }
+
+    _applyStatusOperation(details, item) {
+        const value = details.calculation_content_constant || 0;
+        if (!this._player || !value) return;
+
+        // Native status ids still need deeper mapping. For now, model the common
+        // sample-stage heart case and keep gem/time pickups visible in stats.
+        if (item.image_number === 15 || item.image_number === 16) {
+            this._player.hp = Math.min(this._player.maxHp, this._player.hp + value);
+        }
+    }
+
+    _showAcquiredMini(e) {
+        if (!this._player || !this.textures.exists('item_mini_tiles')) return;
+        const p = this._player;
+        const startY = e.sprite ? e.sprite.y : Math.round((e.ymin + e.ymax) * 0.5 + (e.renderOffsetY || 0));
+        const sprite = this.add.sprite(
+            Math.round((p.xmin + p.xmax) * 0.5),
+            Math.round(startY),
+            'item_mini_tiles',
+            itemBlinkFrame(e.imageNumber, 0)
+        ).setDepth(18);
+
+        this._pickupEffects.push({
+            sprite,
+            imageNumber: e.imageNumber,
+            startY,
+            elapsed: 0,
+            animElapsed: 0,
+            animFrame: 0
+        });
+    }
+
+    _updatePickupEffects(delta) {
+        const p = this._player;
+        for (let i = this._pickupEffects.length - 1; i >= 0; i--) {
+            const fx = this._pickupEffects[i];
+            fx.elapsed += delta;
+            fx.animElapsed += delta;
+            while (fx.animElapsed >= ITEM_BLINK_FRAME_MS) {
+                fx.animElapsed -= ITEM_BLINK_FRAME_MS;
+                fx.animFrame ^= 1;
+            }
+            if (fx.elapsed >= ACQUIRED_MINI_MS || !p) {
+                fx.sprite.destroy();
+                this._pickupEffects.splice(i, 1);
+                continue;
+            }
+            const t = fx.elapsed / ACQUIRED_MINI_MS;
+            const eased = 1 - (1 - t) * (1 - t);
+            fx.sprite
+                .setFrame(itemBlinkFrame(fx.imageNumber, fx.animFrame))
+                .setPosition(
+                    Math.round((p.xmin + p.xmax) * 0.5),
+                    Math.round(fx.startY - ACQUIRED_MINI_RISE * eased)
+                )
+                .setScale(1 + 0.35 * Math.sin(Math.PI * t))
+                .setAlpha(1 - Math.max(0, t - 0.75) / 0.25);
+        }
+    }
+
+    _showMessage(message, details = {}) {
+        if (!message) return;
+        if (details.pause || details.display_time_specification_method === 0) {
+            this._showModalMessage(message, details);
+            return;
+        }
+        if (details.display_position_specification_method === 4) {
+            this._showFloatingMessage(message, details);
+            return;
+        }
+        if (!this._messageText || !this._messagePanel) return;
+        if (this._messageTimer > 0) {
+            this._messageQueue.push({ message, details });
+            return;
+        }
+        this._displayMessage(message, details);
+    }
+
+    _displayMessage(message, details = {}) {
+        const duration = details.display_time ? details.display_time * 100 : MESSAGE_DEFAULT_MS;
+        this._messageText.setText(message);
+        this._messagePanel.setVisible(true);
+        this._messageText.setVisible(true);
+        this._messageTimer = Math.max(duration, 500);
+    }
+
+    _showFloatingMessage(message, details = {}) {
+        if (!this._player) return;
+        const duration = details.display_time ? details.display_time * 100 : MESSAGE_DEFAULT_MS;
+        const p = this._player;
+        const x = Math.round((p.xmin + p.xmax) * 0.5);
+        const y = Math.round(p.ymin - 24);
+        const text = this.add.text(
+            x,
+            y - 4,
+            message,
+            {
+                font: '13px sans-serif',
+                fill: '#111111'
+            }
+        ).setOrigin(0.5, 1).setDepth(22);
+        const panel = this.add.rectangle(
+            x,
+            y,
+            Math.max(32, text.width + 14),
+            Math.max(20, text.height + 8),
+            0xffffff,
+            0.96
+        ).setOrigin(0.5, 1).setStrokeStyle(1, 0x202020, 1).setDepth(21);
+
+        this._floatingMessages.push({
+            panel,
+            text,
+            elapsed: 0,
+            duration: Math.max(duration, 500)
+        });
+    }
+
+    _updateFloatingMessages(delta) {
+        const p = this._player;
+        for (let i = this._floatingMessages.length - 1; i >= 0; i--) {
+            const msg = this._floatingMessages[i];
+            msg.elapsed += delta;
+            if (msg.elapsed >= msg.duration || !p) {
+                msg.panel.destroy();
+                msg.text.destroy();
+                this._floatingMessages.splice(i, 1);
+                continue;
+            }
+            const x = Math.round((p.xmin + p.xmax) * 0.5);
+            const y = Math.round(p.ymin - 24);
+            msg.panel.setPosition(x, y);
+            msg.text.setPosition(x, y - 4);
+        }
+    }
+
+    _showModalMessage(message, details = {}) {
+        if (!this._messageText || !this._messagePanel) return;
+        if (this._modalMessage || this._messageTimer > 0) {
+            this._messageQueue.push({ message, details });
+            return;
+        }
+
+        const w = this.scale.width || 320;
+        const h = this.scale.height || 240;
+        const panelW = Math.min(300, w - 24);
+        const panelH = Math.min(150, h - 28);
+        this._messagePanel
+            .setPosition(w * 0.5, h * 0.5)
+            .setSize(panelW, panelH)
+            .setScale(0.2)
+            .setVisible(true);
+        this._messageText
+            .setPosition(w * 0.5 - panelW * 0.5 + 10, h * 0.5 - panelH * 0.5 + 10)
+            .setWordWrapWidth(panelW - 20, true)
+            .setText(message)
+            .setScale(1)
+            .setVisible(false);
+        this._modalMessage = {
+            elapsed: 0,
+            waitForKey: true
+        };
+    }
+
+    _closeModalMessage() {
+        this._modalMessage = null;
+        if (this._messagePanel) this._messagePanel.setVisible(false);
+        if (this._messageText) this._messageText.setVisible(false);
+        const next = this._messageQueue.shift();
+        if (next) this._showMessage(next.message, next.details);
+    }
+
+    _updateMessage(delta) {
+        if (this._modalMessage) {
+            this._modalMessage.elapsed += delta;
+            const scale = Math.min(1, Math.max(0.2, this._modalMessage.elapsed / MODAL_ZOOM_MS));
+            if (this._messagePanel) this._messagePanel.setScale(scale);
+            if (this._messageText) this._messageText.setVisible(scale >= 1);
+            if (this._keyZ && Phaser.Input.Keyboard.JustDown(this._keyZ)) {
+                this._closeModalMessage();
+            }
+            return;
+        }
+        if (!this._messageTimer) return;
+        this._messageTimer = Math.max(0, this._messageTimer - delta);
+        if (this._messageTimer === 0) {
+            const next = this._messageQueue.shift();
+            if (next) {
+                this._showMessage(next.message, next.details);
+                return;
+            }
+            if (this._messagePanel) this._messagePanel.setVisible(false);
+            if (this._messageText) this._messageText.setVisible(false);
+        }
+    }
+
     //-----------------------------------------------------------------------
     // Player input.
     // IDA: vel_x is zeroed each frame by sub_4A19D0 (vftable+76), then the
@@ -573,6 +853,11 @@ export default class StageScene extends Phaser.Scene {
     //-----------------------------------------------------------------------
 
     update(time, delta) {
+        if (this._modalMessage) {
+            this._updateMessage(delta);
+            return;
+        }
+
         // Handle player input ONCE per frame (not per substep) to avoid multiple jumps.
         if (this._player) this._handleInput(this._player);
 
@@ -589,6 +874,7 @@ export default class StageScene extends Phaser.Scene {
                     this._runActorActions(e);
                     if (e.active && e.canRunPhysics()) this._stepEntity(e);
                 }
+                this._checkPickupCollisions();
             }
 
             this._accum -= FIXED_DT;
@@ -604,9 +890,14 @@ export default class StageScene extends Phaser.Scene {
             this._updateBasicAnimation(e, delta);
         }
         for (const e of this._pickups) {
+            if (e.collected) continue;
+            if (e.triggerCooldownMs > 0) e.triggerCooldownMs = Math.max(0, e.triggerCooldownMs - delta);
             this._syncSprite(e);
             this._updatePickupAnimation(e, delta);
         }
+        this._updatePickupEffects(delta);
+        this._updateFloatingMessages(delta);
+        this._updateMessage(delta);
 
         this._updateHud();
     }
