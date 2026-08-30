@@ -256,6 +256,7 @@ export class ActorEntity extends PlayerEntity {
         this.actions = options.actions ?? [];
         this.reactiveActions = options.reactiveActions ?? [];
         this.flowModel = options.flowModel ?? [];
+        this.flowSequences = options.flowSequences ?? [];
         this.actionCursor = 0;
         this.actionTicks = 0;
         this.cloneIndex = options.cloneIndex ?? 0;

@@ -16,6 +16,7 @@ DataManager.$dataAnime = null;
 DataManager.$dataAnimeSet = null;
 DataManager.$globalPalette = [];
 DataManager.$commonPalette = null;
+DataManager.$gameVariables = null;
 // ... add other $data globals as needed
 
 DataManager._databaseFiles = [
@@ -86,4 +87,29 @@ DataManager.isDataLoaded = function() {
         if (!window[fileInfo.name]) return false;
     }
     return !!window.$dataWorldMap;
+};
+
+export class GameVariables {
+    constructor(size = 1000) {
+        this._data = new Array(size + 1).fill(0);
+    }
+
+    value(id) {
+        return this._data[Number(id) || 0] || 0;
+    }
+
+    setValue(id, value) {
+        this._data[Number(id) || 0] = Number(value) || 0;
+    }
+
+    addValue(id, value) {
+        this.setValue(id, this.value(id) + value);
+    }
+}
+
+DataManager.setupGameObjects = function(stageData = null) {
+    const size = Math.max(1000, stageData?.stage_vars?.length || 0);
+    this.$gameVariables = new GameVariables(size);
+    window.$gameVariables = this.$gameVariables;
+    return this.$gameVariables;
 };

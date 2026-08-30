@@ -27,12 +27,22 @@ const ITEM_TILE_COLS = 8;   // Number of columns in Item.bmp
 const ITEM_TILE_ROWS = 15;   // Number of rows in Item.bmp
 const BLOCK_TILE_COLS = 8; // Number of columns in Block.bmp
 const BLOCK_TILE_ROWS = 15; // Number of rows in Block.bmp
+const SHOT_TILE_COLS = 8;
+const SHOT_TILE_ROWS = 30;
 const ITEM_BLINK_FRAME_MS = 200;
+const SHOT_BLINK_FRAME_MS = 100;
 const ACQUIRED_MINI_MS = 1000 / 60 * 20;
 const ACQUIRED_MINI_RISE = 18;
 const MESSAGE_DEFAULT_MS = 3000;
 const MODAL_ZOOM_MS = 1000 / 60 * 12;
 const MAX_MESSAGE_W = 636;
+const SWORD_SWING_MS = 1000 / 60 * 10;
+const SWORD_FRAME_MS = 1000 / 60 * 2;
+const PLAYER_ATTACK_FRAME_MS = 1000 / 60 * 10;
+const PLAYER_SPRITE_W = 32;
+const SWORD_W = 32;
+const SWORD_H = 24;
+const SWORD_OFFSET_Y = -4;
 
 function itemTileFrame(imageNumber) {
     if (!imageNumber || imageNumber < 1) return 0;
@@ -57,12 +67,43 @@ function blockTileFrame(imageNumber) {
     return row * BLOCK_TILE_COLS + col;
 }
 
+function shotTileFrame(imageNumber, phase) {
+    if (!imageNumber || imageNumber < 1) return 0;
+    const idx = imageNumber;
+    const col = (idx / SHOT_TILE_ROWS) | 0;
+    const row = idx % SHOT_TILE_ROWS;
+    return row * SHOT_TILE_COLS + col * 2 + (phase ? 1 : 0);
+}
+
 function stageFrame(imageNumber) {
     return Math.max(0, (imageNumber || 1) - 1);
 }
 
 function characterFrame(imageNumber) {
-    return Math.max(0, imageNumber || 0) * 16;
+    return Math.max(0, Number(imageNumber || 0) % 15) * 16;
+}
+
+function characterInvincibleFrameOffset(character) {
+    return character?.invincible ? 1 : 0;
+}
+
+function characterTextureKey(imageNumber, imageType) {
+    const fromNumber = Math.floor(Number(imageNumber || 0) / 15) + 1;
+    const sheet = Math.max(1, Math.min(8, fromNumber || imageType || 1));
+    return 'chara_' + sheet;
+}
+
+function applyOperator(current, value, operator) {
+    switch (operator || 0) {
+        case 0: return value;
+        case 2: return current + value;
+        case 3: return current - value;
+        case 4: return current * value;
+        case 5: return value ? current / value : current;
+        case 6: return value ? current % value : current;
+        case 7: return current * value * 0.01;
+        default: return value;
+    }
 }
 
 function frameDurationMs(frame) {
@@ -95,6 +136,42 @@ function paletteBlocks(paletteData) {
     return paletteData?.palette?.blocks || paletteData?.blocks || [];
 }
 
+function paletteItems(paletteData) {
+    return paletteData?.palette?.items || paletteData?.items || [];
+}
+
+function resolveItemDefinition(item, stagePalette, commonPalette) {
+    const resolved = { ...(item || {}) };
+    const parentItems = item?.inherit_palette === 1 ? paletteItems(commonPalette) :
+        item?.inherit_palette === 2 ? paletteItems(stagePalette) : [];
+    const parent = parentItems[item?.inherit_palette_data_number];
+    if (!parent) return resolved;
+
+    const fields = [
+        ['inherit_item_name', ['item_name']],
+        ['inherit_initial_position_offset_x', ['appearance_position_offset_x_dot']],
+        ['inherit_initial_position_offset_y', ['appearance_position_offset_y_dot']],
+        ['inherit_image', ['image_number', 'image_type', 'frame']],
+        ['inherit_z_coordinate', ['z_coordinate']],
+        ['inherit_transparency', ['transparency']],
+        ['inherit_mark', ['mark_display', 'mark_number']],
+        ['inherit_gigantic', ['gigantic']],
+        ['inherit_acquisition_type', ['acquisition_type']],
+        ['inherit_display_above_head_on_acquisition', ['display_above_head_on_acquisition']],
+        ['inherit_sound_effect', ['sound_effect']],
+        ['inherit_effect', ['item_effects']]
+    ];
+
+    for (const [flag, names] of fields) {
+        if (!item[flag]) continue;
+        for (const name of names) {
+            if (Object.prototype.hasOwnProperty.call(parent, name)) resolved[name] = parent[name];
+        }
+    }
+    resolved.parentItem = parent;
+    return resolved;
+}
+
 function resolveBlockDefinition(block, stagePalette, commonPalette) {
     const resolved = { ...(block || {}) };
     const parentBlocks = block?.inherit_palette === 1 ? paletteBlocks(commonPalette) :
@@ -125,6 +202,22 @@ function resolveBlockDefinition(block, stagePalette, commonPalette) {
     return resolved;
 }
 
+function extractSwordConfig(character) {
+    for (const flow of (character?.flows || character?.flow_data || [])) {
+        const hasZ = (flow.key_conditions || []).some(condition => condition.z_key);
+        if (!hasZ) continue;
+        const swordCommand = (flow.commands || flow.command_data || []).find(command => command.type === 12);
+        if (!swordCommand) continue;
+        const details = swordCommand.details || {};
+        return {
+            power: Math.max(1, Number(details.power || 1)),
+            animation: Number(details.animation || 0),
+            executionTime: Math.max(1, Number(details.execution_time || 1))
+        };
+    }
+    return { power: 1, animation: 0, executionTime: 3 };
+}
+
 export default class StageScene extends Phaser.Scene {
     constructor() {
         super('StageScene');
@@ -139,6 +232,8 @@ export default class StageScene extends Phaser.Scene {
         this._actors    = new ActorEntityList();
         this._pickups   = [];
         this._pickupEffects = [];
+        this._shots = [];
+        this._sword = null;
         this._messageTimer = 0;
         this._messageQueue = [];
         this._floatingMessages = [];
@@ -164,6 +259,12 @@ export default class StageScene extends Phaser.Scene {
             if (!this.textures.exists(k))
                 this.load.bmpSpritesheet(k, 'bmp/Character' + i + '.bmp', { frameWidth: TILE, frameHeight: TILE });
         }
+        if (!this.textures.exists('shot_tiles'))
+            this.load.bmpSpritesheet('shot_tiles', 'bmp/Shot.bmp', { frameWidth: 16, frameHeight: 16 });
+        if (!this.textures.exists('sword_l'))
+            this.load.bmpSpritesheet('sword_l', 'bmp/sword/Sword.bmp', { frameWidth: 32, frameHeight: 24 });
+        if (!this.textures.exists('sword_r'))
+            this.load.bmpSpritesheet('sword_r', 'bmp/sword/Sword_r.bmp', { frameWidth: 32, frameHeight: 24 });
     }
 
     create() {
@@ -175,6 +276,7 @@ export default class StageScene extends Phaser.Scene {
             return;
         }
         DataManager.$dataStage = sd;
+        DataManager.setupGameObjects?.(sd);
 
         const cols   = sd.item_width;
         const rows   = sd.height;
@@ -191,7 +293,7 @@ export default class StageScene extends Phaser.Scene {
         this._spawnPickups(sd);
         this._spawnCharacters(sd);
 
-        this.cameras.main.setBounds(SCROLL * TILE, SCROLL * TILE, cols * TILE, rows * TILE);
+        this._applyCameraBounds(sd);
         this.cameras.main.roundPixels = true;
         if (this._player)
             this.cameras.main.startFollow(this._player.sprite, true, 1, 1);
@@ -209,6 +311,7 @@ export default class StageScene extends Phaser.Scene {
     _buildTileGrid(sd, stride) {
         const total      = stride * (this._rows + 2 * SCROLL);
         this._attr       = new Uint8Array(total);
+        this._visible    = new Uint8Array(total);
         this._cat        = new Uint8Array(total).fill(255);
         this._gfx        = new Int16Array(total).fill(-1);
         this._block      = new Array(total);
@@ -220,7 +323,9 @@ export default class StageScene extends Phaser.Scene {
             const ay    = blk.position_y + SCROLL;
             if (ax < 0 || ay < 0 || ax >= stride) continue;
             const idx       = ax + ay * stride;
-            this._attr[idx] = blk.block_type > 0 ? 1 : 0;
+            const visible = this._conditionsMet(blk.display_conditions || []);
+            this._visible[idx] = visible ? 1 : 0;
+            this._attr[idx] = visible && blk.block_type > 0 ? 1 : 0;
             this._gfx[idx]  = blk.image_number >= 0 ? blk.image_number : -1;
             this._block[idx] = blk;
         }
@@ -245,7 +350,7 @@ export default class StageScene extends Phaser.Scene {
             for (let c = 0; c < cols; c++) {
                 const idx = (c + SCROLL) + (r + SCROLL) * stride;
                 const gfx = this._gfx[idx];
-                row.push(gfx > 0 ? blockTileFrame(gfx) : 0);
+                row.push(this._visible[idx] && gfx > 0 ? blockTileFrame(gfx) : 0);
             }
             mapData.push(row);
         }
@@ -254,12 +359,74 @@ export default class StageScene extends Phaser.Scene {
         this._layer = this._map.createLayer(0, ts, SCROLL * TILE, SCROLL * TILE).setDepth(0);
     }
 
+    _conditionsMet(conditions = [], judgmentType = 0) {
+        if (!conditions.length) return true;
+        const results = conditions.map(condition => this._conditionMet(condition));
+        return judgmentType === 1 ? results.some(Boolean) : results.every(Boolean);
+    }
+
+    _conditionMet(condition) {
+        if (!condition) return true;
+        const left = this._conditionOperand(condition, 'left');
+        const right = this._conditionOperand(condition, 'right');
+        switch (condition.how_to_compare || 0) {
+            case 0: return left === right;
+            case 1: return left !== right;
+            case 2: return left >= right;
+            case 3: return left <= right;
+            case 4: return left > right;
+            case 5: return left < right;
+            case 6: return right !== 0 && left % right === 0;
+            case 7: return right === 0 || left % right !== 0;
+            default: return false;
+        }
+    }
+
+    _conditionOperand(condition, side) {
+        const type = condition[side + '_side_type'] || 0;
+        if (type === 0) {
+            if (side === 'right') return Number(condition.right_side_constant || 0);
+            const varKind = condition.left_side_common_variable_or_stage_variable || 0;
+            if (varKind === 0) return DataManager.$gameVariables?.value(condition.left_side_variable_number) || 0;
+            return 0;
+        }
+        if (type === 2 && side === 'right') return Number(condition.right_side_constant || 0);
+        return 0;
+    }
+
+    _refreshConditionalBlocks() {
+        if (!this._block) return;
+        for (let idx = 0; idx < this._block.length; idx++) {
+            const blk = this._block[idx];
+            if (!blk) continue;
+            const visible = this._conditionsMet(blk.display_conditions || []);
+            this._visible[idx] = visible ? 1 : 0;
+            this._attr[idx] = visible && blk.block_type > 0 ? 1 : 0;
+            const tile = this._layer?.getTileAt((idx % this._stride) - SCROLL, ((idx / this._stride) | 0) - SCROLL);
+            if (tile) tile.index = visible && this._gfx[idx] > 0 ? blockTileFrame(this._gfx[idx]) : 0;
+        }
+    }
+
+    _applyCameraBounds(sd) {
+        const viewTilesX = Math.ceil((this.scale.width || 640) / TILE);
+        const viewTilesY = Math.ceil((this.scale.height || 480) / TILE);
+        const minX = sd.enable_horizontal_scroll_minimum ? Number(sd.horizontal_scroll_minimum_value || 0) : 0;
+        const maxRight = sd.enable_horizontal_scroll_maximum ? Number(sd.horizontal_scroll_maximum_value || sd.item_width - 1) : sd.item_width - 1;
+        const minY = sd.enable_vertical_scroll_minimum ? Number(sd.vertical_scroll_minimum_value || 0) : 0;
+        const maxBottom = sd.enable_vertical_scroll_maximum ? Number(sd.vertical_scroll_maximum_value || sd.height - 1) : sd.height - 1;
+        const left = (SCROLL + minX) * TILE;
+        const top = (SCROLL + minY) * TILE;
+        const width = Math.max(viewTilesX * TILE, (maxRight - minX + 1) * TILE);
+        const height = Math.max(viewTilesY * TILE, (maxBottom - minY + 1) * TILE);
+        this.cameras.main.setBounds(left, top, width, height);
+    }
+
     _spawnPickups(sd) {
         const iw = sd.item_collision_width  || 28;
         const ih = sd.item_collision_height || 28;
         for (let i = 0; i < (sd.items || []).length; i++) {
             const si = sd.items[i];
-            const it = si.item;
+            const it = resolveItemDefinition(si.item, sd.palette, DataManager.$commonPalette || globalThis.$commonPalette);
             const e  = makeEntityAtTile(it.position_x, it.position_y, iw, ih, 0);
             e.sprite   = this.add.sprite(
                 (e.xmin + e.xmax) * 0.5, (e.ymin + e.ymax) * 0.5,
@@ -308,6 +475,7 @@ export default class StageScene extends Phaser.Scene {
                 e.animationSet = ch.animation_set || 0;
                 e.hp = e.maxHp = ch.hp;
                 e.sp = e.maxSp = ch.sp;
+                e.swordConfig = extractSwordConfig(ch);
                 // Player01.bmp faces left in the sheet; flipX mirrors to face right.
                 e.facingRight  = !!ch.facing_right;
                 e.characterDefinition = def;
@@ -338,23 +506,31 @@ export default class StageScene extends Phaser.Scene {
                     if (offsetY) e.translateY(offsetY);
                     e.isEnemy      = true;
                     e.flying       = fly;
-                    e.baseFrame    = characterFrame(ch.image_number);
+                    e.baseFrame    = characterFrame(ch.image_number) + characterInvincibleFrameOffset(ch);
                     e.animationSet = ch.animation_set || 0;
                     e.hp = e.maxHp = ch.hp;
                     e.facingRight  = !!ch.facing_right;
                     e.directionFixed = !!ch.direction_fixed;
+                    e.invincible = !!ch.invincible;
                     e.characterDefinition = def;
                     e.characterName = def.name;
                     e.flowModel = actionModel.flows;
+                    e.flowSequences = actionModel.sequences.map(sequence => ({
+                        flow: sequence.flow,
+                        cursor: 0,
+                        waitTicks: cloneIndex * PHYSICS_SUBSTEPS
+                    }));
                     e.groupNumber = ch.has_group ? ch.group_number : null;
                     e.bodyHitPower = ch.body_hit_power || 0;
                     e.defense = ch.defense || 0;
                     e.score = ch.score || 0;
-                    e.renderOffsetY = (e.height - TILE) * 0.5;
-                    const type     = Math.max(1, Math.min(8, ch.image_type || 1));
-                    const cx       = (e.xmin + e.xmax) * 0.5;
-                    const cy       = (e.ymin + e.ymax) * 0.5 + e.renderOffsetY;
-                    e.sprite       = this.add.sprite(cx, cy, 'chara_' + type, e.baseFrame)
+                    e.renderOffsetY = fly
+                        ? (ch.position_y + SCROLL) * TILE + TILE * 0.5 - (e.ymin + e.ymax) * 0.5
+                        : (e.height - TILE) * 0.5;
+                    const type     = characterTextureKey(ch.image_number, ch.image_type);
+                    const cx       = Math.round((e.xmin + e.xmax) * 0.5);
+                    const cy       = Math.round((e.ymin + e.ymax) * 0.5 + e.renderOffsetY);
+                    e.sprite       = this.add.sprite(cx, cy, type, e.baseFrame)
                         .setFlipX(!!e.facingRight)
                         .setDepth(3 + (ch.z_coordinate || 0));
                     this._actors.push(e);
@@ -376,14 +552,18 @@ export default class StageScene extends Phaser.Scene {
         }));
         const continuous = [];
         const reactive = [];
+        const sequences = [];
         for (const flow of flowModel) {
             for (const command of flow.commands) {
                 if (command.type !== 2 && command.type !== 3 && command.type !== 9 && command.type !== 10) continue;
                 if (flow.timing === AQUEDI_FLOW_TIMING.BLOCK_HIT_LR) reactive.push(command);
                 else if (flow.timing === AQUEDI_FLOW_TIMING.ALWAYS) continuous.push(command);
             }
+            if (flow.timing === AQUEDI_FLOW_TIMING.ALWAYS && flow.commands.some(command => command.type === 11)) {
+                sequences.push({ flow, cursor: 0, waitTicks: 0 });
+            }
         }
-        return { continuous, reactive, flows: flowModel };
+        return { continuous, reactive, flows: flowModel, sequences };
     }
 
     _buildHud() {
@@ -593,6 +773,7 @@ export default class StageScene extends Phaser.Scene {
         if (!e.canRunPhysics()) return;
 
         this._runReactiveActorActions(e);
+        this._runActorFlowSequences(e);
 
         if (!e.actions.length) return;
 
@@ -696,6 +877,13 @@ export default class StageScene extends Phaser.Scene {
     _updateBasicAnimation(e, delta) {
         if (!e.sprite) return;
 
+        if (e.attackAnimMs > 0) {
+            e.attackAnimMs = Math.max(0, e.attackAnimMs - delta);
+            e.attackAnimElapsed = (e.attackAnimElapsed || 0) + delta;
+            e.sprite.setFrame((e.baseFrame || 0) + 2 + (Math.floor(e.attackAnimElapsed / PLAYER_ATTACK_FRAME_MS) & 1));
+            return;
+        }
+
         const selected = this._selectBasicAnimation(e);
         if (!selected || !selected.anim.frames?.length) {
             e.sprite.setFrame(e.baseFrame || 0);
@@ -784,14 +972,90 @@ export default class StageScene extends Phaser.Scene {
     }
 
     _applyStatusOperation(details, item) {
-        const value = details.calculation_content_constant || 0;
-        if (!this._player || !value) return;
+        const value = this._statusOperand(details);
 
-        // Native status ids still need deeper mapping. For now, model the common
-        // sample-stage heart case and keep gem/time pickups visible in stats.
+        if (details.operation_target_type === 1 && details.operation_target_variable_type === 0) {
+            const id = details.operation_target_variable_number || 0;
+            const current = DataManager.$gameVariables?.value(id) || 0;
+            DataManager.$gameVariables?.setValue(id, applyOperator(current, value, details.operator_type));
+            this._refreshConditionalBlocks();
+            return;
+        }
+
+        if (!this._player || !value) return;
         if (item.image_number === 15 || item.image_number === 16) {
             this._player.hp = Math.min(this._player.maxHp, this._player.hp + value);
         }
+    }
+
+    _runActorFlowSequences(e) {
+        if (!e.flowSequences?.length) return;
+        for (const sequence of e.flowSequences) {
+            if (sequence.waitTicks > 0) {
+                sequence.waitTicks--;
+                continue;
+            }
+            const commands = sequence.flow.commands || [];
+            const command = commands[sequence.cursor % commands.length];
+            if (!command) continue;
+            if (command.type === 1) {
+                sequence.waitTicks = Math.max(1, (command.details?.execution_time || 1) * PHYSICS_SUBSTEPS * 6);
+            } else if (command.type === 11) {
+                if (command.details?.animation) {
+                    e.attackAnimMs = Math.max(e.attackAnimMs || 0, (command.details.execution_time || 1) * 100);
+                    e.attackAnimElapsed = 0;
+                }
+                this._spawnShot(e, command.details || {});
+            }
+            sequence.cursor++;
+        }
+    }
+
+    _spawnShot(owner, details) {
+        if (!this.textures.exists('shot_tiles')) return;
+        const count = Math.max(1, Number(details.number_of_shots_fired || 1));
+        const dir = owner.facingRight ? 1 : -1;
+        for (let i = 0; i < count; i++) {
+            let x = Math.round((owner.xmin + owner.xmax) * 0.5);
+            let y = Math.round((owner.ymin + owner.ymax) * 0.5);
+            let ox = Number(details.firing_position_offset_x || 0) + i * Number(details.firing_position_offset_x_double || 0);
+            const oy = Number(details.firing_position_offset_y || 0) + i * Number(details.firing_position_offset_y_double || 0);
+            if (details.firing_position_offset_x_flip_if_facing_right && owner.facingRight) ox = -ox;
+            x += ox;
+            y += oy;
+            const sprite = this.add.sprite(x, y, 'shot_tiles', shotTileFrame(details.graphic || 1, 0))
+                .setFlipX(dir > 0)
+                .setDepth(6 + (details.z_coordinate || 0));
+            this._shots.push({
+                sprite,
+                x,
+                y,
+                vx: dir * commandSpeedToSubstepSpeed(details.speed || 0, 0),
+                vy: 0,
+                imageNumber: details.graphic || 1,
+                animElapsed: 0,
+                animFrame: 0,
+                power: details.power || 1,
+                owner,
+                lifetime: details.disappearance_time_valid ? Math.max(1, details.disappearance_time * 6 * PHYSICS_SUBSTEPS) : Number.POSITIVE_INFINITY,
+                penetrateBlocks: !!details.penetrate_blocks
+            });
+        }
+    }
+
+    _statusOperand(details) {
+        if ((details.calculation_content_type || 0) === 0) {
+            return Number(details.calculation_content_constant || 0);
+        }
+        if (details.calculation_content_type === 1 && details.calculation_content_variable_type === 0) {
+            return DataManager.$gameVariables?.value(details.calculation_content_variable_number) || 0;
+        }
+        if (details.calculation_content_type === 2) {
+            const min = Number(details.calculation_content_random_lower_limit || 0);
+            const max = Number(details.calculation_content_random_upper_limit || min);
+            return min + Math.floor(Math.random() * (max - min + 1));
+        }
+        return 0;
     }
 
     _showAcquiredMini(e) {
@@ -1005,7 +1269,12 @@ export default class StageScene extends Phaser.Scene {
         if (dx !== 0 && e.sprite) {
             // Player01.bmp default facing: RIGHT.
             // flipX=false → facing right, flipX=true → facing left.
+            e.facingRight = dx > 0;
             e.sprite.setFlipX(dx > 0);
+        }
+
+        if (Phaser.Input.Keyboard.JustDown(this._keyZ)) {
+            this._startSwordAttack(e);
         }
 
         // Jump: allowed within coyote window.
@@ -1017,6 +1286,87 @@ export default class StageScene extends Phaser.Scene {
             e.airTime  = COYOTE; // block double-jump until landing resets airTime
         }
         if (e.noJumpTicks > 0) e.noJumpTicks--;
+    }
+
+    _startSwordAttack(e) {
+        if (!e || this._sword?.active) return;
+        const texture = e.facingRight ? 'sword_r' : 'sword_l';
+        if (!this.textures.exists(texture)) return;
+        const sprite = this.add.sprite(0, 0, texture, 0).setDepth(7);
+        this._sword = {
+            active: true,
+            owner: e,
+            sprite,
+            elapsed: 0,
+            power: Math.max(1, Number(e.swordConfig?.power || 1)),
+            hitActors: new Set()
+        };
+        e.attackAnimMs = SWORD_SWING_MS;
+        e.attackAnimElapsed = 0;
+        this._positionSword();
+        this._applySwordHits();
+    }
+
+    _positionSword() {
+        const sword = this._sword;
+        const p = sword?.owner;
+        if (!sword?.active || !p) return;
+        const box = this._swordAabb();
+        sword.sprite.setTexture(p.facingRight ? 'sword_r' : 'sword_l');
+        sword.sprite.setPosition(
+            Math.round((box.xmin + box.xmax) * 0.5),
+            Math.round((box.ymin + box.ymax) * 0.5)
+        );
+    }
+
+    _swordAabb() {
+        const p = this._sword?.owner;
+        if (!p) return null;
+        const dir = p.facingRight ? 1 : -1;
+        const playerCenterX = (p.xmin + p.xmax) * 0.5;
+        const playerCenterY = (p.ymin + p.ymax) * 0.5;
+        const playerLeft = playerCenterX - PLAYER_SPRITE_W * 0.5;
+        const playerRight = playerCenterX + PLAYER_SPRITE_W * 0.5;
+        const xmin = dir > 0 ? playerRight : playerLeft - SWORD_W;
+        const cy = playerCenterY + SWORD_OFFSET_Y;
+        return {
+            xmin,
+            xmax: xmin + SWORD_W - 1,
+            ymin: cy - SWORD_H * 0.5,
+            ymax: cy + SWORD_H * 0.5 - 1
+        };
+    }
+
+    _applySwordHits() {
+        const sword = this._sword;
+        const box = this._swordAabb();
+        if (!sword?.active || !box) return;
+        for (const actor of this._actors.entities()) {
+            if (!actor.active || actor.hp <= 0 || sword.hitActors.has(actor)) continue;
+            if (!this._aabbOverlap(box, actor)) continue;
+            sword.hitActors.add(actor);
+            if (actor.invincible) continue;
+            const damage = Math.max(1, sword.power - (actor.defense || 0));
+            actor.hp = Math.max(0, actor.hp - damage);
+            if (actor.hp <= 0) {
+                actor.sprite?.destroy();
+                this._actors.remove(actor);
+            }
+        }
+    }
+
+    _updateSword(delta) {
+        const sword = this._sword;
+        if (!sword?.active) return;
+        sword.elapsed += delta;
+        this._positionSword();
+        this._applySwordHits();
+        const frame = Math.min(2, Math.floor(sword.elapsed / SWORD_FRAME_MS));
+        sword.sprite.setFrame(frame);
+        if (sword.elapsed >= SWORD_SWING_MS) {
+            sword.sprite.destroy();
+            this._sword = null;
+        }
     }
 
     //-----------------------------------------------------------------------
@@ -1044,6 +1394,7 @@ export default class StageScene extends Phaser.Scene {
                     if (e.active && e.canRunPhysics()) this._stepEntity(e);
                 }
                 this._checkPickupCollisions();
+                this._updateShots();
             }
 
             this._accum -= FIXED_DT;
@@ -1064,6 +1415,19 @@ export default class StageScene extends Phaser.Scene {
             this._syncSprite(e);
             this._updatePickupAnimation(e, delta);
         }
+        for (const shot of this._shots) {
+            if (shot.sprite) {
+                shot.animElapsed = (shot.animElapsed || 0) + delta;
+                while (shot.animElapsed >= SHOT_BLINK_FRAME_MS) {
+                    shot.animElapsed -= SHOT_BLINK_FRAME_MS;
+                    shot.animFrame ^= 1;
+                }
+                shot.sprite
+                    .setFrame(shotTileFrame(shot.imageNumber, shot.animFrame))
+                    .setPosition(Math.round(shot.x), Math.round(shot.y));
+            }
+        }
+        this._updateSword(delta);
         this._updatePickupEffects(delta);
         this._updateFloatingMessages(delta);
         this._updateMessage(delta);
@@ -1085,5 +1449,25 @@ export default class StageScene extends Phaser.Scene {
             '  velY:' + p.velY.toFixed(2) +
             (p.onGround ? '  GND' : '  AIR(t=' + p.airTime + ')')
         );
+    }
+
+    _updateShots() {
+        for (let i = this._shots.length - 1; i >= 0; i--) {
+            const shot = this._shots[i];
+            shot.x += shot.vx;
+            shot.y += shot.vy;
+            shot.lifetime--;
+            const hitBlock = !shot.penetrateBlocks && this._solid(shot.x, shot.y, 0);
+            const hitPlayer = this._player && this._pointInEntity(shot.x, shot.y, this._player);
+            if (hitPlayer && this._player.hp > 0) this._player.hp = Math.max(0, this._player.hp - (shot.power || 1));
+            if (shot.lifetime <= 0 || hitBlock || hitPlayer) {
+                shot.sprite?.destroy();
+                this._shots.splice(i, 1);
+            }
+        }
+    }
+
+    _pointInEntity(x, y, e) {
+        return x >= e.xmin && x <= e.xmax && y >= e.ymin && y <= e.ymax;
     }
 }
