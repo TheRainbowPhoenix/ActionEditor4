@@ -43,6 +43,7 @@ const PLAYER_SPRITE_W = 32;
 const SWORD_W = 32;
 const SWORD_H = 24;
 const SWORD_OFFSET_Y = -4;
+const EFFECT_FRAME_MS = 1000 / 60;
 
 function itemTileFrame(imageNumber) {
     if (!imageNumber || imageNumber < 1) return 0;
@@ -212,10 +213,11 @@ function extractSwordConfig(character) {
         return {
             power: Math.max(1, Number(details.power || 1)),
             animation: Number(details.animation || 0),
-            executionTime: Math.max(1, Number(details.execution_time || 1))
+            executionTime: Math.max(1, Number(details.execution_time || 1)),
+            effect: Number(details.effect || 0)
         };
     }
-    return { power: 1, animation: 0, executionTime: 3 };
+    return { power: 1, animation: 0, executionTime: 3, effect: 0 };
 }
 
 export default class StageScene extends Phaser.Scene {
@@ -232,6 +234,7 @@ export default class StageScene extends Phaser.Scene {
         this._actors    = new ActorEntityList();
         this._pickups   = [];
         this._pickupEffects = [];
+        this._effects = [];
         this._shots = [];
         this._sword = null;
         this._messageTimer = 0;
@@ -265,6 +268,8 @@ export default class StageScene extends Phaser.Scene {
             this.load.bmpSpritesheet('sword_l', 'bmp/sword/Sword.bmp', { frameWidth: 32, frameHeight: 24 });
         if (!this.textures.exists('sword_r'))
             this.load.bmpSpritesheet('sword_r', 'bmp/sword/Sword_r.bmp', { frameWidth: 32, frameHeight: 24 });
+        if (!this.textures.exists('effect_1_blue'))
+            this.load.bmpSpritesheet('effect_1_blue', 'bmp/effect/1_Blue.bmp', { frameWidth: 32, frameHeight: 32 });
     }
 
     create() {
@@ -1349,6 +1354,7 @@ export default class StageScene extends Phaser.Scene {
             const damage = Math.max(1, sword.power - (actor.defense || 0));
             actor.hp = Math.max(0, actor.hp - damage);
             if (actor.hp <= 0) {
+                this._spawnEffect(sword.owner?.swordConfig?.effect || 3, (actor.xmin + actor.xmax) * 0.5, (actor.ymin + actor.ymax) * 0.5);
                 actor.sprite?.destroy();
                 this._actors.remove(actor);
             }
@@ -1366,6 +1372,34 @@ export default class StageScene extends Phaser.Scene {
         if (sword.elapsed >= SWORD_SWING_MS) {
             sword.sprite.destroy();
             this._sword = null;
+        }
+    }
+
+    _spawnEffect(effectId, x, y) {
+        if (effectId !== 3 || !this.textures.exists('effect_1_blue')) return;
+        const sprite = this.add.sprite(Math.round(x), Math.round(y), 'effect_1_blue', 0)
+            .setDepth(8);
+        this._effects.push({
+            sprite,
+            frame: 0,
+            elapsed: 0
+        });
+    }
+
+    _updateEffects(delta) {
+        for (let i = this._effects.length - 1; i >= 0; i--) {
+            const effect = this._effects[i];
+            effect.elapsed += delta;
+            while (effect.elapsed >= EFFECT_FRAME_MS) {
+                effect.elapsed -= EFFECT_FRAME_MS;
+                effect.frame++;
+            }
+            if (effect.frame >= 3) {
+                effect.sprite.destroy();
+                this._effects.splice(i, 1);
+                continue;
+            }
+            effect.sprite.setFrame(effect.frame);
         }
     }
 
@@ -1428,6 +1462,7 @@ export default class StageScene extends Phaser.Scene {
             }
         }
         this._updateSword(delta);
+        this._updateEffects(delta);
         this._updatePickupEffects(delta);
         this._updateFloatingMessages(delta);
         this._updateMessage(delta);
