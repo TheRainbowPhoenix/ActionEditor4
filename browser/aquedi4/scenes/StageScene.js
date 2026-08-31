@@ -13,6 +13,7 @@ import {
     normalizeActorCommandDetails
 } from '../objects/AquediCharacterModel.js';
 import { createAquediMessageWindow, measureAquediText } from '../ui/AquediGui.js';
+import { Window_AquediStageHud } from '../ui/AquediHud.js';
 
 const TILE     = AQUEDI_PHYSICS.TILE;
 const SCROLL   = 10;
@@ -243,6 +244,10 @@ export default class StageScene extends Phaser.Scene {
         this._modalMessage = null;
         this._modalWindow = null;
         this._messageWindow = null;
+        this._hud = null;
+        this._hudDelta = 16.6667;
+        this._stageTimerInfinite = true;
+        this._stageTimeRemainingMs = 0;
         this._collectionStats = Object.create(null);
         this._lastSpecialBlockTile = null;
     }
@@ -255,6 +260,10 @@ export default class StageScene extends Phaser.Scene {
             this.load.bmpSpritesheet('item_tiles', 'bmp/Item.bmp', { frameWidth: TILE, frameHeight: TILE });
         if (!this.textures.exists('item_mini_tiles'))
             this.load.bmpSpritesheet('item_mini_tiles', 'bmp/Item_Mini.bmp', { frameWidth: 16, frameHeight: 16 });
+        if (!this.textures.exists('accessory'))
+            this.load.bmp('accessory', 'bmp/Accessory.bmp');
+        if (!this.textures.exists('word_digits'))
+            this.load.bmpSpritesheet('word_digits', 'bmp/Word.bmp', { frameWidth: 32, frameHeight: 32 });
         if (!this.textures.exists('player_stage'))
             this.load.bmpSpritesheet('player_stage', 'bmp/chara_sp/Player01.bmp', { frameWidth: TILE, frameHeight: TILE });
         for (let i = 1; i <= 8; i++) {
@@ -294,6 +303,8 @@ export default class StageScene extends Phaser.Scene {
 
         this._buildTileGrid(sd, stride);
         this._setupBackground(sd);
+        this._stageTimerInfinite = !sd.enable_time_limit;
+        this._stageTimeRemainingMs = Number(sd.time_limit_duration || 0) * 1000;
         this._buildTilemap(cols, rows, stride);
         this._spawnPickups(sd);
         this._spawnCharacters(sd);
@@ -572,10 +583,7 @@ export default class StageScene extends Phaser.Scene {
     }
 
     _buildHud() {
-        this._hudText = this.add.text(8, 8, '', {
-            font: '12px monospace', fill: '#ffffff',
-            stroke: '#000000', strokeThickness: 2
-        }).setScrollFactor(0).setDepth(20);
+        this._hud = new Window_AquediStageHud(this);
     }
 
     //-----------------------------------------------------------------------
@@ -939,6 +947,27 @@ export default class StageScene extends Phaser.Scene {
             e.wasOverlapping = true;
             this._activatePickup(e);
         }
+    }
+
+    _checkActorPlayerCollisions() {
+        const p = this._player;
+        if (!p || p.hp <= 0 || (p.damageCooldownMs || 0) > 0) return;
+        for (const actor of this._actors.entities()) {
+            if (!actor.active || actor.hp <= 0 || !actor.bodyHitPower) continue;
+            if (!this._aabbOverlap(p, actor)) continue;
+            this._damagePlayer(Math.max(1, Number(actor.bodyHitPower || 1)), actor);
+            break;
+        }
+    }
+
+    _damagePlayer(amount, source = null) {
+        const p = this._player;
+        if (!p || p.hp <= 0 || amount <= 0 || (p.damageCooldownMs || 0) > 0) return false;
+        p.hp = Math.max(0, p.hp - Math.max(1, amount | 0));
+        p.damageCooldownMs = 900;
+        p.lastDamageSource = source;
+        this._hud?.showPlayerResourceBars(p, 'hp');
+        return true;
     }
 
     _activatePickup(e) {
@@ -1410,6 +1439,13 @@ export default class StageScene extends Phaser.Scene {
             this._updateMessage(delta);
             return;
         }
+        this._hudDelta = delta;
+        if (!this._stageTimerInfinite) {
+            this._stageTimeRemainingMs = Math.max(0, this._stageTimeRemainingMs - delta);
+        }
+        if (this._player?.damageCooldownMs > 0) {
+            this._player.damageCooldownMs = Math.max(0, this._player.damageCooldownMs - delta);
+        }
 
         // Handle player input ONCE per frame (not per substep) to avoid multiple jumps.
         if (this._player) this._handleInput(this._player);
@@ -1428,6 +1464,7 @@ export default class StageScene extends Phaser.Scene {
                     if (e.active && e.canRunPhysics()) this._stepEntity(e);
                 }
                 this._checkPickupCollisions();
+                this._checkActorPlayerCollisions();
                 this._updateShots();
             }
 
@@ -1471,19 +1508,20 @@ export default class StageScene extends Phaser.Scene {
     }
 
     _updateHud() {
-        if (!this._hudText || !this._player) return;
+        if (!this._hud || !this._player) return;
         const p  = this._player;
         const cx = (p.xmin + p.xmax) * 0.5;
         const cy = (p.ymin + p.ymax) * 0.5;
         const tx = ((cx / TILE) | 0) - SCROLL;
         const ty = ((cy / TILE) | 0) - SCROLL;
-        this._hudText.setText(
-            'HP:' + p.hp + '/' + p.maxHp +
-            '  SP:' + p.sp + '/' + p.maxSp +
-            '  tile:(' + tx + ',' + ty + ')' +
-            '  velY:' + p.velY.toFixed(2) +
-            (p.onGround ? '  GND' : '  AIR(t=' + p.airTime + ')')
-        );
+        this._hud.update(p, {
+            delta: this._hudDelta,
+            itemCount: Object.values(this._collectionStats).reduce((sum, n) => sum + n, 0),
+            score: Object.values(this._collectionStats).reduce((sum, n) => sum + n, 0),
+            timer: this._stageTimerInfinite ? null : Math.ceil(this._stageTimeRemainingMs / 1000),
+            tileX: tx,
+            tileY: ty
+        });
     }
 
     _updateShots() {
@@ -1494,7 +1532,7 @@ export default class StageScene extends Phaser.Scene {
             shot.lifetime--;
             const hitBlock = !shot.penetrateBlocks && this._solid(shot.x, shot.y, 0);
             const hitPlayer = this._player && this._pointInEntity(shot.x, shot.y, this._player);
-            if (hitPlayer && this._player.hp > 0) this._player.hp = Math.max(0, this._player.hp - (shot.power || 1));
+            if (hitPlayer) this._damagePlayer(shot.power || 1, shot.owner || shot);
             if (shot.lifetime <= 0 || hitBlock || hitPlayer) {
                 shot.sprite?.destroy();
                 this._shots.splice(i, 1);

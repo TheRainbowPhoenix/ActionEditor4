@@ -12,6 +12,10 @@ const config = {
     height: 480,
     parent: 'game-container',
     pixelArt: true,
+    fps: {
+        target: 60,
+        forceSetTimeOut: true
+    },
     physics: {
         default: 'arcade',
         arcade: {
