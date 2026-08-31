@@ -227,7 +227,7 @@ export default class StageScene extends Phaser.Scene {
     }
 
     init(data) {
-        this._stageFile = /* data.stageFile || */ 'StorySample02-1.stg4_1020';
+        this._stageFile = data.stageFile || 'StorySample02-1.stg4_1020';
         this._stageKey  = 'stage_' + this._stageFile;
         this._accum     = 0;
         this._player    = null;

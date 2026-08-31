@@ -1,8 +1,48 @@
 // scenes/WorldMapScene.js
 import { DataManager } from '../managers/DataManager.js';
-import Player from '../objects/Player.js';
+import { createAquediMessageWindow } from '../ui/AquediGui.js';
 
-/** @typedef {import('phaser')} Phaser */
+const TILE = 32;
+const VIEW_COLS = 20;
+const VIEW_ROWS = 15;
+const PLAYER_SCREEN_X = 288;
+const PLAYER_SCREEN_Y = 224;
+const PLAYER_FRAME_TOGGLE = 40;
+
+const DIR_DOWN = 0;
+const DIR_UP = 1;
+const DIR_LEFT = 2;
+const DIR_RIGHT = 3;
+
+function clamp(value, min, max) {
+    return Math.max(min, Math.min(max, value));
+}
+
+function worldMapTileFrame(graphic) {
+    return Math.max(0, Number(graphic || 0)) + 1;
+}
+
+function accessoryFrame(direction, blinkFrame) {
+    let baseX = 0;
+    let baseY = 64;
+    if (direction === DIR_UP) {
+        baseX = 64;
+        baseY = 64;
+    } else if (direction === DIR_LEFT) {
+        baseX = 64;
+        baseY = 96;
+    } else if (direction === DIR_RIGHT) {
+        baseX = 0;
+        baseY = 96;
+    }
+    if (blinkFrame) baseX += 32;
+    return (baseY / TILE) * 4 + (baseX / TILE);
+}
+
+function normalizeStageFile(path) {
+    if (!path) return '';
+    return path.split(/[/\\]/).pop().replace(/\.stg4_\d+$/i, '.stg4_1020');
+}
 
 export default class WorldMapScene extends Phaser.Scene {
     constructor() {
@@ -10,256 +50,265 @@ export default class WorldMapScene extends Phaser.Scene {
     }
 
     create() {
-        const mapData = DataManager.$dataWorldMap.data;
-        const tileWidth = 32;
-        const tileHeight = 32;
+        this._data = DataManager.$dataWorldMap.data;
+        this._state = 'navigate';
+        this._cursor = {
+            x: this._data.init_x || 0,
+            y: this._data.init_y || 0,
+            screenX: PLAYER_SCREEN_X,
+            screenY: PLAYER_SCREEN_Y
+        };
+        this._scroll = { x: 0, y: 0 };
+        this._direction = DIR_DOWN;
+        this._blinkCounter = 0;
+        this._activeEvent = null;
+        this._activePage = null;
+        this._stageMenu = null;
 
-        // --- Set Background Color from Palette ---
-        const bgIndex = mapData.background_index;
-        if (DataManager.$globalPalette && DataManager.$globalPalette[bgIndex]) {
-            const bgColor = DataManager.$globalPalette[bgIndex];
-            this.cameras.main.setBackgroundColor(bgColor);
-        } else {
-            // Fallback color if palette is missing or index is invalid
-            this.cameras.main.setBackgroundColor(0x000000); 
-            console.warn(`Background color index ${bgIndex} not found in global palette.`);
-        }
+        this._setupBackground();
+        this._recomputeScroll();
+        this._buildTilemap();
+        this._buildEvents();
+        this._buildPlayerCursor();
+        this._syncViewport();
 
-        this.createPlayerAnimations();
-
-        // Pass `this.map` to the Player constructor for tile size info
-        this.map = this.make.tilemap({
-            data: this.createTilemapData(mapData),
-            tileWidth: tileWidth,
-            tileHeight: tileHeight
-        });
-
-        const tileset = this.map.addTilesetImage('worldmap_chip');
-        const layer = this.map.createLayer(0, tileset, 0, 0);
-        
-        // Add Events as Sprites on top of the tilemap layer
-        this.createEventSprites(mapData, tileWidth, tileHeight);
-
-        // Use the 'accessory32' texture from Accessory.bmp
-        this.player = new Player(
-            this,
-            (mapData.init_x + 0.5) * tileWidth,
-            (mapData.init_y + 0.5) * tileHeight,
-            'accessory32'
-        );
-        this.add.existing(this.player);
-
-        // Camera setup
-        this.cameras.main.startFollow(this.player, true);
-        this.cameras.main.setBounds(0, 0, this.map.widthInPixels, this.map.heightInPixels);
-
-        this.input.keyboard.on('keydown-Z', () => { this.checkEventTrigger(); });
-        // Debug shortcut: press S to jump straight to StorySample01
-        this.input.keyboard.once('keydown-S', () => {
-            this.scene.start('StageScene', { stageFile: 'StorySample01.stg4_1020' });
+        this._keys = this.input.keyboard.addKeys({
+            up: Phaser.Input.Keyboard.KeyCodes.UP,
+            down: Phaser.Input.Keyboard.KeyCodes.DOWN,
+            left: Phaser.Input.Keyboard.KeyCodes.LEFT,
+            right: Phaser.Input.Keyboard.KeyCodes.RIGHT,
+            z: Phaser.Input.Keyboard.KeyCodes.Z,
+            x: Phaser.Input.Keyboard.KeyCodes.X,
+            s: Phaser.Input.Keyboard.KeyCodes.S
         });
     }
 
-    createPlayerAnimations() {
-        const frameRate = 6;
-        const frameOffset = 8; // Start at frame 8
+    update() {
+        this._blinkCounter = (this._blinkCounter + 1) % (PLAYER_FRAME_TOGGLE * 2);
+        this._playerCursor.setFrame(accessoryFrame(this._direction, this._blinkCounter >= PLAYER_FRAME_TOGGLE));
 
-        // Down: frames 8, 9
-        this.anims.create({
-            key: 'walk_down',
-            frames: this.anims.generateFrameNumbers('accessory32', { start: frameOffset + 0, end: frameOffset + 1 }),
-            frameRate: frameRate,
-            repeat: -1
-        });
-        this.anims.create({
-            key: 'idle_down',
-            frames: [{ key: 'accessory32', frame: frameOffset + 0 }],
-        });
-
-        // Up: frames 10, 11
-        this.anims.create({
-            key: 'walk_up',
-            frames: this.anims.generateFrameNumbers('accessory32', { start: frameOffset + 2, end: frameOffset + 3 }),
-            frameRate: frameRate,
-            repeat: -1
-        });
-        this.anims.create({
-            key: 'idle_up',
-            frames: [{ key: 'accessory32', frame: frameOffset + 2 }],
-        });
-
-        // Right: frames 12, 13
-        this.anims.create({
-            key: 'walk_right',
-            frames: this.anims.generateFrameNumbers('accessory32', { start: frameOffset + 4, end: frameOffset + 5 }),
-            frameRate: frameRate,
-            repeat: -1
-        });
-         this.anims.create({
-            key: 'idle_right',
-            frames: [{ key: 'accessory32', frame: frameOffset + 4 }],
-        });
-
-        // Left: frames 14, 15
-        this.anims.create({
-            key: 'walk_left',
-            frames: this.anims.generateFrameNumbers('accessory32', { start: frameOffset + 6, end: frameOffset + 7 }),
-            frameRate: frameRate,
-            repeat: -1
-        });
-        this.anims.create({
-            key: 'idle_left',
-            frames: [{ key: 'accessory32', frame: frameOffset + 6 }],
-        });
-    }
-
-    update(time, delta) {
-        this.player.update(delta);
-    }
-
-    createTilemapData(mapData) {
-        const data = [];
-        for (let y = 0; y < mapData.height; y++) {
-            const row = [];
-            for (let x = 0; x < mapData.width; x++) {
-                const tileId = mapData.tiles[y * mapData.width + x];
-                const chip = tileId > 0 ? mapData.tiles_types[tileId - 1] : null;
-                // Phaser tile index is based on the graphic index from the tileset image
-                row.push(chip ? chip.graphic + 1 : 0);
-            }
-            data.push(row);
-        }
-        return data;
-    }
-
-    /**
-     * Creates sprites for the world map events with complex frame calculation.
-     * @param {object} mapData The world map data.
-     * @param {number} tileWidth The width of a tile.
-     * @param {number} tileHeight The height of a tile.
-     */
-    createEventSprites(mapData, tileWidth, tileHeight) {
-        const eventTexture = this.textures.get('worldmap_event');
-        if (!eventTexture || eventTexture.key === '__MISSING') {
-            console.warn("WorldEvent.bmp texture not found or not loaded.");
+        if (this._state === 'stage-menu') {
+            this._updateStageMenuInput();
             return;
         }
 
-        // Calculate how many columns are available in the spritesheet
-        const tilesPerColumn = Math.floor(eventTexture.source[0].height / tileHeight);
-        const maxColumnIndex = Math.floor(eventTexture.source[0].width / tileWidth) - 1;
+        this._updateNavigationInput();
+    }
 
-        for (const event of mapData.events) {
-            const page = event.pages[0];
+    _setupBackground() {
+        const bgIndex = this._data.background_index;
+        const bgColor = DataManager.$globalPalette?.[bgIndex];
+        this.cameras.main.setBackgroundColor(bgColor ?? 0x000000);
+        this.cameras.main.setBounds(0, 0, VIEW_COLS * TILE, VIEW_ROWS * TILE);
+        this.cameras.main.roundPixels = true;
+    }
+
+    _buildTilemap() {
+        const rows = [];
+        for (let y = 0; y < this._data.height; y++) {
+            const row = [];
+            for (let x = 0; x < this._data.width; x++) {
+                const tileId = this._tileIdAt(x, y);
+                const chip = this._chipForTileId(tileId);
+                row.push(chip ? worldMapTileFrame(chip.graphic) : 0);
+            }
+            rows.push(row);
+        }
+
+        this._map = this.make.tilemap({ data: rows, tileWidth: TILE, tileHeight: TILE });
+        const tileset = this._map.addTilesetImage('worldmap_chip');
+        this._layer = this._map.createLayer(0, tileset, 0, 0).setDepth(0);
+    }
+
+    _buildEvents() {
+        this._eventSprites = [];
+        const texture = this.textures.get('worldmap_event');
+        if (!texture || texture.key === '__MISSING') return;
+
+        for (const event of this._data.events || []) {
+            const page = this._selectActivePage(event);
             if (!page) continue;
-            
-            // Determine the column from world_number, clamping to the max available column
-            const columnIndex = 1 - Math.min(page.world_number, maxColumnIndex);
-            
-            // The `graphic` value is the row index within that column
-            const rowIndex = page.graphic;
-
-            // Calculate the source pixel coordinates
-            const sourceX = columnIndex * tileWidth;
-            const sourceY = rowIndex * tileHeight;
-
-            // Create the sprite from the spritesheet
-            const eventSprite = this.add.sprite(
-                (event.placement_x + 0.5) * tileWidth,
-                (event.placement_y + 1) * tileHeight, // Anchor to bottom of tile
-                'worldmap_event'
-            ).setOrigin(0.5, 1);
-            
-            // Set the frame using the calculated pixel coordinates
-            eventSprite.setFrame(new Phaser.Textures.Frame(
-                eventSprite.texture,
-                'event_' + event.header, // a unique name for the frame
-                0, // source index
-                sourceX, sourceY,
-                tileWidth, tileHeight
+            const sprite = this.add.sprite(event.placement_x * TILE, event.placement_y * TILE, 'worldmap_event')
+                .setOrigin(0, 0)
+                .setDepth(2);
+            const sourceX = this._isWorldCleared(page) ? TILE : 0;
+            const sourceY = page.graphic * TILE;
+            sprite.setFrame(new Phaser.Textures.Frame(
+                sprite.texture,
+                'world_event_' + event.header + '_' + event.placement_x + '_' + event.placement_y,
+                0,
+                sourceX,
+                sourceY,
+                TILE,
+                TILE
             ));
+            this._eventSprites.push({ event, page, sprite });
         }
     }
 
-    _showStageMenu(stageFile) {
-        if (this._stageMenu) return;
-
-        const px = this.cameras.main.scrollX + 320;
-        const py = this.cameras.main.scrollY + 240;
-
-        this._stageMenuBg = this.add.rectangle(px, py, 160, 64, 0x444444, 0.9)
-            .setDepth(50);
-
-        const style = { font: '14px monospace', fill: '#ffffff' };
-
-        this._stageMenuItems = [
-            this.add.text(px - 72, py - 20, 'ステージに挑む', style).setDepth(51),
-            this.add.text(px - 72, py + 4,  'やっぱりやめる',  style).setDepth(51),
-        ];
-        this._stageMenuIndex  = 0;
-        this._stageMenuFile   = stageFile;
-        this._stageMenuActive = true;
-
-        this._stageMenuKeys = [
-            this.input.keyboard.on('keydown-UP',   () => this._moveStageMenu(-1)),
-            this.input.keyboard.on('keydown-DOWN', () => this._moveStageMenu(+1)),
-            this.input.keyboard.on('keydown-Z',    () => this._confirmStageMenu()),
-            this.input.keyboard.on('keydown-X',    () => this._closeStageMenu()),
-        ];
+    _buildPlayerCursor() {
+        this._playerCursor = this.add.sprite(PLAYER_SCREEN_X, PLAYER_SCREEN_Y, 'accessory32', accessoryFrame(this._direction, false))
+            .setOrigin(0, 0)
+            .setScrollFactor(0)
+            .setDepth(4);
     }
 
-    _moveStageMenu(delta) {
-        if (!this._stageMenuActive) return;
-        this._stageMenuIndex = (this._stageMenuIndex + delta + 2) % 2;
-        this._stageMenuItems[0].setText(
-            (this._stageMenuIndex === 0 ? '-> ' : '   ') + 'ステージに挑む'
-        );
-        this._stageMenuItems[1].setText(
-            (this._stageMenuIndex === 1 ? '-> ' : '   ') + 'やっぱりやめる'
-        );
-    }
+    _updateNavigationInput() {
+        let nx = this._cursor.x;
+        let ny = this._cursor.y;
+        let direction = null;
 
-    _confirmStageMenu() {
-        if (!this._stageMenuActive) return;
-        if (this._stageMenuIndex === 0) {
-            this._closeStageMenu();
-            this.scene.start('StageScene', { stageFile: this._stageMenuFile });
-        } else {
-            this._closeStageMenu();
+        if (Phaser.Input.Keyboard.JustDown(this._keys.left)) {
+            nx--;
+            direction = DIR_LEFT;
+        } else if (Phaser.Input.Keyboard.JustDown(this._keys.right)) {
+            nx++;
+            direction = DIR_RIGHT;
+        } else if (Phaser.Input.Keyboard.JustDown(this._keys.up)) {
+            ny--;
+            direction = DIR_UP;
+        } else if (Phaser.Input.Keyboard.JustDown(this._keys.down)) {
+            ny++;
+            direction = DIR_DOWN;
         }
+
+        if (direction !== null) {
+            this._direction = direction;
+            this._tryMoveCursor(nx, ny);
+        }
+
+        if (Phaser.Input.Keyboard.JustDown(this._keys.z)) {
+            const active = this._eventAt(this._cursor.x, this._cursor.y);
+            if (active?.page?.start_stage) this._openStageMenu(active.event, active.page);
+        }
+
+        if (Phaser.Input.Keyboard.JustDown(this._keys.s)) {
+            this.scene.start('StageScene', { stageFile: 'StorySample01.stg4_1020' });
+        }
+    }
+
+    _tryMoveCursor(x, y) {
+        x = clamp(x, 0, this._data.width - 1);
+        y = clamp(y, 0, this._data.height - 1);
+        if (!this._canPass(x, y)) return;
+        this._cursor.x = x;
+        this._cursor.y = y;
+        this._recomputeScroll();
+        this._syncViewport();
+    }
+
+    _recomputeScroll() {
+        this._scroll.x = clamp(this._cursor.x - 9, 0, Math.max(0, this._data.width - VIEW_COLS));
+        this._scroll.y = clamp(this._cursor.y - 7, 0, Math.max(0, this._data.height - VIEW_ROWS));
+    }
+
+    _syncViewport() {
+        this.cameras.main.scrollX = this._scroll.x * TILE;
+        this.cameras.main.scrollY = this._scroll.y * TILE;
+        this._playerCursor.setPosition(
+            (this._cursor.x - this._scroll.x) * TILE,
+            (this._cursor.y - this._scroll.y) * TILE
+        );
+    }
+
+    _tileIdAt(x, y) {
+        if (x < 0 || y < 0 || x >= this._data.width || y >= this._data.height) return 0;
+        return this._data.tiles[y * this._data.width + x] || 0;
+    }
+
+    _chipForTileId(tileId) {
+        return tileId > 0 ? this._data.tiles_types[tileId - 1] : null;
+    }
+
+    _canPass(x, y) {
+        const event = this._eventAt(x, y);
+        if (event?.page && event.page.event_type === 2) return false;
+        const chip = this._chipForTileId(this._tileIdAt(x, y));
+        return !!chip && !chip.locked;
+    }
+
+    _eventAt(x, y) {
+        for (const event of this._data.events || []) {
+            if (event.placement_x !== x || event.placement_y !== y) continue;
+            const page = this._selectActivePage(event);
+            if (page) return { event, page };
+        }
+        return null;
+    }
+
+    _selectActivePage(event) {
+        for (const page of event.pages || []) {
+            if (this._pageConditionsMet(page)) return page;
+        }
+        return null;
+    }
+
+    _pageConditionsMet(page) {
+        if (!page) return false;
+        if (page.appearance_condition_world > 0 && !this._isWorldCleared({ world_number: page.appearance_condition_world })) {
+            return false;
+        }
+        return true;
+    }
+
+    _isWorldCleared(page) {
+        return !!this._clearedWorlds?.[page.world_number];
+    }
+
+    _openStageMenu(event, page) {
+        this._activeEvent = event;
+        this._activePage = page;
+        this._state = 'stage-menu';
+        this._stageMenu = {
+            index: 1,
+            stageFile: normalizeStageFile(page.start_stage),
+            worldName: page.world_name || event.name || '',
+            window: null
+        };
+        this._redrawStageMenu();
+    }
+
+    _updateStageMenuInput() {
+        if (Phaser.Input.Keyboard.JustDown(this._keys.up) || Phaser.Input.Keyboard.JustDown(this._keys.down)) {
+            this._stageMenu.index = this._stageMenu.index ? 0 : 1;
+            this._redrawStageMenu();
+        }
+
+        if (Phaser.Input.Keyboard.JustDown(this._keys.x)) {
+            this._closeStageMenu();
+            return;
+        }
+
+        if (Phaser.Input.Keyboard.JustDown(this._keys.z)) {
+            if (this._stageMenu.index === 0) {
+                const stageFile = this._stageMenu.stageFile;
+                this._closeStageMenu();
+                this.scene.start('StageScene', { stageFile });
+            } else {
+                this._closeStageMenu();
+            }
+        }
+    }
+
+    _redrawStageMenu() {
+        this._stageMenu.window?.destroy();
+        const marker0 = this._stageMenu.index === 0 ? '▶' : '　';
+        const marker1 = this._stageMenu.index === 1 ? '▶' : '　';
+        const title = this._stageMenu.worldName;
+        const message = title + '\n' + marker0 + 'ステージに挑戦\n' + marker1 + 'やっぱりやめる';
+        this._stageMenu.window = createAquediMessageWindow(this, message, 304, 184, {
+            origin: { x: 0.5, y: 0 },
+            maxTextWidth: 0,
+            scrollFactor: 0,
+            depth: 50
+        });
     }
 
     _closeStageMenu() {
-        if (!this._stageMenuActive) return;
-        this._stageMenuActive = false;
-        this._stageMenuBg.destroy();
-        this._stageMenuItems.forEach(t => t.destroy());
-        this._stageMenu      = null;
-        this._stageMenuItems = null;
-    }
-
-    checkEventTrigger() {
-        // Position in tiles
-        const x = Math.floor(this.player.x / 32);
-        const y = Math.floor(this.player.y / 32);
-
-        for (const event of DataManager.$dataWorldMap.data.events) {
-            if (event.placement_x === x && event.placement_y === y) {
-                const page = event.pages[0];
-                if (page && page.start_stage) {
-                    let stageFile = page.start_stage.split(/[/\\]/).pop();
-            
-                    console.log(`Transitioning to stage: ${stageFile}`);
-                    // Engine saves .stg4_966 references but we have _1020 builds
-                    stageFile = stageFile.replace(/\.stg4_\d+$/, '.stg4_1020');
-                    this._showStageMenu(stageFile);
-                    
-                    
-                    // Clean up the stage path
-                    // const stageFile = page.start_stage.split('\\').pop();
-                    // this.scene.start('StageScene', { stageFile: stageFile });
-                }
-            }
-        }
+        this._stageMenu?.window?.destroy();
+        this._stageMenu = null;
+        this._activeEvent = null;
+        this._activePage = null;
+        this._state = 'navigate';
     }
 }
