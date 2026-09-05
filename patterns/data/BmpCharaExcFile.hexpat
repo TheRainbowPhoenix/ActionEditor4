@@ -1,8 +1,11 @@
 struct BmpCharaExcElement {
-    u32 header [[color("00143C")]];
+    // vector<dword> -- can be mixed size !!
+    u32 binary_field_count [[color("00143C")]]; 
     u32 is_name_same_path;
     u32 is_giant;
     u32 scale_mode;
+    
+    // vector<string> - 2
     u32 strings_count;
 
     // Resource name dynamic size
@@ -21,10 +24,9 @@ struct BmpCharaExcElement {
 struct BmpCharaExcFile {
     // Header with magic and count
     u32 magic;
+    
+    // vector<BmpCharaExcElement>
     u32 anim_set_count;
-    
-    
-    
     BmpCharaExcElement anim_sets[anim_set_count]; // anim_set_count];
 
 };

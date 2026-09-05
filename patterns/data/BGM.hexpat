@@ -1,8 +1,11 @@
-struct CharaEffectElement {
-    u32 header [[color("00143C")]];
+struct BGMTrack {
+    // vector<dword> -- can be mixed size !!
+    u32 binary_field_count [[color("00143C")]];
     u32 is_name_same_path;
     u32 volume;
-    u32 strings_count; // always 2 ?
+
+    // vector<string> - 2
+    u32 strings_count;
 
     // Resource name dynamic size
     u32 name_length             [[color("00020A")]];
@@ -18,13 +21,15 @@ struct CharaEffectElement {
    
 };
 
-struct CharaEffectFile {
+struct BGMFile {
     // Header with magic and count
     u32 magic;
-    u32 anim_set_count;
     
-    CharaEffectElement anim_sets[anim_set_count]; // anim_set_count];
+    // vector<BGMTrack>
+    u32 bgm_set_count;
+    
+    BGMTrack bgm_sets[bgm_set_count]; // bgm_set_count];
 
 };
 
-CharaEffectFile animations_set @ 0x0;
+BGMFile bgm_file @ 0x0;
